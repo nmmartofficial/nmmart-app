@@ -88,10 +88,6 @@ public class SessionManager {
         return pref.getString(KEY_EMAIL, "");
     }
 
-    public boolean isAdmin() {
-        return "admin".equalsIgnoreCase(getRole());
-    }
-
     public String getRole() {
         return pref.getString(KEY_ROLE, "");
     }

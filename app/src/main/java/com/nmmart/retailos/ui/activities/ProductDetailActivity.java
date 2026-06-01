@@ -208,10 +208,6 @@ public class ProductDetailActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_product_detail, menu);
-        MenuItem edit = menu.findItem(R.id.action_edit);
-        if (edit != null) {
-            edit.setVisible(sessionManager.isAdmin());
-        }
         return true;
     }
 
@@ -220,10 +216,6 @@ public class ProductDetailActivity extends AppCompatActivity {
         int id = item.getItemId();
         if (id == R.id.action_share) {
             shareOnWhatsApp();
-            return true;
-        }
-        if (id == R.id.action_edit) {
-            showQuickEditDialog();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -301,52 +293,6 @@ public class ProductDetailActivity extends AppCompatActivity {
             sendIntent.setPackage(null);
             startActivity(Intent.createChooser(sendIntent, "Share Product"));
         }
-    }
-
-    private void showQuickEditDialog() {
-        android.widget.EditText etPrice = new android.widget.EditText(this);
-        etPrice.setHint("New Price (e.g. 99)");
-        etPrice.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
-
-        new AlertDialog.Builder(this)
-                .setTitle("Quick Edit: " + product.name)
-                .setMessage("Enter new selling price:")
-                .setView(etPrice)
-                .setPositiveButton("Update", (dialog, which) -> {
-                    String newPriceStr = etPrice.getText().toString().trim();
-                    if (!newPriceStr.isEmpty()) {
-                        updateProductPrice(Double.parseDouble(newPriceStr));
-                    }
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
-    }
-
-    private void updateProductPrice(double newPrice) {
-        if (!sessionManager.isLoggedIn()) {
-            Toast.makeText(this, "Please login to update price", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        Map<String, Object> updateData = new HashMap<>();
-        updateData.put("Rate", newPrice);
-
-        repository.updateProductPriceCall(product.id, updateData).enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.isSuccessful()) {
-                    Toast.makeText(ProductDetailActivity.this, "Price Updated!", Toast.LENGTH_SHORT).show();
-                    product.nm_price = newPrice;
-                    ((TextView)findViewById(R.id.tvDetailPrice)).setText("₹" + newPrice);
-                } else {
-                    Toast.makeText(ProductDetailActivity.this, "Update failed", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<Void> call, Throwable t) {
-                Toast.makeText(ProductDetailActivity.this, "Network Error", Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 
     private class ImagePagerAdapter extends RecyclerView.Adapter<ImagePagerAdapter.VH> {

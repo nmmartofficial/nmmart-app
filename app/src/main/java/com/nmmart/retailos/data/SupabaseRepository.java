@@ -4,7 +4,6 @@ import com.nmmart.retailos.models.Banner;
 import com.nmmart.retailos.models.Category;
 import com.nmmart.retailos.models.HomeConfig;
 import com.nmmart.retailos.models.Order;
-import com.nmmart.retailos.models.OrderAdmin;
 import com.nmmart.retailos.models.Product;
 import com.nmmart.retailos.models.WalletMaster;
 import com.nmmart.retailos.models.WalletTransaction;
@@ -72,10 +71,6 @@ public class SupabaseRepository {
 
     public void getAllProducts(int limit, int offset, Callback<List<Product>> callback) {
         apiService.getAllProducts(apiKey, anonOrUserAuth(), limit, offset).enqueue(callback);
-    }
-
-    public void updateProductPrice(String productId, Map<String, Object> updateData, Callback<Void> callback) {
-        updateProductPriceCall(productId, updateData).enqueue(callback);
     }
 
     public void placeOrder(Map<String, Object> orderData, Callback<Void> callback) {

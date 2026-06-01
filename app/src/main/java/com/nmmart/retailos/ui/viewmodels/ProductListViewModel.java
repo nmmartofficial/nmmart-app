@@ -182,27 +182,6 @@ public class ProductListViewModel extends ViewModel {
         }
         products.setValue(currentList);
     }
-
-    public void updatePrice(Product product, double newPrice) {
-        Map<String, Object> data = Collections.singletonMap("Rate", newPrice);
-        Call<Void> call = repository.updateProductPriceCall(product.id, data);
-        activeCalls.add(call);
-        call.enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                activeCalls.remove(call);
-                if (response.isSuccessful()) {
-                    product.nm_price = newPrice;
-                    products.setValue(products.getValue());
-                }
-            }
-
-            @Override
-            public void onFailure(Call<Void> call, Throwable t) {
-                activeCalls.remove(call);
-            }
-        });
-    }
     
     @Override
     protected void onCleared() {

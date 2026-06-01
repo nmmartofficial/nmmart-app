@@ -7,7 +7,6 @@ import com.nmmart.retailos.models.Banner;
 import com.nmmart.retailos.models.Category;
 import com.nmmart.retailos.models.HomeConfig;
 import com.nmmart.retailos.models.Order;
-import com.nmmart.retailos.models.OrderAdmin;
 import com.nmmart.retailos.models.Product;
 import com.nmmart.retailos.models.WalletMaster;
 import com.nmmart.retailos.models.WalletTransaction;
@@ -163,21 +162,6 @@ public class SupabaseConfig {
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
             @Body Map<String, Object> orderData
-        );
-
-        @GET("orders")
-        Call<List<OrderAdmin>> getAllOrders(
-            @Header("apikey") String apiKey,
-            @Header("Authorization") String auth,
-            @Query("order") String orderBy
-        );
-
-        @PATCH("orders")
-        Call<Void> updateOrderStatus(
-            @Header("apikey") String apiKey,
-            @Header("Authorization") String auth,
-            @Query("id") String orderId,
-            @Body Map<String, Object> statusData
         );
         
         @GET("app_config")

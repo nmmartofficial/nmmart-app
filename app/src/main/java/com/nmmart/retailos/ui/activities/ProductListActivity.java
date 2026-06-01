@@ -25,7 +25,7 @@ import com.nmmart.retailos.ui.viewmodels.ProductListViewModel;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ProductListActivity extends BaseActivity implements ProductListAdapter.OnProductLongClickListener, ProductListAdapter.OnProductClickListener {
+public class ProductListActivity extends BaseActivity implements ProductListAdapter.OnProductClickListener {
 
     private ActivityProductListBinding binding;
     private ProductListViewModel viewModel;
@@ -80,7 +80,7 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
     private void setupRecyclerView() {
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         binding.rvProducts.setLayoutManager(layoutManager);
-        adapter = new ProductListAdapter(this, this);
+        adapter = new ProductListAdapter(this);
         adapter.setOnProductClickListener(this);
         binding.rvProducts.setAdapter(adapter);
         
@@ -232,25 +232,6 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
         Intent intent = new Intent(this, ProductDetailActivity.class);
         intent.putExtra("PRODUCT", product);
         startActivity(intent);
-    }
-
-    @Override
-    public void onProductLongClick(Product product) {
-        if (!sessionManager.isAdmin()) return;
-
-        EditText etPrice = new EditText(this);
-        etPrice.setHint("New Price");
-        etPrice.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
-
-        new AlertDialog.Builder(this)
-                .setTitle("Edit " + product.name)
-                .setView(etPrice)
-                .setPositiveButton("Update", (d, w) -> {
-                    String price = etPrice.getText().toString();
-                    if (!price.isEmpty()) viewModel.updatePrice(product, Double.parseDouble(price));
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
     }
 
     @Override

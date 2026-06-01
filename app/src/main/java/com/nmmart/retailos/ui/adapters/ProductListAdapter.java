@@ -22,24 +22,18 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     private boolean isLoading = false;
     private Context context;
     private OnProductClickListener onProductClickListener;
-    private OnProductLongClickListener onProductLongClickListener;
     private OnCartUpdateListener onCartUpdateListener;
 
     public interface OnProductClickListener {
         void onProductClick(Product product);
     }
 
-    public interface OnProductLongClickListener {
-        void onProductLongClick(Product product);
-    }
-
     public interface OnCartUpdateListener {
         void onCartUpdated();
     }
 
-    public ProductListAdapter(Context context, OnProductLongClickListener onProductLongClickListener) {
+    public ProductListAdapter(Context context) {
         this.context = context;
-        this.onProductLongClickListener = onProductLongClickListener;
     }
 
     public ProductListAdapter(List<Product> productList, OnProductClickListener onProductClickListener) {
@@ -96,7 +90,7 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         ItemProductBinding binding = ItemProductBinding.inflate(
                 LayoutInflater.from(parent.getContext()), parent, false);
         context = parent.getContext();
-        return new ProductViewHolder(binding, context, productList, onProductClickListener, onProductLongClickListener);
+        return new ProductViewHolder(binding, context, productList, onProductClickListener);
     }
 
     @Override
@@ -111,31 +105,20 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         private Context context;
         private List<Product> productList;
         private OnProductClickListener onProductClickListener;
-        private OnProductLongClickListener onProductLongClickListener;
 
         ProductViewHolder(ItemProductBinding binding, Context context, List<Product> productList, 
-                          OnProductClickListener onProductClickListener, OnProductLongClickListener onProductLongClickListener) {
+                          OnProductClickListener onProductClickListener) {
             super(binding.getRoot());
             this.binding = binding;
             this.context = context;
             this.productList = productList;
             this.onProductClickListener = onProductClickListener;
-            this.onProductLongClickListener = onProductLongClickListener;
             
             binding.getRoot().setOnClickListener(v -> {
                 int position = getAdapterPosition();
                 if (position != RecyclerView.NO_POSITION && onProductClickListener != null) {
                     onProductClickListener.onProductClick(productList.get(position));
                 }
-            });
-            
-            binding.getRoot().setOnLongClickListener(v -> {
-                int position = getAdapterPosition();
-                if (position != RecyclerView.NO_POSITION && onProductLongClickListener != null) {
-                    onProductLongClickListener.onProductLongClick(productList.get(position));
-                    return true;
-                }
-                return false;
             });
             
             binding.btnAddToCart.setOnClickListener(v -> {
