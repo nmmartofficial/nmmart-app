@@ -206,20 +206,6 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
         hideErrorState();
         if (searchQuery != null && !searchQuery.isEmpty()) {
             viewModel.searchProducts(searchQuery);
-        } else if (categoryName != null) {
-            viewModel.fetchProductsByCategory(categoryName);
-        } else if (brandName != null) {
-            viewModel.fetchProductsByBrand(brandName);
-        } else {
-            viewModel.fetchProductsByCategory(null); // Load all
-        }
-    }
-        if (!isNetworkAvailable()) {
-            showErrorState();
-            return;
-        }
-        if (searchQuery != null) {
-            viewModel.searchProducts(searchQuery);
         } else if (brandName != null) {
             viewModel.fetchProductsByBrand(brandName);
         } else {

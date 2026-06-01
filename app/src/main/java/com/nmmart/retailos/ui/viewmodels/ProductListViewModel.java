@@ -1,23 +1,24 @@
 package com.nmmart.retailos.ui.viewmodels;
 
+import android.app.Application;
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
 
 import com.nmmart.retailos.data.SupabaseRepository;
 import com.nmmart.retailos.models.Product;
+import com.nmmart.retailos.utils.NetworkUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ProductListViewModel extends ViewModel {
+public class ProductListViewModel extends AndroidViewModel {
     private SupabaseRepository repository;
     
     private List<Call<?>> activeCalls = new ArrayList<>();
@@ -34,7 +35,8 @@ public class ProductListViewModel extends ViewModel {
     private static final int PAGE_SIZE = 30;
     private boolean isLastPage = false;
 
-    public ProductListViewModel() {
+    public ProductListViewModel(@NonNull Application application) {
+        super(application);
         repository = new SupabaseRepository();
     }
 
@@ -53,6 +55,11 @@ public class ProductListViewModel extends ViewModel {
     }
     
     public void fetchProducts(String category, String brand, int limit, int offset) {
+        if (!NetworkUtils.isNetworkAvailable(getApplication())) {
+            errorMessage.setValue("No internet connection.");
+            isLoading.setValue(false);
+            return;
+        }
         cancelAllCalls();
         currentCategory = category;
         currentBrand = brand;
@@ -72,19 +79,24 @@ public class ProductListViewModel extends ViewModel {
                     products.setValue(response.body());
                     if (response.body().size() < limit) isLastPage = true;
                     currentOffset += limit;
-                } else errorMessage.setValue("Failed to fetch products");
+                } else errorMessage.setValue("Failed to fetch products: " + response.message());
             }
 
             @Override
             public void onFailure(Call<List<Product>> call, Throwable t) {
                 activeCalls.remove(call);
                 isLoading.setValue(false);
-                errorMessage.setValue(t.getMessage());
+                errorMessage.setValue("Network error: " + t.getMessage());
             }
         });
     }
 
     public void searchProducts(String query) {
+        if (!NetworkUtils.isNetworkAvailable(getApplication())) {
+            errorMessage.setValue("No internet connection.");
+            isLoading.setValue(false);
+            return;
+        }
         cancelAllCalls();
         currentCategory = null;
         currentSearchQuery = query;
@@ -103,19 +115,22 @@ public class ProductListViewModel extends ViewModel {
                     products.setValue(response.body());
                     if (response.body().size() < PAGE_SIZE) isLastPage = true;
                     currentOffset = PAGE_SIZE;
-                } else errorMessage.setValue("Search failed");
+                } else errorMessage.setValue("Search failed: " + response.message());
             }
 
             @Override
             public void onFailure(Call<List<Product>> call, Throwable t) {
                 activeCalls.remove(call);
                 isLoading.setValue(false);
-                errorMessage.setValue(t.getMessage());
+                errorMessage.setValue("Network error: " + t.getMessage());
             }
         });
     }
 
     public void loadMoreProducts() {
+        if (!NetworkUtils.isNetworkAvailable(getApplication())) {
+            return;
+        }
         Boolean currentIsLoading = isLoading.getValue();
         if (currentIsLoading != null && currentIsLoading) return;
         if (isLastPage) return;

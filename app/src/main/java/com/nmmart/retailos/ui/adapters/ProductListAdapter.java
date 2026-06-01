@@ -126,12 +126,14 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 if (position != RecyclerView.NO_POSITION) {
                     Product product = productList.get(position);
                     com.nmmart.retailos.data.CartManager cartManager = com.nmmart.retailos.data.CartManager.getInstance(context);
-                    cartManager.addToCart(product);
-                    android.widget.Toast.makeText(context, product.name + " added to cart!", android.widget.Toast.LENGTH_SHORT).show();
-                    
-                    // Notify listener that cart is updated
-                    if (onCartUpdateListener != null) {
-                        onCartUpdateListener.onCartUpdated();
+                    if (cartManager.addToCart(product)) {
+                        android.widget.Toast.makeText(context, product.name + " added to cart!", android.widget.Toast.LENGTH_SHORT).show();
+                        // Notify listener that cart is updated
+                        if (onCartUpdateListener != null) {
+                            onCartUpdateListener.onCartUpdated();
+                        }
+                    } else {
+                        android.widget.Toast.makeText(context, "Cannot add more. Only " + product.getStock() + " in stock.", android.widget.Toast.LENGTH_SHORT).show();
                     }
                 }
             });
@@ -154,18 +156,18 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             // Wishlist icon update
             boolean isInWishlist = com.nmmart.retailos.data.WishlistManager.getInstance(context).isInWishlist(product.id);
             binding.ivWishlist.setImageResource(isInWishlist ? android.R.drawable.btn_star_big_on : android.R.drawable.btn_star_big_off);
-            if (isInWishlist) binding.ivWishlist.setColorFilter(Color.parseColor("#FFC107"));
+            if (isInWishlist) binding.ivWishlist.setColorFilter(android.graphics.Color.parseColor("#FFC107"));
             else binding.ivWishlist.clearColorFilter();
 
             if (product.getMrp() > product.getNmPrice()) {
-                binding.tvMrp.setText("₹" + product.getMrp());
+                binding.tvMrp.setText(com.nmmart.retailos.utils.PriceUtils.formatPrice(product.getMrp()));
                 binding.tvMrp.setPaintFlags(binding.tvMrp.getPaintFlags() | android.graphics.Paint.STRIKE_THRU_TEXT_FLAG);
                 binding.tvMrp.setVisibility(View.VISIBLE);
             } else {
                 binding.tvMrp.setVisibility(View.GONE);
             }
 
-            binding.tvNmPrice.setText("₹" + product.getNmPrice());
+            binding.tvNmPrice.setText(com.nmmart.retailos.utils.PriceUtils.formatPrice(product.getNmPrice()));
 
             // Inventory Alert Logic
             if (product.getStock() > 0 && product.getStock() <= 5) {

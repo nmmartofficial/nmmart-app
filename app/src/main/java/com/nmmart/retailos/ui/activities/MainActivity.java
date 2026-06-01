@@ -38,6 +38,11 @@ import com.nmmart.retailos.ui.viewmodels.ProductListViewModel;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.text.Editable;
+import android.text.TextWatcher;
+import java.util.Timer;
+import java.util.TimerTask;
+
 public class MainActivity extends BaseActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     // Views & Binding
@@ -46,6 +51,10 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     // Managers & Repos
     private SessionManager sessionManager;
     private SupabaseRepository supabaseRepository;
+    
+    // Search Debouncing
+    private Timer searchTimer;
+    private final long SEARCH_DELAY = 600; // 600ms delay
     
     // Adapters
     private ProductListViewModel productListViewModel;
@@ -394,6 +403,35 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         });
         
         // Search
+        binding.etSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (searchTimer != null) {
+                    searchTimer.cancel();
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String query = s.toString().trim();
+                if (query.length() >= 3) {
+                    searchTimer = new Timer();
+                    searchTimer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            runOnUiThread(() -> {
+                                // You can show suggestions here or direct search
+                                // For now, let's keep it simple
+                            });
+                        }
+                    }, SEARCH_DELAY);
+                }
+            }
+        });
+
         binding.etSearch.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
                 String query = binding.etSearch.getText().toString().trim();
@@ -430,6 +468,14 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         
         productListViewModel.getIsLoadingMore().observe(this, isLoadingMore -> {
             productListAdapter.setLoading(isLoadingMore != null && isLoadingMore);
+        });
+
+        // MainViewModel error observer
+        MainViewModel mainViewModel = new ViewModelProvider(this).get(MainViewModel.class);
+        mainViewModel.getErrorMessage().observe(this, message -> {
+            if (message != null && !message.isEmpty()) {
+                Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+            }
         });
     }
 
@@ -495,13 +541,17 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         binding.shimmerView.setVisibility(View.VISIBLE);
         binding.shimmerView.startShimmer();
         
-        // Fetch App Config for Dynamic Delivery Time
+        // Fetch App Config for Dynamic Delivery Time and Charges
         supabaseRepository.getAppConfig(new retrofit2.Callback<List<AppConfig>>() {
             @Override
             public void onResponse(retrofit2.Call<List<AppConfig>> call, retrofit2.Response<List<AppConfig>> response) {
                 if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
                     AppConfig config = response.body().get(0);
                     binding.tvDeliveryTime.setText(config.deliveryTimeMsg);
+                    
+                    // Update CartManager delivery config
+                    com.nmmart.retailos.data.CartManager.getInstance(MainActivity.this)
+                        .updateDeliveryConfig(config.minOrderFreeDelivery, config.deliveryCharge);
                 }
             }
             @Override

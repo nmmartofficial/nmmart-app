@@ -38,14 +38,40 @@
         android:textSize="14sp"
         app:layout_constraintTop_toBottomOf="@id/tvLocationTitle" />
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnCurrentLocation"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginTop="24dp"
+        android:backgroundTint="#F5F5F5"
+        android:text="Use Current Location"
+        android:textColor="@color/orange_primary"
+        app:cornerRadius="12dp"
+        app:icon="@android:drawable/ic_menu_mylocation"
+        app:iconTint="@color/orange_primary"
+        app:layout_constraintTop_toBottomOf="@id/tvLocationSubtitle"
+        style="@style/Widget.MaterialComponents.Button.TextButton" />
+
+    <TextView
+        android:id="@+id/tvOr"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="OR"
+        android:textColor="#BDBDBD"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnCurrentLocation" />
+
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardCity"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="16dp"
         app:cardCornerRadius="12dp"
         app:cardElevation="2dp"
-        app:layout_constraintTop_toBottomOf="@id/tvLocationSubtitle">
+        app:layout_constraintTop_toBottomOf="@id/tvOr">
 
         <Spinner
             android:id="@+id/spinnerCity"

@@ -1,5 +1,6 @@
 plugins {
     id 'com.android.application'
+    id 'com.google.gms.google-services'
 }
 
 android {
@@ -62,6 +63,13 @@ dependencies {
 
     // Lottie Animations
     implementation 'com.airbnb.android:lottie:6.3.0'
+
+    // Google Play Services for Location
+    implementation 'com.google.android.gms:play-services-location:21.1.0'
+
+    // Firebase Messaging
+    implementation platform('com.google.firebase:firebase-bom:32.7.1')
+    implementation 'com.google.firebase:firebase-messaging'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

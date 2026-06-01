@@ -245,7 +245,11 @@ public class CartActivity extends BaseActivity {
                 Glide.with(holder.itemView.getContext()).load(product.image_url).into(holder.itemBinding.ivCartProduct);
             }
 
-            holder.itemBinding.btnPlus.setOnClickListener(v -> viewModel.addToCart(product));
+            holder.itemBinding.btnPlus.setOnClickListener(v -> {
+                if (!viewModel.addToCart(product)) {
+                    Toast.makeText(CartActivity.this, "Only " + product.getStock() + " in stock", Toast.LENGTH_SHORT).show();
+                }
+            });
             holder.itemBinding.btnMinus.setOnClickListener(v -> viewModel.removeFromCart(product));
         }
 

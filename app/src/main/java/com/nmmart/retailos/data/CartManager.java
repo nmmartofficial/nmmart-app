@@ -21,14 +21,29 @@ public class CartManager {
     private static final String KEY_CART_ITEMS = "cartItems";
     private static final String KEY_CART_QUANTITIES = "cartQuantities";
     
-    // Delivery Logic (Can be moved to Supabase config later)
-    private static final double MIN_FREE_DELIVERY_AMOUNT = 500.0;
-    private static final double DELIVERY_CHARGE = 40.0;
+    // Delivery Logic (Updated dynamically from AppConfig)
+    private double minFreeDeliveryAmount = 500.0;
+    private double deliveryCharge = 40.0;
 
     private CartManager(Context context) {
         sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         gson = new Gson();
         loadCartFromPrefs();
+        loadConfigFromPrefs();
+    }
+
+    private void loadConfigFromPrefs() {
+        minFreeDeliveryAmount = sharedPreferences.getFloat("minFreeDelivery", 500.0f);
+        deliveryCharge = sharedPreferences.getFloat("deliveryCharge", 40.0f);
+    }
+
+    public void updateDeliveryConfig(double minFree, double charge) {
+        this.minFreeDeliveryAmount = minFree;
+        this.deliveryCharge = charge;
+        sharedPreferences.edit()
+                .putFloat("minFreeDelivery", (float) minFree)
+                .putFloat("deliveryCharge", (float) charge)
+                .apply();
     }
 
     public static synchronized CartManager getInstance(Context context) {
@@ -65,15 +80,23 @@ public class CartManager {
         editor.apply();
     }
 
-    public void addToCart(Product product) {
+    public boolean addToCart(Product product) {
         String id = product.id;
+        int currentQty = cartQuantities.getOrDefault(id, 0);
+        int stock = product.getStock();
+
+        if (stock > 0 && currentQty >= stock) {
+            return false; // Cannot add more than available stock
+        }
+
         if (cartItems.containsKey(id)) {
-            cartQuantities.put(id, cartQuantities.get(id) + 1);
+            cartQuantities.put(id, currentQty + 1);
         } else {
             cartItems.put(id, product);
             cartQuantities.put(id, 1);
         }
         saveCartToPrefs();
+        return true;
     }
 
     public void removeFromCart(Product product) {
@@ -114,10 +137,10 @@ public class CartManager {
 
     public double getDeliveryCharge() {
         double subtotal = getTotalPrice();
-        if (subtotal == 0 || subtotal >= MIN_FREE_DELIVERY_AMOUNT) {
+        if (subtotal == 0 || subtotal >= minFreeDeliveryAmount) {
             return 0;
         }
-        return DELIVERY_CHARGE;
+        return deliveryCharge;
     }
 
     public double getGrandTotal() {
@@ -125,7 +148,7 @@ public class CartManager {
     }
 
     public double getMinFreeDeliveryAmount() {
-        return MIN_FREE_DELIVERY_AMOUNT;
+        return minFreeDeliveryAmount;
     }
 
     public void clearCart() {

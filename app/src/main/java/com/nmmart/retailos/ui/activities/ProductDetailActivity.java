@@ -52,6 +52,8 @@ public class ProductDetailActivity extends AppCompatActivity {
     private ProductListAdapter similarAdapter;
     private UnitOptionAdapter unitAdapter;
     private String selectedUnit;
+    private Handler stockUpdateHandler;
+    private Runnable stockUpdateRunnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,10 +103,10 @@ public class ProductDetailActivity extends AppCompatActivity {
 
         // Bind Data
         tvName.setText(product.name != null ? product.name : "Product");
-        tvPrice.setText("₹" + product.getNmPrice());
+        tvPrice.setText(com.nmmart.retailos.utils.PriceUtils.formatPrice(product.getNmPrice()));
         
         if (product.getMrp() > product.getNmPrice()) {
-            tvMrp.setText("₹" + product.getMrp());
+            tvMrp.setText(com.nmmart.retailos.utils.PriceUtils.formatPrice(product.getMrp()));
             tvMrp.setPaintFlags(tvMrp.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
             tvMrp.setVisibility(View.VISIBLE);
         } else {
@@ -120,7 +122,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         // Savings Logic
         double savings = product.getMrp() - product.getNmPrice();
         if (savings > 0) {
-            tvSavings.setText("SAVE ₹" + String.format("%.0f", savings));
+            tvSavings.setText("SAVE " + com.nmmart.retailos.utils.PriceUtils.formatPrice(savings));
             tvSavings.setVisibility(View.VISIBLE);
         } else {
             tvSavings.setVisibility(View.GONE);
@@ -184,25 +186,98 @@ public class ProductDetailActivity extends AppCompatActivity {
         });
 
         btnQtyPlus.setOnClickListener(v -> {
-            cartManager.addToCart(product);
-            updateQtyFromCart();
+            if (cartManager.addToCart(product)) {
+                updateQtyFromCart();
+            } else {
+                Toast.makeText(this, "Only " + product.getStock() + " units available", Toast.LENGTH_SHORT).show();
+            }
         });
 
         btnAdd.setOnClickListener(v -> {
-            cartManager.addToCart(product);
-            updateQtyFromCart();
-            Toast.makeText(this, product.name + " added to cart!", Toast.LENGTH_SHORT).show();
+            if (cartManager.addToCart(product)) {
+                updateQtyFromCart();
+                Toast.makeText(this, product.name + " added to cart!", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Cannot add more. Out of stock!", Toast.LENGTH_SHORT).show();
+            }
         });
 
         btnBuyNow.setOnClickListener(v -> {
             if (cartManager.getQuantity(product.id) == 0) {
-                cartManager.addToCart(product);
+                if (!cartManager.addToCart(product)) {
+                    Toast.makeText(this, "Out of stock!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
             }
             updateQtyFromCart();
             startActivity(new Intent(this, CartActivity.class));
         });
 
         updateQtyFromCart();
+        setupStockAutoUpdate();
+    }
+
+    private void setupStockAutoUpdate() {
+        stockUpdateHandler = new Handler(android.os.Looper.getMainLooper());
+        stockUpdateRunnable = new Runnable() {
+            @Override
+            public void run() {
+                refreshProductData();
+                stockUpdateHandler.postDelayed(this, 30000); // Update every 30 seconds
+            }
+        };
+    }
+
+    private void refreshProductData() {
+        if (product == null || product.id == null) return;
+        
+        SupabaseConfig.getService()
+                .searchProducts(SupabaseConfig.getApiKey(), SupabaseConfig.getAuthorizationHeader(), "eq." + product.id, 1, 0)
+                .enqueue(new Callback<List<Product>>() {
+                    @Override
+                    public void onResponse(Call<List<Product>> call, Response<List<Product>> response) {
+                        if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                            Product updatedProduct = response.body().get(0);
+                            updateStockUI(updatedProduct);
+                        }
+                    }
+                    @Override
+                    public void onFailure(Call<List<Product>> call, Throwable t) {}
+                });
+    }
+
+    private void updateStockUI(Product updatedProduct) {
+        this.product.stock = updatedProduct.stock;
+        TextView tvStock = findViewById(R.id.tvDetailStock);
+        MaterialButton btnAdd = findViewById(R.id.btnAddToCartDetail);
+        
+        if (product.getStock() > 0) {
+            tvStock.setText("In Stock (" + product.getStock() + " left)");
+            tvStock.setTextColor(Color.parseColor("#388E3C"));
+            btnAdd.setEnabled(true);
+            btnAdd.setText("ADD TO CART");
+        } else {
+            tvStock.setText("Out of Stock");
+            tvStock.setTextColor(Color.RED);
+            btnAdd.setEnabled(false);
+            btnAdd.setText("OUT OF STOCK");
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (stockUpdateHandler != null && stockUpdateRunnable != null) {
+            stockUpdateHandler.post(stockUpdateRunnable);
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (stockUpdateHandler != null && stockUpdateRunnable != null) {
+            stockUpdateHandler.removeCallbacks(stockUpdateRunnable);
+        }
     }
 
     @Override

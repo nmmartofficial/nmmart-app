@@ -9,6 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.nmmart.retailos.R;
 import com.nmmart.retailos.models.Category;
 
@@ -70,6 +71,15 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
         // Bind data to views
         void bind(Category category) {
             tvCategoryName.setText(category.getName());
+            if (category.getIconUrl() != null && !category.getIconUrl().isEmpty()) {
+                Glide.with(itemView.getContext())
+                        .load(category.getIconUrl())
+                        .placeholder(R.drawable.ic_launcher_foreground)
+                        .error(R.drawable.ic_launcher_foreground)
+                        .into(ivCategoryIcon);
+            } else {
+                ivCategoryIcon.setImageResource(R.drawable.ic_launcher_foreground);
+            }
         }
     }
 }

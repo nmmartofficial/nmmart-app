@@ -65,38 +65,43 @@ public class LoginActivity extends AppCompatActivity {
     private void handleSendOtp() {
         String mobile = etMobile.getText().toString().trim();
 
-        // Check kar rahe hain ki mobile number 10 digits ka hai ya nahi
-        if (mobile.length() == 10) {
-            String phoneE164 = toE164India(mobile);
-            btnSendOtp.setEnabled(false);
-
-            SupabaseAuthConfig.getService().requestOtp(
-                    SupabaseAuthConfig.getApiKey(),
-                    new SupabaseAuthConfig.OtpRequest(phoneE164, true)
-            ).enqueue(new Callback<Void>() {
-                @Override
-                public void onResponse(Call<Void> call, Response<Void> response) {
-                    btnSendOtp.setEnabled(true);
-                    if (response.isSuccessful()) {
-                        tilOtp.setVisibility(View.VISIBLE);
-                        btnVerifyOtp.setVisibility(View.VISIBLE);
-                        btnSendOtp.setVisibility(View.GONE);
-                        Toast.makeText(LoginActivity.this, "OTP sent to " + mobile, Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(LoginActivity.this, "Failed to send OTP. Try again.", Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<Void> call, Throwable t) {
-                    btnSendOtp.setEnabled(true);
-                    Toast.makeText(LoginActivity.this, "Network error. Try again.", Toast.LENGTH_SHORT).show();
-                }
-            });
-        } else {
-            // Agar mobile number galat hai
-            Toast.makeText(this, "Please enter a valid 10-digit number!", Toast.LENGTH_SHORT).show();
+        if (mobile.isEmpty()) {
+            etMobile.setError("Mobile number is required");
+            return;
         }
+
+        if (mobile.length() != 10) {
+            etMobile.setError("Enter a valid 10-digit number");
+            return;
+        }
+
+        etMobile.setError(null);
+        String phoneE164 = toE164India(mobile);
+        btnSendOtp.setEnabled(false);
+
+        SupabaseAuthConfig.getService().requestOtp(
+                SupabaseAuthConfig.getApiKey(),
+                new SupabaseAuthConfig.OtpRequest(phoneE164, true)
+        ).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                btnSendOtp.setEnabled(true);
+                if (response.isSuccessful()) {
+                    tilOtp.setVisibility(View.VISIBLE);
+                    btnVerifyOtp.setVisibility(View.VISIBLE);
+                    btnSendOtp.setVisibility(View.GONE);
+                    Toast.makeText(LoginActivity.this, "OTP sent to " + mobile, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(LoginActivity.this, "Failed to send OTP. Try again.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                btnSendOtp.setEnabled(true);
+                Toast.makeText(LoginActivity.this, "Network error. Try again.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void handleVerifyOtp() {
@@ -104,15 +109,21 @@ public class LoginActivity extends AppCompatActivity {
         String enteredOtp = etOtp.getText().toString().trim();
 
         if (mobile.length() != 10) {
-            Toast.makeText(this, "Please enter a valid 10-digit number!", Toast.LENGTH_SHORT).show();
+            etMobile.setError("Enter valid mobile number");
             return;
         }
 
         if (enteredOtp.isEmpty()) {
-            Toast.makeText(this, "Please enter OTP!", Toast.LENGTH_SHORT).show();
+            etOtp.setError("Please enter OTP");
             return;
         }
 
+        if (enteredOtp.length() < 6) {
+            etOtp.setError("OTP must be 6 digits");
+            return;
+        }
+
+        etOtp.setError(null);
         String phoneE164 = toE164India(mobile);
         btnVerifyOtp.setEnabled(false);
 
