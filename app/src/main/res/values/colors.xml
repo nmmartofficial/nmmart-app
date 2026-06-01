@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand Colors: Professional Orange Theme -->
+    <color name="orange_primary">#FFC107</color>
+    <color name="orange_dark">#F57C00</color>
+    <color name="orange_light">#FFE0B2</color>
+    <color name="black_soft">#212121</color>
+    <color name="white">#FFFFFF</color>
+    <color name="grey_background">#F5F5F5</color>
+    
+    <!-- NM MART Brand Colors -->
+    <color name="burgundy">#FFC107</color>
+    <color name="gold">#DAA520</color>
+    <color name="slate">#708090</color>
+    
+    <!-- Standard Colors -->
+    <color name="black">#FF000000</color>
+    <color name="grey_light">#F5F5F5</color>
+</resources>

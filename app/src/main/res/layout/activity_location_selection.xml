@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:padding="24dp">
+
+    <ImageView
+        android:id="@+id/ivLocationIllustration"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:layout_marginTop="40dp"
+        android:src="@android:drawable/ic_menu_mylocation"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@color/orange_primary" />
+
+    <TextView
+        android:id="@+id/tvLocationTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:gravity="center"
+        android:text="Select Your Location"
+        android:textColor="@color/black"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toBottomOf="@id/ivLocationIllustration" />
+
+    <TextView
+        android:id="@+id/tvLocationSubtitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:text="Switch on your location to stay in tune with what's happening in your area"
+        android:textColor="#757575"
+        android:textSize="14sp"
+        app:layout_constraintTop_toBottomOf="@id/tvLocationTitle" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardCity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="2dp"
+        app:layout_constraintTop_toBottomOf="@id/tvLocationSubtitle">
+
+        <Spinner
+            android:id="@+id/spinnerCity"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:paddingHorizontal="16dp" />
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardArea"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="2dp"
+        app:layout_constraintTop_toBottomOf="@id/cardCity">
+
+        <Spinner
+            android:id="@+id/spinnerArea"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:paddingHorizontal="16dp" />
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSubmitLocation"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginTop="40dp"
+        android:backgroundTint="@color/orange_primary"
+        android:text="Submit"
+        android:textColor="@color/white"
+        app:cornerRadius="12dp"
+        app:layout_constraintTop_toBottomOf="@id/cardArea" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="6dp"
+    app:cardCornerRadius="14dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="@color/white">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp">
+
+        <!-- Product Image -->
+        <ImageView
+            android:id="@+id/ivProduct"
+            android:layout_width="match_parent"
+            android:layout_height="130dp"
+            android:scaleType="centerCrop"
+            android:src="@android:drawable/ic_menu_report_image"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Discount Badge -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardDiscount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="4dp"
+            app:cardBackgroundColor="@color/orange_primary"
+            app:cardElevation="2dp"
+            app:layout_constraintTop_toTopOf="@id/ivProduct"
+            app:layout_constraintStart_toStartOf="@id/ivProduct"
+            android:layout_margin="4dp">
+            <TextView
+                android:id="@+id/tvDiscountBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="2dp"
+                android:text="10% OFF"
+                android:textColor="@color/white"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <ImageView
+            android:id="@+id/ivWishlist"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:padding="6dp"
+            android:src="@android:drawable/btn_star_big_off"
+            app:layout_constraintTop_toTopOf="@id/ivProduct"
+            app:layout_constraintEnd_toEndOf="@id/ivProduct"
+            android:layout_margin="4dp"
+            android:background="@drawable/circle_white_bg"
+            android:elevation="3dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@id/ivProduct">
+
+            <TextView
+                android:id="@+id/tvProductName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Product Name"
+                android:textColor="@color/black"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:maxLines="2"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/tvUnit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1 kg"
+                android:textSize="11sp"
+                android:textColor="#757575"
+                android:layout_marginTop="4dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="4dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                android:id="@+id/tvNmPrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹0"
+                android:textColor="#008000"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvMrp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹0"
+                android:textSize="12sp"
+                android:textColor="#9E9E9E"
+                android:layout_marginStart="6dp" />
+
+            <TextView
+                android:id="@+id/tvInventoryAlert"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Only 2 left!"
+                android:textColor="#D32F2F"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAddToCart"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginTop="8dp"
+                android:text="ADD"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:backgroundTint="@color/orange_primary"
+                android:textColor="@color/white"
+                app:cornerRadius="8dp"
+                app:icon="@android:drawable/ic_input_add"
+                app:iconGravity="textStart"
+                app:iconSize="16dp" />
+
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

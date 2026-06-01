@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:allowBackup="false"
+        android:name=".NMMartApplication"
+        android:icon="@drawable/ic_launcher"
+        android:label="NM Mart"
+        android:roundIcon="@drawable/ic_launcher"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.NMMart">
+        
+        <activity
+            android:name=".ui.activities.SplashActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ui.activities.MainActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.activities.LocationSelectionActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.activities.LoginActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.activities.ProductListActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity" />
+
+        <activity
+            android:name=".ui.activities.ProductDetailActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.ProductListActivity" />
+
+        <activity
+            android:name=".ui.activities.CartActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity" />
+
+        <activity
+            android:name=".ui.activities.CheckoutActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.CartActivity" />
+
+        <activity
+            android:name=".ui.activities.WishlistActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.activities.SignupActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.LoginActivity" />
+
+        <activity
+            android:name=".ui.activities.OrderSuccessActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity" />
+
+        <activity
+            android:name=".ui.activities.AddressActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.CheckoutActivity" />
+
+        <activity
+            android:name=".ui.activities.ProfileActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity" />
+
+        <activity
+            android:name=".ui.activities.OrderHistoryActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity" />
+
+        <activity
+            android:name=".ui.activities.ReferEarnActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity" />
+
+        <activity
+            android:name=".ui.activities.CustomerSupportActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity" />
+
+        <activity
+            android:name=".ui.activities.AboutUsActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity" />
+
+        <activity
+            android:name=".ui.activities.WalletActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity" />
+
+    </application>
+
+</manifest>

@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">NM Mart</string>
+    <string-array name="sort_options">
+        <item>Newest First</item>
+        <item>Price: Low to High</item>
+        <item>Price: High to Low</item>
+        <item>Discount: High to Low</item>
+    </string-array>
+</resources>

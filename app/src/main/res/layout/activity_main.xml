@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/drawer_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#F5F5F5">
+
+        <View
+            android:id="@+id/headerBg"
+            android:layout_width="0dp"
+            android:layout_height="200dp"
+            android:background="@color/burgundy"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Menu Button (Hamburger) -->
+        <ImageButton
+            android:id="@+id/btnMenu"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginStart="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_menu"
+            android:contentDescription="Menu"
+            app:tint="@color/white"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- Location & User Name Layout -->
+        <LinearLayout
+            android:id="@+id/locationLayout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="22dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toEndOf="@id/btnMenu"
+            app:layout_constraintEnd_toStartOf="@id/walletBadge">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🕒"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tvDeliveryTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Deliver in 10 minutes"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_marginStart="4dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="2dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📍"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tvLocation"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Naya Nagar, Manjhanpur"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium"
+                    android:layout_marginStart="4dp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvUserName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hello, Customer! 👋"
+                android:textColor="@color/white"
+                android:textSize="13sp"
+                android:fontFamily="sans-serif"
+                android:layout_marginTop="1dp" />
+        </LinearLayout>
+
+        <!-- Wallet Badge -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/walletBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardBackgroundColor="#A52A2A"
+            app:cardElevation="4dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="👛"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/tvWalletBalance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="₹120"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginStart="6dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Cart Button -->
+        <ImageButton
+            android:id="@+id/btnCart"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginTop="68dp"
+            android:layout_marginEnd="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_cart"
+            android:contentDescription="Cart"
+            app:tint="@color/white"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/tilSearch"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp"
+            app:layout_constraintTop_toBottomOf="@id/locationLayout"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Search 'Grocery'"
+                app:startIconDrawable="@drawable/ic_search"
+                app:endIconMode="custom"
+                app:endIconDrawable="@drawable/ic_mic"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+                app:boxBackgroundColor="@color/white"
+                app:boxStrokeWidth="0dp"
+                app:boxStrokeWidthFocused="0dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etSearch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:inputType="text" />
+            </com.google.android.material.textfield.TextInputLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipeRefreshLayout"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintTop_toBottomOf="@id/headerBg"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <com.facebook.shimmer.ShimmerFrameLayout
+                android:id="@+id/shimmerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:visibility="gone">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+                    <View android:layout_width="150dp" android:layout_height="20dp" android:background="#E0E0E0" />
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="180dp" android:orientation="horizontal" android:layout_marginTop="10dp">
+                        <View android:layout_width="140dp" android:layout_height="match_parent" android:layout_margin="4dp" android:background="#E0E0E0" />
+                        <View android:layout_width="140dp" android:layout_height="match_parent" android:layout_margin="4dp" android:background="#E0E0E0" />
+                        <View android:layout_width="140dp" android:layout_height="match_parent" android:layout_margin="4dp" android:background="#E0E0E0" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.facebook.shimmer.ShimmerFrameLayout>
+
+            <androidx.core.widget.NestedScrollView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fillViewport="true"
+                android:clipToPadding="false"
+                android:paddingBottom="80dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- 1. BANNER SLIDER -->
+                <LinearLayout
+                    android:id="@+id/sectionBanner"
+                    android:layout_width="match_parent"
+                    android:layout_height="160dp"
+                    android:orientation="vertical">
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvBanners"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal"
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                </LinearLayout>
+
+                <!-- 1. RECENTLY VIEWED -->
+                <LinearLayout
+                    android:id="@+id/sectionRecentlyViewed"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="10dp"
+                    android:visibility="gone">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Recently Viewed"
+                        android:textSize="19sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"
+                        android:fontFamily="sans-serif-medium" />
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvRecentlyViewed"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal"
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                </LinearLayout>
+
+                <!-- 2. EVERYDAY ESSENTIALS -->
+                <LinearLayout
+                    android:id="@+id/sectionEverydayEssentials"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="20dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Everyday Essentials"
+                        android:textSize="19sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"
+                        android:fontFamily="sans-serif-medium" />
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvEverydayEssentials"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal"
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                </LinearLayout>
+
+                <!-- 3. BEST SELLING -->
+                <LinearLayout
+                    android:id="@+id/sectionBestSelling"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="20dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Best Selling"
+                        android:textSize="19sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"
+                        android:fontFamily="sans-serif-medium" />
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvBestSelling"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal"
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                </LinearLayout>
+
+                <!-- 4. COUPONS & OFFERS -->
+                <LinearLayout
+                    android:id="@+id/sectionCoupons"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="20dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Coupons &amp; Offers"
+                        android:textSize="19sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"
+                        android:fontFamily="sans-serif-medium" />
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvCoupons"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal"
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                </LinearLayout>
+
+                <!-- 5. SHOP BY CATEGORY -->
+                <LinearLayout
+                    android:id="@+id/sectionCategories"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="20dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Shop by Category"
+                        android:textSize="19sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"
+                        android:fontFamily="sans-serif-medium" />
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvCategories"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal"
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                </LinearLayout>
+
+                <!-- 5. SHOP BY BRAND -->
+                <LinearLayout
+                    android:id="@+id/sectionBrands"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="20dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Shop by Brand"
+                        android:textSize="19sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"
+                        android:fontFamily="sans-serif-medium" />
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvBrands"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal"
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                </LinearLayout>
+
+                <!-- 6. TWO-COLUMN PRODUCT GRID -->
+                <LinearLayout
+                    android:id="@+id/sectionProducts"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="20dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="All Products"
+                        android:textSize="19sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"
+                        android:fontFamily="sans-serif-medium" />
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvProducts"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                        app:spanCount="2" />
+                </LinearLayout>
+
+            </LinearLayout>
+            </androidx.core.widget.NestedScrollView>
+
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Bottom Navigation Bar -->
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottom_navigation"
+            android:layout_width="match_parent"
+            android:layout_height="70dp"
+            android:background="@color/white"
+            app:elevation="16dp"
+            app:menu="@menu/bottom_nav_menu"
+            app:itemIconTint="@color/orange_primary"
+            app:itemTextColor="@color/black_soft"
+            app:labelVisibilityMode="labeled"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Navigation Drawer -->
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/nav_view"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:fitsSystemWindows="true"
+        app:headerLayout="@layout/nav_header"
+        app:menu="@menu/drawer_menu" />
+
+</androidx.drawerlayout.widget.DrawerLayout>

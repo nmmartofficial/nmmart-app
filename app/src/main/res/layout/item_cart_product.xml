@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/ivCartProduct"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:scaleType="centerInside"
+            android:src="@android:drawable/ic_menu_gallery" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="16dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvCartProductName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Product Name"
+                android:textColor="@color/black_soft"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvCartProductUnit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1 kg"
+                android:textColor="#666666"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tvCartProductPrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="₹99"
+                android:textColor="@color/orange_primary"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:background="#F5F5F5"
+            android:padding="4dp">
+
+            <ImageButton
+                android:id="@+id/btnMinus"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_input_delete"
+                app:tint="@color/black_soft" />
+
+            <TextView
+                android:id="@+id/tvQty"
+                android:layout_width="32dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="1"
+                android:textColor="@color/black_soft"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <ImageButton
+                android:id="@+id/btnPlus"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_input_add"
+                app:tint="@color/orange_primary" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

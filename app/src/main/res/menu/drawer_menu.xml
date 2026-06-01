@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_profile"
+        android:icon="@drawable/ic_person"
+        android:title="My Profile" />
+    <item
+        android:id="@+id/nav_orders"
+        android:icon="@drawable/ic_grocery_bag"
+        android:title="My Orders" />
+    <item
+        android:id="@+id/nav_addresses"
+        android:icon="@android:drawable/ic_menu_mylocation"
+        android:title="My Addresses" />
+    <item
+        android:id="@+id/nav_wallet"
+        android:icon="@drawable/ic_wallet"
+        android:title="NM Wallet" />
+    <item
+        android:id="@+id/nav_refer"
+        android:icon="@android:drawable/ic_menu_share"
+        android:title="Refer &amp; Earn" />
+    <item
+        android:id="@+id/nav_help"
+        android:icon="@android:drawable/ic_menu_call"
+        android:title="Help &amp; Support" />
+    <item
+        android:id="@+id/nav_about"
+        android:icon="@android:drawable/ic_menu_info_details"
+        android:title="About Us" />
+    <item
+        android:id="@+id/nav_share"
+        android:icon="@drawable/ic_share"
+        android:title="Share App" />
+    <item
+        android:id="@+id/nav_logout"
+        android:icon="@drawable/ic_logout"
+        android:title="Logout" />
+</menu>
