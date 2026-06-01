@@ -10,7 +10,7 @@
     android:insetBottom="0dp"
     android:minWidth="0dp"
     android:textAllCaps="false"
-    app:checkable="true"
+    android:checkable="true"
     app:cornerRadius="12dp"
     app:strokeColor="@color/orange_primary"
     app:strokeWidth="1dp" />
