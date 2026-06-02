@@ -33,7 +33,7 @@ public class SessionManager {
     private static final String KEY_STORE_LOGO = "storeLogoUrl";
 
     // Default logo link provided by user
-    private static final String DEFAULT_LOGO_URL = "https://i.postimg.cc/YCN9s3BR/NM-Mart-logo.png";
+    private static final String DEFAULT_LOGO_URL = "https://i.postimg.cc/1XFXZgzX/logo-nm-mart-app.png";
     
     private SharedPreferences pref;
     private SharedPreferences.Editor editor;
