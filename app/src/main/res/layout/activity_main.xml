@@ -472,6 +472,7 @@
         app:menu="@menu/drawer_menu"
         app:itemIconTint="#333333"
         app:itemTextColor="#333333"
-        app:itemBackground="@android:color/transparent" />
+        app:itemBackground="@drawable/nav_item_background"
+        android:paddingHorizontal="8dp" />
 
 </androidx.drawerlayout.widget.DrawerLayout>
