@@ -14,9 +14,8 @@
         <!-- Customize your theme here. -->
     </style>
 
-    <!-- Splash Screen Theme - Direct Logo -->
+    <!-- Splash Screen Theme -->
     <style name="Theme.Splash" parent="Theme.MaterialComponents.NoActionBar">
-        <item name="android:windowBackground">@drawable/splash_screen</item>
         <item name="android:statusBarColor">@color/white</item>
     </style>
 </resources>
