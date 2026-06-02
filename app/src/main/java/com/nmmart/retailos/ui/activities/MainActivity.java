@@ -154,11 +154,8 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     navUserMobile.setText("Login to continue");
                 }
 
-                // Load dynamic logo
-                String logoUrl = sessionManager.getStoreLogoUrl();
-                if (logoUrl != null && !logoUrl.isEmpty()) {
-                    Glide.with(this).load(logoUrl).placeholder(R.drawable.nm_mart_logo).error(R.drawable.nm_mart_logo).into(navLogo);
-                }
+                // Use local clean logo directly
+                navLogo.setImageResource(R.drawable.nm_mart_logo);
             }
         }
     }
