@@ -23,10 +23,13 @@ import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private TextInputEditText etEmail, etOtp;
+    private TextInputEditText etMobile, etOtp;
     private TextInputLayout tilOtp;
     private Button btnSendOtp, btnVerifyOtp;
     private SessionManager sessionManager;
+
+    // Bypass number
+    private static final String BYPASS_NUMBER = "708154604";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,7 +37,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         // Views ko initialize kar rahe hain
-        etEmail = findViewById(R.id.etEmail);
+        etMobile = findViewById(R.id.etMobile);
         etOtp = findViewById(R.id.etOtp);
         tilOtp = findViewById(R.id.tilOtp);
         btnSendOtp = findViewById(R.id.btnSendOtp);
@@ -45,7 +48,15 @@ public class LoginActivity extends AppCompatActivity {
         btnSendOtp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                handleSendOtp();
+                String input = etMobile.getText().toString().trim();
+                
+                // Check for bypass
+                if (input.equals(BYPASS_NUMBER)) {
+                    bypassLogin();
+                    return;
+                }
+                
+                handleSendOtp(input);
             }
         });
 
@@ -53,7 +64,16 @@ public class LoginActivity extends AppCompatActivity {
         btnVerifyOtp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                handleVerifyOtp();
+                String input = etMobile.getText().toString().trim();
+                String enteredOtp = etOtp.getText().toString().trim();
+                
+                // Check for bypass
+                if (input.equals(BYPASS_NUMBER)) {
+                    bypassLogin();
+                    return;
+                }
+                
+                handleVerifyOtp(input, enteredOtp);
             }
         });
 
@@ -63,26 +83,44 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    private void handleSendOtp() {
-        String email = etEmail.getText().toString().trim();
+    private void bypassLogin() {
+        // Bypass login - no OTP needed
+        sessionManager.setLogin(true, BYPASS_NUMBER, "");
+        
+        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+        
+        Toast.makeText(LoginActivity.this, "Bypass login successful!", Toast.LENGTH_SHORT).show();
+    }
 
-        if (email.isEmpty()) {
-            etEmail.setError("Email is required");
+    private void handleSendOtp(String input) {
+        if (input.isEmpty()) {
+            etMobile.setError("Mobile/Email is required");
             return;
         }
 
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            etEmail.setError("Enter a valid email address");
-            return;
-        }
-
-        etEmail.setError(null);
+        etMobile.setError(null);
         btnSendOtp.setEnabled(false);
+        
+        boolean isEmail = android.util.Patterns.EMAIL_ADDRESS.matcher(input).matches();
+        
+        Call<Void> call;
+        if (isEmail) {
+            call = SupabaseAuthConfig.getService().requestEmailOtp(
+                    SupabaseAuthConfig.getApiKey(),
+                    new SupabaseAuthConfig.EmailOtpRequest(input, true)
+            );
+        } else {
+            String phoneE164 = toE164India(input);
+            call = SupabaseAuthConfig.getService().requestOtp(
+                    SupabaseAuthConfig.getApiKey(),
+                    new SupabaseAuthConfig.OtpRequest(phoneE164, true)
+            );
+        }
 
-        SupabaseAuthConfig.getService().requestEmailOtp(
-                SupabaseAuthConfig.getApiKey(),
-                new SupabaseAuthConfig.EmailOtpRequest(email, true)
-        ).enqueue(new Callback<Void>() {
+        call.enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 btnSendOtp.setEnabled(true);
@@ -90,7 +128,7 @@ public class LoginActivity extends AppCompatActivity {
                     tilOtp.setVisibility(View.VISIBLE);
                     btnVerifyOtp.setVisibility(View.VISIBLE);
                     btnSendOtp.setVisibility(View.GONE);
-                    Toast.makeText(LoginActivity.this, "OTP sent to " + email, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, "OTP sent to " + input, Toast.LENGTH_SHORT).show();
                 } else {
                     try {
                         String errorBody = response.errorBody() != null ? response.errorBody().string() : "No error body";
@@ -112,15 +150,7 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    private void handleVerifyOtp() {
-        String email = etEmail.getText().toString().trim();
-        String enteredOtp = etOtp.getText().toString().trim();
-
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            etEmail.setError("Enter valid email address");
-            return;
-        }
-
+    private void handleVerifyOtp(String input, String enteredOtp) {
         if (enteredOtp.isEmpty()) {
             etOtp.setError("Please enter OTP");
             return;
@@ -134,10 +164,23 @@ public class LoginActivity extends AppCompatActivity {
         etOtp.setError(null);
         btnVerifyOtp.setEnabled(false);
 
-        SupabaseAuthConfig.getService().verifyEmailOtp(
-                SupabaseAuthConfig.getApiKey(),
-                new SupabaseAuthConfig.VerifyEmailRequest("email", email, enteredOtp)
-        ).enqueue(new Callback<SupabaseAuthConfig.AuthSessionResponse>() {
+        boolean isEmail = android.util.Patterns.EMAIL_ADDRESS.matcher(input).matches();
+        
+        Call<SupabaseAuthConfig.AuthSessionResponse> call;
+        if (isEmail) {
+            call = SupabaseAuthConfig.getService().verifyEmailOtp(
+                    SupabaseAuthConfig.getApiKey(),
+                    new SupabaseAuthConfig.VerifyEmailRequest("email", input, enteredOtp)
+            );
+        } else {
+            String phoneE164 = toE164India(input);
+            call = SupabaseAuthConfig.getService().verifyOtp(
+                    SupabaseAuthConfig.getApiKey(),
+                    new SupabaseAuthConfig.VerifyRequest("sms", phoneE164, enteredOtp)
+            );
+        }
+
+        call.enqueue(new Callback<SupabaseAuthConfig.AuthSessionResponse>() {
             @Override
             public void onResponse(Call<SupabaseAuthConfig.AuthSessionResponse> call, Response<SupabaseAuthConfig.AuthSessionResponse> response) {
                 btnVerifyOtp.setEnabled(true);
@@ -151,10 +194,15 @@ public class LoginActivity extends AppCompatActivity {
                 long expiresAt = now + Math.max(0L, session.expiresInSec - 30L);
 
                 String userId = session.user != null ? session.user.id : "";
-                sessionManager.setAuthSession(userId, "", session.accessToken, session.refreshToken, expiresAt);
-                sessionManager.setLogin(true, "", email); // Empty mobile for email login
+                if (isEmail) {
+                    sessionManager.setAuthSession(userId, "", session.accessToken, session.refreshToken, expiresAt);
+                    sessionManager.setLogin(true, "", input);
+                } else {
+                    sessionManager.setAuthSession(userId, input, session.accessToken, session.refreshToken, expiresAt);
+                    sessionManager.setLogin(true, input, "");
+                }
 
-                saveUserToSupabase(email, session.accessToken);
+                saveUserToSupabase(input, session.accessToken);
 
                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -170,9 +218,14 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    private void saveUserToSupabase(String email, String accessToken) {
+    private void saveUserToSupabase(String input, String accessToken) {
         Map<String, String> user = new HashMap<>();
-        user.put("email", email);
+        boolean isEmail = android.util.Patterns.EMAIL_ADDRESS.matcher(input).matches();
+        if (isEmail) {
+            user.put("email", input);
+        } else {
+            user.put("mobile", input);
+        }
 
         SupabaseConfig.getService().insertUser(
                 SupabaseConfig.getApiKey(),
@@ -189,5 +242,12 @@ public class LoginActivity extends AppCompatActivity {
                 // Log failure if needed
             }
         });
+    }
+
+    private static String toE164India(String mobile10) {
+        if (mobile10 == null) return "";
+        String trimmed = mobile10.trim();
+        if (trimmed.startsWith("+")) return trimmed;
+        return "+91" + trimmed;
     }
 }
