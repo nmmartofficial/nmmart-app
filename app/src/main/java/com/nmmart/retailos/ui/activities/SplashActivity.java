@@ -1,6 +1,8 @@
 package com.nmmart.retailos.ui.activities;
 
+import com.bumptech.glide.Glide;
 import com.nmmart.retailos.R;
+import com.nmmart.retailos.data.SessionManager;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -19,21 +21,27 @@ public class SplashActivity extends AppCompatActivity {
         setContentView(R.layout.activity_splash);
 
         ImageView logo = findViewById(R.id.ivSplashLogo);
-        TextView title = findViewById(R.id.tvSplashTitle);
 
-        // Simple Fade & Scale Animation
+        SessionManager sessionManager = new SessionManager(this);
+        String logoUrl = sessionManager.getStoreLogoUrl();
+        
+        if (logoUrl != null && !logoUrl.isEmpty()) {
+            Glide.with(this)
+                .load(logoUrl)
+                .placeholder(R.drawable.nm_mart_logo)
+                .error(R.drawable.nm_mart_logo)
+                .into(logo);
+        }
+
+        // Simple Fade Animation
         Animation fadeIn = AnimationUtils.loadAnimation(this, android.R.anim.fade_in);
         logo.startAnimation(fadeIn);
-        title.startAnimation(fadeIn);
 
         // 2 Seconds delay ke baad check login state
         new Handler().postDelayed(() -> {
             try {
-                com.nmmart.retailos.data.SessionManager sessionManager = new com.nmmart.retailos.data.SessionManager(SplashActivity.this);
                 Intent intent;
-                
                 if (sessionManager.isLoggedIn()) {
-                    // Check if user has selected location
                     String location = sessionManager.getDeliveryLocation();
                     if (location == null || location.isEmpty() || location.equals("Select Location")) {
                         intent = new Intent(SplashActivity.this, LocationSelectionActivity.class);
@@ -49,7 +57,6 @@ public class SplashActivity extends AppCompatActivity {
                 finish();
             } catch (Exception e) {
                 android.util.Log.e("SplashActivity", "Error navigating", e);
-                // Fallback to LoginActivity
                 Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
                 startActivity(intent);
                 finish();

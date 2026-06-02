@@ -1,6 +1,7 @@
 package com.nmmart.retailos.ui.activities;
 
 import android.util.Log;
+import com.bumptech.glide.Glide;
 import com.nmmart.retailos.BuildConfig;
 import com.nmmart.retailos.R;
 
@@ -8,6 +9,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.textfield.TextInputEditText;
@@ -28,6 +30,7 @@ public class LoginActivity extends AppCompatActivity {
     private TextInputLayout tilOtp;
     private Button btnSendOtp, btnVerifyOtp;
     private SessionManager sessionManager;
+    private ImageView ivLogo;
 
     // Bypass number (only for DEBUG)
     private static final String BYPASS_NUMBER = "7081154604";
@@ -38,12 +41,23 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         // Views ko initialize kar rahe hain
+        ivLogo = findViewById(R.id.ivLogo);
         etMobile = findViewById(R.id.etMobile);
         etOtp = findViewById(R.id.etOtp);
         tilOtp = findViewById(R.id.tilOtp);
         btnSendOtp = findViewById(R.id.btnSendOtp);
         btnVerifyOtp = findViewById(R.id.btnVerifyOtp);
         sessionManager = new SessionManager(this);
+
+        // Load Dynamic Logo
+        String logoUrl = sessionManager.getStoreLogoUrl();
+        if (logoUrl != null && !logoUrl.isEmpty()) {
+            Glide.with(this)
+                .load(logoUrl)
+                .placeholder(R.drawable.ic_launcher_foreground)
+                .error(R.drawable.ic_launcher_foreground)
+                .into(ivLogo);
+        }
 
         // Send OTP button click listener
         btnSendOtp.setOnClickListener(new View.OnClickListener() {

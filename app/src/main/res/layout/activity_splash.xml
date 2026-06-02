@@ -18,20 +18,11 @@
         <!-- Professional NM Mart Logo -->
         <ImageView
             android:id="@+id/ivSplashLogo"
-            android:layout_width="140dp"
-            android:layout_height="140dp"
-            android:src="@drawable/ic_launcher_foreground" />
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:src="@drawable/nm_mart_logo" />
 
-        <TextView
-            android:id="@+id/tvSplashTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="NM MART"
-            android:textColor="@color/orange_primary"
-            android:textSize="40sp"
-            android:textStyle="bold"
-            android:fontFamily="sans-serif-medium" />
+
 
         <TextView
             android:layout_width="wrap_content"

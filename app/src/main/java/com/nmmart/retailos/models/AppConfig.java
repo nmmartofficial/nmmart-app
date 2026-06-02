@@ -27,4 +27,7 @@ public class AppConfig implements Serializable {
     
     @SerializedName("is_service_active")
     public boolean isServiceActive;
+
+    @SerializedName("store_logo_url")
+    public String storeLogoUrl;
 }

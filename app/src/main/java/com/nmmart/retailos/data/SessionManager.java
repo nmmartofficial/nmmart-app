@@ -30,6 +30,10 @@ public class SessionManager {
     private static final String KEY_SHOW_DEAL = "showDeal";
     private static final String KEY_STORE_THEME = "storeTheme";
     private static final String KEY_DARK_MODE = "darkMode";
+    private static final String KEY_STORE_LOGO = "storeLogoUrl";
+
+    // Default logo link provided by user
+    private static final String DEFAULT_LOGO_URL = "https://i.postimg.cc/YCN9s3BR/NM-Mart-logo.png";
     
     private SharedPreferences pref;
     private SharedPreferences.Editor editor;
@@ -219,6 +223,15 @@ public class SessionManager {
 
     public String getStoreTheme() {
         return pref.getString(KEY_STORE_THEME, "#FF9800");
+    }
+
+    public void setStoreLogoUrl(String url) {
+        editor.putString(KEY_STORE_LOGO, url);
+        editor.apply();
+    }
+
+    public String getStoreLogoUrl() {
+        return pref.getString(KEY_STORE_LOGO, DEFAULT_LOGO_URL);
     }
 
     public boolean isLoggedIn() {

@@ -15,6 +15,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -34,6 +35,7 @@ import com.nmmart.retailos.data.SupabaseConfig;
 import com.nmmart.retailos.data.SupabaseRepository;
 import com.nmmart.retailos.models.Product;
 import com.nmmart.retailos.ui.adapters.ProductListAdapter;
+import com.nmmart.retailos.utils.PriceUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,10 +45,9 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ProductDetailActivity extends AppCompatActivity {
+public class ProductDetailActivity extends BaseActivity {
 
     private Product product;
-    private SessionManager sessionManager;
     private SupabaseRepository repository;
     private CartManager cartManager;
     private TextView tvQtyValue;
@@ -85,7 +86,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         TextView tvMrp = findViewById(R.id.tvDetailMrp);
         TextView tvUnit = findViewById(R.id.tvDetailUnit);
         TextView tvDesc = findViewById(R.id.tvDetailDesc);
-        TextView tvStock = findViewById(R.id.tvDetailStock);
+        TextView tvStockLabel = findViewById(R.id.tvDetailStock);
         TextView tvSavings = findViewById(R.id.tvDetailSavings);
         TextView tvBadge = findViewById(R.id.tvDetailBadge);
         TextView tvDetailBrand = findViewById(R.id.tvDetailBrand);
@@ -98,48 +99,45 @@ public class ProductDetailActivity extends AppCompatActivity {
         TextView tvSelectUnitTitle = findViewById(R.id.tvSelectUnitTitle);
         RecyclerView rvSimilar = findViewById(R.id.rvSimilarProducts);
 
-        sessionManager = new SessionManager(this);
         repository = new SupabaseRepository();
         cartManager = CartManager.getInstance(this);
 
         // Bind Data
         tvName.setText(product.name != null ? product.name : "Product");
-        tvPrice.setText(com.nmmart.retailos.utils.PriceUtils.formatPrice(product.getNmPrice()));
+        tvPrice.setText(PriceUtils.formatPrice(product.getNmPrice()));
         
         if (product.getMrp() > product.getNmPrice()) {
-            tvMrp.setText(com.nmmart.retailos.utils.PriceUtils.formatPrice(product.getMrp()));
+            tvMrp.setText(PriceUtils.formatPrice(product.getMrp()));
             tvMrp.setPaintFlags(tvMrp.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
             tvMrp.setVisibility(View.VISIBLE);
         } else {
             tvMrp.setVisibility(View.GONE);
         }
         
-        tvUnit.setText(product.unit != null ? product.unit : "1 pcs");
+        // Setup Unit Options and Select first one by default
+        List<String> unitOptions = parseUnitOptions(product.unit);
+        if (!unitOptions.isEmpty()) {
+            selectedUnit = unitOptions.get(0);
+            product.unit = selectedUnit; // Object update taki cart mein pehla unit jaye
+            tvUnit.setText(selectedUnit);
+        } else {
+            selectedUnit = product.unit != null ? product.unit : "1 pcs";
+            tvUnit.setText(selectedUnit);
+        }
+
         tvDesc.setText(product.getDescription());
         tvDetailBrand.setText("Brand: " + product.getBrand());
-
-        selectedUnit = product.unit != null ? product.unit : "";
 
         // Savings Logic
         double savings = product.getMrp() - product.getNmPrice();
         if (savings > 0) {
-            tvSavings.setText("SAVE " + com.nmmart.retailos.utils.PriceUtils.formatPrice(savings));
+            tvSavings.setText("SAVE " + PriceUtils.formatPrice(savings));
             tvSavings.setVisibility(View.VISIBLE);
         } else {
             tvSavings.setVisibility(View.GONE);
         }
 
-        // Stock Logic
-        if (product.getStock() > 0) {
-            tvStock.setText("In Stock (" + product.getStock() + " left)");
-            tvStock.setTextColor(Color.parseColor("#388E3C"));
-            btnAdd.setEnabled(true);
-        } else {
-            tvStock.setText("Out of Stock");
-            tvStock.setTextColor(Color.RED);
-            btnAdd.setEnabled(false);
-            btnAdd.setText("OUT OF STOCK");
-        }
+        updateStockUI(product);
 
         // Badge Logic
         if (product.badge != null && !product.badge.isEmpty()) {
@@ -154,13 +152,13 @@ public class ProductDetailActivity extends AppCompatActivity {
         vpImages.setAdapter(pagerAdapter);
         new TabLayoutMediator(tabDots, vpImages, (tab, position) -> tab.setText("•")).attach();
 
-        List<String> unitOptions = parseUnitOptions(product.unit);
         if (unitOptions.size() > 1) {
             tvSelectUnitTitle.setVisibility(View.VISIBLE);
             rvUnitOptions.setVisibility(View.VISIBLE);
             rvUnitOptions.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
             unitAdapter = new UnitOptionAdapter(unitOptions, selected -> {
                 selectedUnit = selected;
+                product.unit = selected; // Object update taki cart mein sahi unit jaye
                 tvUnit.setText(selected);
             });
             rvUnitOptions.setAdapter(unitAdapter);
@@ -178,8 +176,6 @@ public class ProductDetailActivity extends AppCompatActivity {
         });
         rvSimilar.setAdapter(similarAdapter);
         fetchSimilarProducts();
-
-        toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         btnQtyMinus.setOnClickListener(v -> {
             cartManager.removeFromCart(product);
@@ -224,22 +220,20 @@ public class ProductDetailActivity extends AppCompatActivity {
             @Override
             public void run() {
                 refreshProductData();
-                stockUpdateHandler.postDelayed(this, 30000); // Update every 30 seconds
+                stockUpdateHandler.postDelayed(this, 30000);
             }
         };
     }
 
     private void refreshProductData() {
         if (product == null || product.id == null) return;
-        
         SupabaseConfig.getService()
                 .searchProducts(SupabaseConfig.getApiKey(), SupabaseConfig.getAuthorizationHeader(), "eq." + product.id, 1, 0)
                 .enqueue(new Callback<List<Product>>() {
                     @Override
                     public void onResponse(Call<List<Product>> call, Response<List<Product>> response) {
                         if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
-                            Product updatedProduct = response.body().get(0);
-                            updateStockUI(updatedProduct);
+                            updateStockUI(response.body().get(0));
                         }
                     }
                     @Override
@@ -248,6 +242,7 @@ public class ProductDetailActivity extends AppCompatActivity {
     }
 
     private void updateStockUI(Product updatedProduct) {
+        if (updatedProduct == null) return;
         this.product.stock = updatedProduct.stock;
         TextView tvStock = findViewById(R.id.tvDetailStock);
         MaterialButton btnAdd = findViewById(R.id.btnAddToCartDetail);
@@ -268,8 +263,9 @@ public class ProductDetailActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        updateQtyFromCart();
         if (stockUpdateHandler != null && stockUpdateRunnable != null) {
-            stockUpdateHandler.removeCallbacks(stockUpdateRunnable); // Remove any existing callbacks to prevent duplicates
+            stockUpdateHandler.removeCallbacks(stockUpdateRunnable);
             stockUpdateHandler.post(stockUpdateRunnable);
         }
     }
@@ -291,8 +287,14 @@ public class ProductDetailActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.action_share) {
+        if (id == android.R.id.home) {
+            getOnBackPressedDispatcher().onBackPressed();
+            return true;
+        } else if (id == R.id.action_share) {
             shareOnWhatsApp();
+            return true;
+        } else if (id == R.id.action_edit) {
+            Toast.makeText(this, "Edit function coming soon", Toast.LENGTH_SHORT).show();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -300,14 +302,14 @@ public class ProductDetailActivity extends AppCompatActivity {
 
     private void updateQtyFromCart() {
         int qty = cartManager.getQuantity(product.id);
-        tvQtyValue.setText(String.valueOf(qty <= 0 ? 0 : qty));
+        tvQtyValue.setText(String.valueOf(Math.max(0, qty)));
     }
 
     private void fetchSimilarProducts() {
-        String category = product.category != null ? "eq." + product.category : null;
-        String notEqualId = product.id != null ? "neq." + product.id : null;
+        String cat = product.category != null ? "eq." + product.category : null;
+        String idNot = product.id != null ? "neq." + product.id : null;
         SupabaseConfig.getService()
-                .getRelatedProducts(SupabaseConfig.getApiKey(), SupabaseConfig.getAuthorizationHeader(), category, notEqualId, 6)
+                .getRelatedProducts(SupabaseConfig.getApiKey(), SupabaseConfig.getAuthorizationHeader(), cat, idNot, 6)
                 .enqueue(new Callback<List<Product>>() {
                     @Override
                     public void onResponse(Call<List<Product>> call, Response<List<Product>> response) {
@@ -315,163 +317,87 @@ public class ProductDetailActivity extends AppCompatActivity {
                             similarAdapter.setProducts(response.body());
                         }
                     }
-
-                    @Override
-                    public void onFailure(Call<List<Product>> call, Throwable t) {
-                    }
+                    @Override public void onFailure(Call<List<Product>> call, Throwable t) {}
                 });
     }
 
     private static List<String> parseImageUrls(String raw) {
         List<String> out = new ArrayList<>();
-        if (raw == null) return out;
-        String trimmed = raw.trim();
-        if (trimmed.isEmpty()) return out;
-        String[] parts = trimmed.split(",");
-        for (String p : parts) {
-            String s = p != null ? p.trim() : "";
-            if (!s.isEmpty()) out.add(s);
-        }
-        if (out.isEmpty()) out.add(trimmed);
+        if (raw == null || raw.trim().isEmpty()) return out;
+        String[] parts = raw.split(",");
+        for (String p : parts) if (p != null && !p.trim().isEmpty()) out.add(p.trim());
         return out;
     }
 
     private static List<String> parseUnitOptions(String unit) {
         List<String> out = new ArrayList<>();
-        if (unit == null) return out;
-        String raw = unit.trim();
-        if (raw.isEmpty()) return out;
-        String[] parts = raw.split("[,|/]");
-        for (String p : parts) {
-            String s = p != null ? p.trim() : "";
-            if (!s.isEmpty()) out.add(s);
-        }
-        if (out.isEmpty()) out.add(raw);
+        if (unit == null || unit.trim().isEmpty()) return out;
+        String[] parts = unit.split("[,|/]");
+        for (String p : parts) if (p != null && !p.trim().isEmpty()) out.add(p.trim());
         return out;
     }
 
     private void shareOnWhatsApp() {
-        String message = "*NM Mart - " + product.name + "*\n" +
-                "💰 NM Price: ₹" + product.nm_price + "\n" +
-                "🛒 MRP: ₹" + product.mrp + "\n" +
+        String msg = "*NM Mart - " + product.name + "*\n" +
+                "💰 NM Price: " + PriceUtils.formatPrice(product.getNmPrice()) + "\n" +
+                "🛒 MRP: " + PriceUtils.formatPrice(product.getMrp()) + "\n" +
                 "📦 Unit: " + product.unit + "\n\n" +
-                "Check it out on NM Mart App! Freshness guaranteed.";
-        
-        Intent sendIntent = new Intent();
-        sendIntent.setAction(Intent.ACTION_SEND);
-        sendIntent.putExtra(Intent.EXTRA_TEXT, message);
-        sendIntent.setType("text/plain");
-        sendIntent.setPackage("com.whatsapp");
-        
-        try {
-            startActivity(sendIntent);
-        } catch (Exception e) {
-            // If WhatsApp is not installed, use general share
-            sendIntent.setPackage(null);
-            startActivity(Intent.createChooser(sendIntent, "Share Product"));
+                "Download NM Mart App now!";
+        Intent si = new Intent(Intent.ACTION_SEND);
+        si.putExtra(Intent.EXTRA_TEXT, msg);
+        si.setType("text/plain");
+        si.setPackage("com.whatsapp");
+        try { startActivity(si); } catch (Exception e) {
+            si.setPackage(null);
+            startActivity(Intent.createChooser(si, "Share Product"));
         }
     }
 
     private class ImagePagerAdapter extends RecyclerView.Adapter<ImagePagerAdapter.VH> {
         private final List<String> urls;
-
-        ImagePagerAdapter(List<String> urls) {
-            this.urls = urls != null ? urls : new ArrayList<>();
-        }
-
-        @androidx.annotation.NonNull
-        @Override
-        public VH onCreateViewHolder(@androidx.annotation.NonNull ViewGroup parent, int viewType) {
-            ImageView iv = new ImageView(parent.getContext());
+        ImagePagerAdapter(List<String> urls) { this.urls = urls; }
+        @NonNull @Override public VH onCreateViewHolder(@NonNull ViewGroup p, int vt) {
+            ImageView iv = new ImageView(p.getContext());
             iv.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             iv.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-            iv.setBackgroundColor(android.graphics.Color.WHITE);
             return new VH(iv);
         }
-
-        @Override
-        public void onBindViewHolder(@androidx.annotation.NonNull VH holder, int position) {
-            String url = urls.isEmpty() ? null : urls.get(position);
-            Glide.with(holder.imageView.getContext())
-                    .load(url)
-                    .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
-                    .placeholder(R.drawable.ic_grocery_bag)
-                    .error(R.drawable.ic_grocery_bag)
-                    .dontAnimate()
-                    .into(holder.imageView);
+        @Override public void onBindViewHolder(@NonNull VH h, int pos) {
+            Glide.with(h.imageView.getContext()).load(urls.isEmpty() ? null : urls.get(pos))
+                    .placeholder(R.drawable.ic_grocery_bag).error(R.drawable.ic_grocery_bag).into(h.imageView);
         }
-
-        @Override
-        public int getItemCount() {
-            return Math.max(1, urls.size());
-        }
-
+        @Override public int getItemCount() { return Math.max(1, urls.size()); }
         class VH extends RecyclerView.ViewHolder {
             ImageView imageView;
-
-            VH(@androidx.annotation.NonNull ImageView itemView) {
-                super(itemView);
-                imageView = itemView;
-            }
+            VH(@NonNull ImageView iv) { super(iv); imageView = iv; }
         }
-    }
-
-    interface OnSelect {
-        void onSelect(String selected);
     }
 
     private class UnitOptionAdapter extends RecyclerView.Adapter<UnitOptionAdapter.VH> {
         private final List<String> options;
         private final OnSelect listener;
         private int selectedIndex = 0;
-
-        UnitOptionAdapter(List<String> options, OnSelect listener) {
-            this.options = options != null ? options : new ArrayList<>();
-            this.listener = listener;
-            for (int i = 0; i < this.options.size(); i++) {
-                if (this.options.get(i).equalsIgnoreCase(selectedUnit)) {
-                    selectedIndex = i;
-                    break;
-                }
-            }
+        UnitOptionAdapter(List<String> ops, OnSelect l) {
+            this.options = ops; this.listener = l;
+            for (int i = 0; i < options.size(); i++) if (options.get(i).equalsIgnoreCase(selectedUnit)) selectedIndex = i;
         }
-
-        @androidx.annotation.NonNull
-        @Override
-        public VH onCreateViewHolder(@androidx.annotation.NonNull ViewGroup parent, int viewType) {
-            View v = getLayoutInflater().inflate(R.layout.item_unit_option, parent, false);
-            return new VH(v);
+        @NonNull @Override public VH onCreateViewHolder(@NonNull ViewGroup p, int vt) {
+            return new VH(getLayoutInflater().inflate(R.layout.item_unit_option, p, false));
         }
-
-        @Override
-        public void onBindViewHolder(@androidx.annotation.NonNull VH holder, int position) {
-            String option = options.get(position);
-            holder.btn.setText(option);
-            boolean selected = position == selectedIndex;
-            holder.btn.setChecked(selected);
-            holder.btn.setOnClickListener(v -> {
-                int old = selectedIndex;
-                selectedIndex = holder.getAdapterPosition();
-                notifyItemChanged(old);
-                notifyItemChanged(selectedIndex);
-                if (listener != null && selectedIndex != RecyclerView.NO_POSITION) {
-                    listener.onSelect(options.get(selectedIndex));
-                }
+        @Override public void onBindViewHolder(@NonNull VH h, int pos) {
+            h.btn.setText(options.get(pos));
+            h.btn.setChecked(pos == selectedIndex);
+            h.btn.setOnClickListener(v -> {
+                int old = selectedIndex; selectedIndex = h.getAdapterPosition();
+                notifyItemChanged(old); notifyItemChanged(selectedIndex);
+                if (listener != null && selectedIndex != -1) listener.onSelect(options.get(selectedIndex));
             });
         }
-
-        @Override
-        public int getItemCount() {
-            return options.size();
-        }
-
+        @Override public int getItemCount() { return options.size(); }
         class VH extends RecyclerView.ViewHolder {
-            com.google.android.material.button.MaterialButton btn;
-
-            VH(@androidx.annotation.NonNull View itemView) {
-                super(itemView);
-                btn = itemView.findViewById(R.id.btnUnitOption);
-            }
+            MaterialButton btn;
+            VH(@NonNull View v) { super(v); btn = v.findViewById(R.id.btnUnitOption); }
         }
     }
+    interface OnSelect { void onSelect(String s); }
 }
