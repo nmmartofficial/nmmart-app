@@ -78,6 +78,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private int currentBannerPosition = 0;
     private Handler bannerHandler;
     private Runnable bannerRunnable;
+    private java.util.Timer bannerTimer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -438,30 +439,10 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (searchTimer != null) {
-                    searchTimer.cancel();
-                }
-            }
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
 
             @Override
-            public void afterTextChanged(Editable s) {
-                String query = s.toString().trim();
-                if (query.length() >= 3) {
-                    searchTimer = new Timer();
-                    searchTimer.schedule(new TimerTask() {
-                        @Override
-                        public void run() {
-                            runOnUiThread(() -> {
-                                // Open ProductListActivity with search query
-                                Intent intent = new Intent(MainActivity.this, ProductListActivity.class);
-                                intent.putExtra("SEARCH_QUERY", query);
-                                startActivity(intent);
-                            });
-                        }
-                    }, SEARCH_DELAY);
-                }
-            }
+            public void afterTextChanged(Editable s) {}
         });
 
         binding.etSearch.setOnEditorActionListener((v, actionId, event) -> {
@@ -698,7 +679,8 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             }
         };
         
-        new java.util.Timer().schedule(new java.util.TimerTask() {
+        bannerTimer = new java.util.Timer();
+        bannerTimer.schedule(new java.util.TimerTask() {
             @Override
             public void run() {
                 if (bannerHandler != null) {
@@ -712,6 +694,11 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
      * Stop banner auto-scroll
      */
     private void stopBannerAutoScroll() {
+        if (bannerTimer != null) {
+            bannerTimer.cancel();
+            bannerTimer.purge();
+            bannerTimer = null;
+        }
         if (bannerHandler != null && bannerRunnable != null) {
             bannerHandler.removeCallbacks(bannerRunnable);
             bannerHandler = null;

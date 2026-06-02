@@ -208,223 +208,229 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 
-            <com.facebook.shimmer.ShimmerFrameLayout
-                android:id="@+id/shimmerView"
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:visibility="gone">
+                android:layout_height="match_parent">
+
+                <androidx.core.widget.NestedScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:fillViewport="true"
+                    android:clipToPadding="false"
+                    android:paddingBottom="80dp">
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
-                    <View android:layout_width="150dp" android:layout_height="20dp" android:background="#E0E0E0" />
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="180dp" android:orientation="horizontal" android:layout_marginTop="10dp">
-                        <View android:layout_width="140dp" android:layout_height="match_parent" android:layout_margin="4dp" android:background="#E0E0E0" />
-                        <View android:layout_width="140dp" android:layout_height="match_parent" android:layout_margin="4dp" android:background="#E0E0E0" />
-                        <View android:layout_width="140dp" android:layout_height="match_parent" android:layout_margin="4dp" android:background="#E0E0E0" />
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <!-- 1. BANNER SLIDER -->
+                    <LinearLayout
+                        android:id="@+id/sectionBanner"
+                        android:layout_width="match_parent"
+                        android:layout_height="160dp"
+                        android:orientation="vertical">
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvBanners"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="horizontal"
+                            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
                     </LinearLayout>
-                </LinearLayout>
-            </com.facebook.shimmer.ShimmerFrameLayout>
 
-            <androidx.core.widget.NestedScrollView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:fillViewport="true"
-                android:clipToPadding="false"
-                android:paddingBottom="80dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <!-- 1. BANNER SLIDER -->
-                <LinearLayout
-                    android:id="@+id/sectionBanner"
-                    android:layout_width="match_parent"
-                    android:layout_height="160dp"
-                    android:orientation="vertical">
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rvBanners"
+                    <!-- 1. RECENTLY VIEWED -->
+                    <LinearLayout
+                        android:id="@+id/sectionRecentlyViewed"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:orientation="horizontal"
-                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-                </LinearLayout>
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="10dp"
+                        android:visibility="gone">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Recently Viewed"
+                            android:textSize="19sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/black"
+                            android:fontFamily="sans-serif-medium" />
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvRecentlyViewed"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:orientation="horizontal"
+                            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                    </LinearLayout>
 
-                <!-- 1. RECENTLY VIEWED -->
-                <LinearLayout
-                    android:id="@+id/sectionRecentlyViewed"
+                    <!-- 2. EVERYDAY ESSENTIALS -->
+                    <LinearLayout
+                        android:id="@+id/sectionEverydayEssentials"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="20dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Everyday Essentials"
+                            android:textSize="19sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/black"
+                            android:fontFamily="sans-serif-medium" />
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvEverydayEssentials"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:orientation="horizontal"
+                            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                    </LinearLayout>
+
+                    <!-- 3. BEST SELLING -->
+                    <LinearLayout
+                        android:id="@+id/sectionBestSelling"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="20dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Best Selling"
+                            android:textSize="19sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/black"
+                            android:fontFamily="sans-serif-medium" />
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvBestSelling"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:orientation="horizontal"
+                            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                    </LinearLayout>
+
+                    <!-- 4. COUPONS & OFFERS -->
+                    <LinearLayout
+                        android:id="@+id/sectionCoupons"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="20dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Coupons &amp; Offers"
+                            android:textSize="19sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/black"
+                            android:fontFamily="sans-serif-medium" />
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvCoupons"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:orientation="horizontal"
+                            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                    </LinearLayout>
+
+                    <!-- 5. SHOP BY CATEGORY -->
+                    <LinearLayout
+                        android:id="@+id/sectionCategories"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="20dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Shop by Category"
+                            android:textSize="19sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/black"
+                            android:fontFamily="sans-serif-medium" />
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvCategories"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:orientation="horizontal"
+                            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                    </LinearLayout>
+
+                    <!-- 5. SHOP BY BRAND -->
+                    <LinearLayout
+                        android:id="@+id/sectionBrands"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="20dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Shop by Brand"
+                            android:textSize="19sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/black"
+                            android:fontFamily="sans-serif-medium" />
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvBrands"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:orientation="horizontal"
+                            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                    </LinearLayout>
+
+                    <!-- 6. TWO-COLUMN PRODUCT GRID -->
+                    <LinearLayout
+                        android:id="@+id/sectionProducts"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="20dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="All Products"
+                            android:textSize="19sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/black"
+                            android:fontFamily="sans-serif-medium" />
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvProducts"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                            app:spanCount="2" />
+                    </LinearLayout>
+
+                </LinearLayout>
+                </androidx.core.widget.NestedScrollView>
+
+                <com.facebook.shimmer.ShimmerFrameLayout
+                    android:id="@+id/shimmerView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="20dp"
                     android:visibility="gone">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Recently Viewed"
-                        android:textSize="19sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/black"
-                        android:fontFamily="sans-serif-medium" />
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rvRecentlyViewed"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:orientation="horizontal"
-                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-                </LinearLayout>
+                        android:orientation="vertical">
+                        <View android:layout_width="150dp" android:layout_height="20dp" android:background="#E0E0E0" />
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="180dp" android:orientation="horizontal" android:layout_marginTop="10dp">
+                            <View android:layout_width="140dp" android:layout_height="match_parent" android:layout_margin="4dp" android:background="#E0E0E0" />
+                            <View android:layout_width="140dp" android:layout_height="match_parent" android:layout_margin="4dp" android:background="#E0E0E0" />
+                            <View android:layout_width="140dp" android:layout_height="match_parent" android:layout_margin="4dp" android:background="#E0E0E0" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.facebook.shimmer.ShimmerFrameLayout>
 
-                <!-- 2. EVERYDAY ESSENTIALS -->
-                <LinearLayout
-                    android:id="@+id/sectionEverydayEssentials"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginTop="20dp">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Everyday Essentials"
-                        android:textSize="19sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/black"
-                        android:fontFamily="sans-serif-medium" />
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rvEverydayEssentials"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:orientation="horizontal"
-                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-                </LinearLayout>
-
-                <!-- 3. BEST SELLING -->
-                <LinearLayout
-                    android:id="@+id/sectionBestSelling"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginTop="20dp">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Best Selling"
-                        android:textSize="19sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/black"
-                        android:fontFamily="sans-serif-medium" />
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rvBestSelling"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:orientation="horizontal"
-                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-                </LinearLayout>
-
-                <!-- 4. COUPONS & OFFERS -->
-                <LinearLayout
-                    android:id="@+id/sectionCoupons"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginTop="20dp">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Coupons &amp; Offers"
-                        android:textSize="19sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/black"
-                        android:fontFamily="sans-serif-medium" />
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rvCoupons"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:orientation="horizontal"
-                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-                </LinearLayout>
-
-                <!-- 5. SHOP BY CATEGORY -->
-                <LinearLayout
-                    android:id="@+id/sectionCategories"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginTop="20dp">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Shop by Category"
-                        android:textSize="19sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/black"
-                        android:fontFamily="sans-serif-medium" />
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rvCategories"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:orientation="horizontal"
-                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-                </LinearLayout>
-
-                <!-- 5. SHOP BY BRAND -->
-                <LinearLayout
-                    android:id="@+id/sectionBrands"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginTop="20dp">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Shop by Brand"
-                        android:textSize="19sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/black"
-                        android:fontFamily="sans-serif-medium" />
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rvBrands"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:orientation="horizontal"
-                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-                </LinearLayout>
-
-                <!-- 6. TWO-COLUMN PRODUCT GRID -->
-                <LinearLayout
-                    android:id="@+id/sectionProducts"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginTop="20dp">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="All Products"
-                        android:textSize="19sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/black"
-                        android:fontFamily="sans-serif-medium" />
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rvProducts"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-                        app:spanCount="2" />
-                </LinearLayout>
-
-            </LinearLayout>
-            </androidx.core.widget.NestedScrollView>
+            </FrameLayout>
 
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 

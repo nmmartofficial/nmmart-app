@@ -43,7 +43,7 @@ public class SupabaseRepository {
     }
 
     public Call<List<Product>> searchProductsCall(String query, int limit, int offset) {
-        return apiService.searchProducts(apiKey, anonOrUserAuth(), "ilike.*" + query + "*", limit, offset);
+        return apiService.searchProducts(apiKey, anonOrUserAuth(), "ilike.%" + query + "%", limit, offset);
     }
 
     public Call<List<HomeConfig>> getHomeConfigCall() {
