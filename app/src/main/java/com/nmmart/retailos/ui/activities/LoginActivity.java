@@ -1,5 +1,6 @@
 package com.nmmart.retailos.ui.activities;
 
+import android.util.Log;
 import com.nmmart.retailos.R;
 
 import android.content.Intent;
@@ -92,14 +93,22 @@ public class LoginActivity extends AppCompatActivity {
                     btnSendOtp.setVisibility(View.GONE);
                     Toast.makeText(LoginActivity.this, "OTP sent to " + mobile, Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(LoginActivity.this, "Failed to send OTP. Try again.", Toast.LENGTH_SHORT).show();
+                    try {
+                        String errorBody = response.errorBody() != null ? response.errorBody().string() : "No error body";
+                        Log.e("LoginActivity", "OTP send failed: " + response.code() + " - " + errorBody);
+                        Toast.makeText(LoginActivity.this, "Failed to send OTP: " + errorBody, Toast.LENGTH_LONG).show();
+                    } catch (Exception e) {
+                        Log.e("LoginActivity", "Error reading error body", e);
+                        Toast.makeText(LoginActivity.this, "Failed to send OTP. Try again.", Toast.LENGTH_SHORT).show();
+                    }
                 }
             }
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
                 btnSendOtp.setEnabled(true);
-                Toast.makeText(LoginActivity.this, "Network error. Try again.", Toast.LENGTH_SHORT).show();
+                Log.e("LoginActivity", "OTP network error", t);
+                Toast.makeText(LoginActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
     }
