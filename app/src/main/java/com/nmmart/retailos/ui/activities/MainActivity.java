@@ -83,27 +83,32 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        // Initialize UI
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-        
-        // Initialize dependencies
-        initDependencies();
-        
-        // Setup all UI components
-        setupAllUI();
-        
-        // Setup data observers
-        setupObservers();
-        
-        // Setup click listeners
-        setupClickListeners();
-        
-        // Load initial data
-        loadInitialData();
-        
-        // Update cart badge
-        updateCartBadge();
+        try {
+            // Initialize UI
+            binding = ActivityMainBinding.inflate(getLayoutInflater());
+            setContentView(binding.getRoot());
+            
+            // Initialize dependencies
+            initDependencies();
+            
+            // Setup all UI components
+            setupAllUI();
+            
+            // Setup data observers
+            setupObservers();
+            
+            // Setup click listeners
+            setupClickListeners();
+            
+            // Load initial data
+            loadInitialData();
+            
+            // Update cart badge
+            updateCartBadge();
+        } catch (Exception e) {
+            android.util.Log.e("MainActivity", "Error in onCreate", e);
+            Toast.makeText(this, "Error starting app: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 
 
@@ -143,24 +148,44 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
      * Setup header section with location, user name, wallet balance
      */
     private void setupHeader() {
-        binding.tvLocation.setText(sessionManager.getDeliveryLocation());
-        binding.tvUserName.setText("Hello, " + sessionManager.getUserName() + "! 👋");
-        binding.tvWalletBalance.setText("₹" + (int)sessionManager.getWalletBalance());
+        try {
+            String location = sessionManager.getDeliveryLocation();
+            if (location != null) binding.tvLocation.setText(location);
+            
+            String userName = sessionManager.getUserName();
+            if (userName == null || userName.isEmpty()) userName = "Guest";
+            binding.tvUserName.setText("Hello, " + userName + "! 👋");
+            
+            float walletBalance = sessionManager.getWalletBalance();
+            binding.tvWalletBalance.setText("₹" + (int)walletBalance);
+        } catch (Exception e) {
+            android.util.Log.e("MainActivity", "Error in setupHeader", e);
+        }
         
         // Voice Search Listener
-        binding.textInputLayout.setEndIconOnClickListener(v -> {
-            Intent intent = new Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-            intent.putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-            intent.putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Say product name...");
-            try {
-                startActivityForResult(intent, 101);
-            } catch (Exception e) {
-                android.widget.Toast.makeText(this, "Voice search not supported", android.widget.Toast.LENGTH_SHORT).show();
+        try {
+            if (binding.textInputLayout != null) {
+                binding.textInputLayout.setEndIconOnClickListener(v -> {
+                    Intent intent = new Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                    intent.putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+                    intent.putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Say product name...");
+                    try {
+                        startActivityForResult(intent, 101);
+                    } catch (Exception e) {
+                        android.widget.Toast.makeText(this, "Voice search not supported", android.widget.Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
-        });
+        } catch (Exception e) {
+            android.util.Log.e("MainActivity", "Error in voice search setup", e);
+        }
 
         // Update Navigation Drawer Header
-        updateNavHeader();
+        try {
+            updateNavHeader();
+        } catch (Exception e) {
+            android.util.Log.e("MainActivity", "Error in updateNavHeader", e);
+        }
     }
 
     @Override
@@ -203,24 +228,34 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
      * Update cart badge on bottom navigation
      */
     private void updateCartBadge() {
-        com.nmmart.retailos.data.CartManager cartManager = com.nmmart.retailos.data.CartManager.getInstance(this);
-        int cartCount = cartManager.getCartCount();
-        
-        // Get the cart menu item
-        MenuItem cartItem = binding.bottomNavigation.getMenu().findItem(R.id.nav_cart);
-        
-        if (cartCount > 0) {
-            // Show badge with count
-            cartItem.setActionView(R.layout.badge_layout);
-            View badgeView = cartItem.getActionView();
-            TextView badgeText = badgeView.findViewById(android.R.id.text1);
-            badgeText.setText(String.valueOf(cartCount));
+        try {
+            com.nmmart.retailos.data.CartManager cartManager = com.nmmart.retailos.data.CartManager.getInstance(this);
+            int cartCount = cartManager.getCartCount();
             
-            // Add click listener to badge to open cart
-            badgeView.setOnClickListener(v -> onNavigationItemSelected(cartItem));
-        } else {
-            // Hide badge
-            cartItem.setActionView(null);
+            if (binding != null && binding.bottomNavigation != null) {
+                // Get the cart menu item
+                MenuItem cartItem = binding.bottomNavigation.getMenu().findItem(R.id.nav_cart);
+                if (cartItem != null) {
+                    if (cartCount > 0) {
+                        // Show badge with count
+                        cartItem.setActionView(R.layout.badge_layout);
+                        View badgeView = cartItem.getActionView();
+                        if (badgeView != null) {
+                            TextView badgeText = badgeView.findViewById(android.R.id.text1);
+                            if (badgeText != null) {
+                                badgeText.setText(String.valueOf(cartCount));
+                            }
+                            // Add click listener to badge to open cart
+                            badgeView.setOnClickListener(v -> onNavigationItemSelected(cartItem));
+                        }
+                    } else {
+                        // Hide badge
+                        cartItem.setActionView(null);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            android.util.Log.e("MainActivity", "Error in updateCartBadge", e);
         }
     }
 
