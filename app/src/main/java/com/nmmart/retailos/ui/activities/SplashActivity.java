@@ -1,16 +1,11 @@
 package com.nmmart.retailos.ui.activities;
 
-import com.bumptech.glide.Glide;
 import com.nmmart.retailos.R;
 import com.nmmart.retailos.data.SessionManager;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.widget.ImageView;
-import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class SplashActivity extends AppCompatActivity {
@@ -18,26 +13,10 @@ public class SplashActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_splash);
-
-        ImageView logo = findViewById(R.id.ivSplashLogo);
 
         SessionManager sessionManager = new SessionManager(this);
-        String logoUrl = sessionManager.getStoreLogoUrl();
-        
-        if (logoUrl != null && !logoUrl.isEmpty()) {
-            Glide.with(this)
-                .load(logoUrl)
-                .placeholder(R.drawable.nm_mart_logo)
-                .error(R.drawable.nm_mart_logo)
-                .into(logo);
-        }
 
-        // Simple Fade Animation
-        Animation fadeIn = AnimationUtils.loadAnimation(this, android.R.anim.fade_in);
-        logo.startAnimation(fadeIn);
-
-        // 2 Seconds delay ke baad check login state
+        // 1 Second delay to show the logo
         new Handler().postDelayed(() -> {
             try {
                 Intent intent;
@@ -61,6 +40,6 @@ public class SplashActivity extends AppCompatActivity {
                 startActivity(intent);
                 finish();
             }
-        }, 2000);
+        }, 1000);
     }
 }
