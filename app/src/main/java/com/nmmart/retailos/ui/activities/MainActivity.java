@@ -244,6 +244,10 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         binding.bottomNavigation.setOnNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
             if (id == R.id.nav_home) return true;
+            if (id == R.id.nav_categories) {
+                Toast.makeText(this, "Categories section", Toast.LENGTH_SHORT).show();
+                return true;
+            }
             if (id == R.id.nav_cart) {
                 startActivity(new Intent(this, CartActivity.class));
                 return true;
@@ -428,8 +432,29 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.nav_profile && sessionManager.isLoggedIn()) startActivity(new Intent(this, ProfileActivity.class));
-        else if (id == R.id.nav_logout && sessionManager.isLoggedIn()) {
+        if (id == R.id.nav_profile && sessionManager.isLoggedIn()) {
+            startActivity(new Intent(this, ProfileActivity.class));
+        } else if (id == R.id.nav_orders) {
+            startActivity(new Intent(this, OrderHistoryActivity.class));
+        } else if (id == R.id.nav_addresses && sessionManager.isLoggedIn()) {
+            startActivity(new Intent(this, AddressActivity.class));
+        } else if (id == R.id.nav_wallet && sessionManager.isLoggedIn()) {
+            startActivity(new Intent(this, WalletActivity.class));
+        } else if (id == R.id.nav_refer) {
+            startActivity(new Intent(this, ReferEarnActivity.class));
+        } else if (id == R.id.nav_help) {
+            startActivity(new Intent(this, CustomerSupportActivity.class));
+        } else if (id == R.id.nav_about) {
+            startActivity(new Intent(this, AboutUsActivity.class));
+        } else if (id == R.id.nav_settings) {
+            startActivity(new Intent(this, SettingsActivity.class));
+        } else if (id == R.id.nav_share) {
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/plain");
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, "NM Mart");
+            shareIntent.putExtra(Intent.EXTRA_TEXT, "Check out NM Mart app!");
+            startActivity(Intent.createChooser(shareIntent, "Share via"));
+        } else if (id == R.id.nav_logout && sessionManager.isLoggedIn()) {
             sessionManager.logout();
             Intent intent = new Intent(this, LoginActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
