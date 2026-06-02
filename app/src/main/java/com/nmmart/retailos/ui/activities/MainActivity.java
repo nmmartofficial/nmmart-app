@@ -143,7 +143,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             if (headerView != null) {
                 TextView navUserName = headerView.findViewById(R.id.nav_user_name);
                 TextView navUserMobile = headerView.findViewById(R.id.nav_user_mobile);
-                ImageView navLogo = headerView.findViewById(R.id.ivNavLogo);
                 
                 if (sessionManager.isLoggedIn()) {
                     navUserName.setText(sessionManager.getUserName());
@@ -153,9 +152,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     navUserName.setText("Welcome to NM Mart");
                     navUserMobile.setText("Login to continue");
                 }
-
-                // Use local clean logo directly
-                navLogo.setImageResource(R.drawable.nm_mart_logo);
             }
         }
     }

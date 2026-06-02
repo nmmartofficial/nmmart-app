@@ -8,15 +8,23 @@
     android:padding="24dp"
     android:theme="@style/ThemeOverlay.AppCompat.Light">
 
-    <!-- Full NM Mart Logo -->
-    <ImageView
+    <!-- Simple Text Logo -->
+    <TextView
         android:id="@+id/ivNavLogo"
-        android:layout_width="160dp"
-        android:layout_height="120dp"
-        android:background="@null"
-        android:elevation="0dp"
-        android:scaleType="centerInside"
-        android:src="@drawable/nm_mart_logo" />
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="NM Mart"
+        android:textSize="36sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Shop More. Save More."
+        android:layout_marginTop="8dp"
+        android:textSize="14sp"
+        android:textColor="#F5F5F5" />
 
     <TextView
         android:id="@+id/nav_user_name"
