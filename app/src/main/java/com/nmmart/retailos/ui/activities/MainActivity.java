@@ -158,7 +158,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             binding.tvUserName.setText("Hello, " + userName + "! 👋");
             
             float walletBalance = sessionManager.getWalletBalance();
-            binding.tvWalletBalance.setText("₹" + (int)walletBalance);
+            binding.tvWalletBalance.setText(String.format("₹%.2f", walletBalance));
         } catch (Exception e) {
             android.util.Log.e("MainActivity", "Error in setupHeader", e);
         }
@@ -537,7 +537,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
                         WalletMaster wallet = response.body().get(0);
                         sessionManager.setWalletBalance((float)wallet.currentBalance);
-                        binding.tvWalletBalance.setText("₹" + (int)wallet.currentBalance);
+                        binding.tvWalletBalance.setText(String.format("₹%.2f", wallet.currentBalance));
                     }
                 }
 

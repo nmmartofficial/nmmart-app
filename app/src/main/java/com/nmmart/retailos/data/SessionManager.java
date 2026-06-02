@@ -234,7 +234,19 @@ public class SessionManager {
     }
 
     public void logout() {
-        editor.clear();
+        // Preserve user settings, only clear auth/data
+        editor.remove(KEY_IS_LOGGED_IN);
+        editor.remove(KEY_MOBILE);
+        editor.remove(KEY_EMAIL);
+        editor.remove(KEY_USER_ID);
+        editor.remove(KEY_PHONE_E164);
+        editor.remove(KEY_ACCESS_TOKEN);
+        editor.remove(KEY_REFRESH_TOKEN);
+        editor.remove(KEY_EXPIRES_AT);
+        editor.remove(KEY_ROLE);
+        editor.remove(KEY_USER_NAME);
+        editor.remove(KEY_WALLET_BALANCE);
+        editor.remove(KEY_IS_VIP);
         editor.apply();
     }
 
