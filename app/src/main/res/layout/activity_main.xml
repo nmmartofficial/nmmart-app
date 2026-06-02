@@ -173,30 +173,43 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/textInputLayout"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Search 'Grocery'"
-                app:startIconDrawable="@drawable/ic_search"
-                app:endIconMode="custom"
-                app:endIconDrawable="@drawable/ic_mic"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-                app:boxBackgroundColor="@color/white"
-                app:boxStrokeWidth="0dp"
-                app:boxStrokeWidthFocused="0dp"
-                app:boxCornerRadiusTopStart="12dp"
-                app:boxCornerRadiusTopEnd="12dp"
-                app:boxCornerRadiusBottomStart="12dp"
-                app:boxCornerRadiusBottomEnd="12dp">
+                android:orientation="vertical">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etSearch"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-medium"
-                android:inputType="text" />
-            </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/textInputLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Search 'Grocery'"
+                    app:startIconDrawable="@drawable/ic_search"
+                    app:endIconMode="custom"
+                    app:endIconDrawable="@drawable/ic_mic"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+                    app:boxBackgroundColor="@color/white"
+                    app:boxStrokeWidth="0dp"
+                    app:boxStrokeWidthFocused="0dp"
+                    app:boxCornerRadiusTopStart="12dp"
+                    app:boxCornerRadiusTopEnd="12dp"
+                    app:boxCornerRadiusBottomStart="12dp"
+                    app:boxCornerRadiusBottomEnd="12dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etSearch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:inputType="text" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvSearchHistory"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:visibility="gone" />
+            </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -226,41 +239,94 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
+                    <!-- Quick Category Chips -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="16dp">
+                        <HorizontalScrollView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:scrollbars="none">
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+                                
+                                <com.google.android.material.chip.Chip
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="All"
+                                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                                    app:chipBackgroundColor="@color/orange_primary"
+                                    android:textColor="@color/white"
+                                    android:layout_marginEnd="8dp"
+                                    app:checkedIconVisible="false" />
+                                    
+                                <com.google.android.material.chip.Chip
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Aata-Dal"
+                                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                                    app:chipBackgroundColor="@color/white"
+                                    android:textColor="@color/black"
+                                    android:layout_marginEnd="8dp"
+                                    app:checkedIconVisible="false" />
+                                    
+                                <com.google.android.material.chip.Chip
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Dairy"
+                                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                                    app:chipBackgroundColor="@color/white"
+                                    android:textColor="@color/black"
+                                    android:layout_marginEnd="8dp"
+                                    app:checkedIconVisible="false" />
+                                    
+                                <com.google.android.material.chip.Chip
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Snacks"
+                                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                                    app:chipBackgroundColor="@color/white"
+                                    android:textColor="@color/black"
+                                    android:layout_marginEnd="8dp"
+                                    app:checkedIconVisible="false" />
+                                    
+                                <com.google.android.material.chip.Chip
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Beverages"
+                                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                                    app:chipBackgroundColor="@color/white"
+                                    android:textColor="@color/black"
+                                    android:layout_marginEnd="8dp"
+                                    app:checkedIconVisible="false" />
+                                    
+                                <com.google.android.material.chip.Chip
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Cleaning"
+                                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                                    app:chipBackgroundColor="@color/white"
+                                    android:textColor="@color/black"
+                                    app:checkedIconVisible="false" />
+                            </LinearLayout>
+                        </HorizontalScrollView>
+                    </LinearLayout>
+
                     <!-- 1. BANNER SLIDER -->
                     <LinearLayout
                         android:id="@+id/sectionBanner"
                         android:layout_width="match_parent"
                         android:layout_height="160dp"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:layout_marginBottom="8dp">
                         <androidx.recyclerview.widget.RecyclerView
                             android:id="@+id/rvBanners"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:orientation="horizontal"
-                            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-                    </LinearLayout>
-
-                    <!-- 1. RECENTLY VIEWED -->
-                    <LinearLayout
-                        android:id="@+id/sectionRecentlyViewed"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginTop="10dp"
-                        android:visibility="gone">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Recently Viewed"
-                            android:textSize="19sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/black"
-                            android:fontFamily="sans-serif-medium" />
-                        <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/rvRecentlyViewed"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
                             android:orientation="horizontal"
                             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
                     </LinearLayout>
@@ -271,20 +337,21 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:layout_marginTop="20dp">
+                        android:layout_marginTop="24dp"
+                        android:layout_marginBottom="8dp">
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Everyday Essentials"
-                            android:textSize="19sp"
+                            android:textSize="20sp"
                             android:textStyle="bold"
                             android:textColor="@color/black"
-                            android:fontFamily="sans-serif-medium" />
+                            android:fontFamily="sans-serif" />
                         <androidx.recyclerview.widget.RecyclerView
                             android:id="@+id/rvEverydayEssentials"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
+                            android:layout_marginTop="12dp"
                             android:orientation="horizontal"
                             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
                     </LinearLayout>
@@ -295,44 +362,21 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:layout_marginTop="20dp">
+                        android:layout_marginTop="24dp"
+                        android:layout_marginBottom="8dp">
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Best Selling"
-                            android:textSize="19sp"
+                            android:text="🔥 Best Selling"
+                            android:textSize="20sp"
                             android:textStyle="bold"
                             android:textColor="@color/black"
-                            android:fontFamily="sans-serif-medium" />
+                            android:fontFamily="sans-serif" />
                         <androidx.recyclerview.widget.RecyclerView
                             android:id="@+id/rvBestSelling"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:orientation="horizontal"
-                            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-                    </LinearLayout>
-
-                    <!-- 4. COUPONS & OFFERS -->
-                    <LinearLayout
-                        android:id="@+id/sectionCoupons"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginTop="20dp">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Coupons &amp; Offers"
-                            android:textSize="19sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/black"
-                            android:fontFamily="sans-serif-medium" />
-                        <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/rvCoupons"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
+                            android:layout_marginTop="12dp"
                             android:orientation="horizontal"
                             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
                     </LinearLayout>
@@ -343,44 +387,21 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:layout_marginTop="20dp">
+                        android:layout_marginTop="24dp"
+                        android:layout_marginBottom="8dp">
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Shop by Category"
-                            android:textSize="19sp"
+                            android:textSize="20sp"
                             android:textStyle="bold"
                             android:textColor="@color/black"
-                            android:fontFamily="sans-serif-medium" />
+                            android:fontFamily="sans-serif" />
                         <androidx.recyclerview.widget.RecyclerView
                             android:id="@+id/rvCategories"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:orientation="horizontal"
-                            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-                    </LinearLayout>
-
-                    <!-- 5. SHOP BY BRAND -->
-                    <LinearLayout
-                        android:id="@+id/sectionBrands"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginTop="20dp">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Shop by Brand"
-                            android:textSize="19sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/black"
-                            android:fontFamily="sans-serif-medium" />
-                        <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/rvBrands"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
+                            android:layout_marginTop="12dp"
                             android:orientation="horizontal"
                             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
                     </LinearLayout>
@@ -391,20 +412,20 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:layout_marginTop="20dp">
+                        android:layout_marginTop="24dp">
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="All Products"
-                            android:textSize="19sp"
+                            android:textSize="20sp"
                             android:textStyle="bold"
                             android:textColor="@color/black"
-                            android:fontFamily="sans-serif-medium" />
+                            android:fontFamily="sans-serif" />
                         <androidx.recyclerview.widget.RecyclerView
                             android:id="@+id/rvProducts"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
+                            android:layout_marginTop="12dp"
                             app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
                             app:spanCount="2" />
                     </LinearLayout>

@@ -2,18 +2,12 @@ package com.nmmart.retailos.ui.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.InputType;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.EditText;
+import android.widget.RadioGroup;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.LinearLayoutManager;
-
-import com.facebook.shimmer.ShimmerFrameLayout;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.nmmart.retailos.R;
 import com.nmmart.retailos.data.SessionManager;
 import com.nmmart.retailos.databinding.ActivityProductListBinding;
@@ -21,6 +15,9 @@ import com.nmmart.retailos.models.Product;
 import com.nmmart.retailos.ui.adapters.ProductListAdapter;
 import com.nmmart.retailos.ui.adapters.ShimmerAdapter;
 import com.nmmart.retailos.ui.viewmodels.ProductListViewModel;
+
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +31,7 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
     private List<Product> productList = new ArrayList<>();
     private String categoryName, searchQuery, brandName;
     private SessionManager sessionManager;
+    private int selectedSortPosition = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -187,14 +185,37 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
     }
 
     private void setupListeners() {
-        binding.spinnerSort.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                viewModel.sortProducts(position);
-            }
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
+        binding.sortingLayout.setOnClickListener(v -> showSortBottomSheet());
+    }
+    
+    private void showSortBottomSheet() {
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
+        View bottomSheetView = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_sort_filter, null);
+        bottomSheetDialog.setContentView(bottomSheetView);
+        
+        RadioGroup radioGroupSort = bottomSheetView.findViewById(R.id.radioGroupSort);
+        
+        // Set current selection
+        switch (selectedSortPosition) {
+            case 0: radioGroupSort.check(R.id.radioRelevance); break;
+            case 1: radioGroupSort.check(R.id.radioPriceLowHigh); break;
+            case 2: radioGroupSort.check(R.id.radioPriceHighLow); break;
+            case 3: radioGroupSort.check(R.id.radioDiscount); break;
+        }
+        
+        radioGroupSort.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId == R.id.radioRelevance) selectedSortPosition = 0;
+            else if (checkedId == R.id.radioPriceLowHigh) selectedSortPosition = 1;
+            else if (checkedId == R.id.radioPriceHighLow) selectedSortPosition = 2;
+            else if (checkedId == R.id.radioDiscount) selectedSortPosition = 3;
         });
+        
+        bottomSheetView.findViewById(R.id.btnApplySort).setOnClickListener(v -> {
+            viewModel.sortProducts(selectedSortPosition);
+            bottomSheetDialog.dismiss();
+        });
+        
+        bottomSheetDialog.show();
     }
 
     private void fetchData() {

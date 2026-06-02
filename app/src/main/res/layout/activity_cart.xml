@@ -59,6 +59,27 @@
                 android:layout_height="wrap_content"
                 android:nestedScrollingEnabled="false" />
 
+            <LinearLayout
+                android:id="@+id/sectionSaved"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="8dp"
+                android:visibility="gone">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Saved for Later"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black_soft" />
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvSavedItems"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false" />
+            </LinearLayout>
+
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardCoupon"
                 android:layout_width="match_parent"
@@ -88,20 +109,32 @@
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
-                        <TextView
-                            android:id="@+id/tvCouponValue"
+                        <EditText
+                            android:id="@+id/etCoupon"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Select"
-                            android:textColor="#666666" />
+                            android:hint="Enter coupon code"
+                            android:background="@drawable/circle_white_bg"
+                            android:padding="10dp"
+                            android:inputType="textCapCharacters" />
 
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:src="@android:drawable/arrow_down_float"
-                            app:tint="#666666" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnApplyCoupon"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="Apply"
+                            app:cornerRadius="8dp" />
                     </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvCouponStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textSize="12sp"
+                        android:visibility="gone" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

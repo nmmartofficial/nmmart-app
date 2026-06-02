@@ -2,6 +2,8 @@ package com.nmmart.retailos.ui.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,7 +22,6 @@ import com.nmmart.retailos.data.SupabaseRepository;
 import com.nmmart.retailos.databinding.ActivityCartBinding;
 import com.nmmart.retailos.databinding.ItemCartProductBinding;
 import com.nmmart.retailos.models.Product;
-import com.nmmart.retailos.ui.adapters.ProductListAdapter;
 import com.nmmart.retailos.ui.viewmodels.CartViewModel;
 import com.nmmart.retailos.utils.PriceUtils;
 
@@ -36,7 +37,8 @@ public class CartActivity extends BaseActivity {
 
     private ActivityCartBinding binding;
     private CartViewModel viewModel;
-    private CartAdapter adapter;
+    private CartAdapter cartAdapter;
+    private SavedAdapter savedAdapter;
     private String appliedCouponCode = "";
     private double appliedDiscount = 0.0;
     private SupabaseRepository repository;
@@ -54,7 +56,7 @@ public class CartActivity extends BaseActivity {
         cartManager = CartManager.getInstance(this);
 
         setupToolbar();
-        setupRecyclerView();
+        setupRecyclerViews();
         setupObservers();
         setupListeners();
     }
@@ -67,27 +69,22 @@ public class CartActivity extends BaseActivity {
         binding.toolbar.setNavigationOnClickListener(v -> onBackPressed());
     }
 
-    private void setupRecyclerView() {
+    private void setupRecyclerViews() {
         binding.rvCartItems.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new CartAdapter(new ArrayList<>());
-        binding.rvCartItems.setAdapter(adapter);
+        cartAdapter = new CartAdapter(new ArrayList<>(), false);
+        binding.rvCartItems.setAdapter(cartAdapter);
+        
+        binding.rvSavedItems.setLayoutManager(new LinearLayoutManager(this));
+        savedAdapter = new SavedAdapter(new ArrayList<>());
+        binding.rvSavedItems.setAdapter(savedAdapter);
     }
 
     private void setupObservers() {
         viewModel.getCartItems().observe(this, items -> {
-            if (items == null || items.isEmpty()) {
-                binding.rvCartItems.setVisibility(View.GONE);
-                binding.bottomLayout.setVisibility(View.GONE);
-                binding.emptyCartLayout.setVisibility(View.VISIBLE);
-                binding.cardFreeDelivery.setVisibility(View.GONE);
-            } else {
-                binding.rvCartItems.setVisibility(View.VISIBLE);
-                binding.bottomLayout.setVisibility(View.VISIBLE);
-                binding.emptyCartLayout.setVisibility(View.GONE);
-                adapter.updateItems(items);
-            }
+            updateUIBasedOnItems();
+            cartAdapter.updateItems(items);
         });
-
+        updateSavedItems();
         viewModel.getTotalPrice().observe(this, itemsTotal -> {
             double total = itemsTotal != null ? itemsTotal : 0.0;
             
@@ -99,6 +96,37 @@ public class CartActivity extends BaseActivity {
             }
         });
     }
+    
+    private void updateSavedItems() {
+        List<Product> savedItems = cartManager.getSavedItems();
+        if (savedItems != null && !savedItems.isEmpty()) {
+            binding.sectionSaved.setVisibility(View.VISIBLE);
+            savedAdapter.updateItems(savedItems);
+        } else {
+            binding.sectionSaved.setVisibility(View.GONE);
+        }
+    }
+    
+    private void updateUIBasedOnItems() {
+        List<Product> items = viewModel.getCartItems().getValue();
+        boolean hasCartItems = items != null && !items.isEmpty();
+        if (!hasCartItems && cartManager.getSavedItems().isEmpty()) {
+            binding.rvCartItems.setVisibility(View.GONE);
+            binding.bottomLayout.setVisibility(View.GONE);
+            binding.emptyCartLayout.setVisibility(View.VISIBLE);
+            binding.cardFreeDelivery.setVisibility(View.GONE);
+            binding.cardCoupon.setVisibility(View.GONE);
+            binding.cardBillDetails.setVisibility(View.GONE);
+        } else {
+            binding.cardCoupon.setVisibility(View.VISIBLE);
+            binding.cardBillDetails.setVisibility(View.VISIBLE);
+            if (hasCartItems) {
+                binding.rvCartItems.setVisibility(View.VISIBLE);
+                binding.bottomLayout.setVisibility(View.VISIBLE);
+                binding.emptyCartLayout.setVisibility(View.GONE);
+            }
+        }
+    }
 
     private void revalidateCoupon(double itemsTotal) {
         repository.validateAndApplyCoupon(appliedCouponCode, itemsTotal, new Callback<List<CouponValidationResult>>() {
@@ -109,7 +137,8 @@ public class CartActivity extends BaseActivity {
                     if (!result.isValid) {
                         appliedCouponCode = "";
                         appliedDiscount = 0.0;
-                        binding.tvCouponValue.setText("Select");
+                        binding.tvCouponStatus.setVisibility(View.GONE);
+                        binding.etCoupon.setText("");
                         Toast.makeText(CartActivity.this, "Coupon no longer valid", Toast.LENGTH_SHORT).show();
                     } else {
                         appliedDiscount = result.discountAmount;
@@ -117,7 +146,8 @@ public class CartActivity extends BaseActivity {
                 } else {
                     appliedCouponCode = "";
                     appliedDiscount = 0.0;
-                    binding.tvCouponValue.setText("Select");
+                    binding.tvCouponStatus.setVisibility(View.GONE);
+                    binding.etCoupon.setText("");
                 }
                 updateBillUI(itemsTotal);
             }
@@ -194,66 +224,89 @@ public class CartActivity extends BaseActivity {
             }
         });
 
-        binding.cardCoupon.setOnClickListener(v -> showCouponDialog());
+        binding.btnApplyCoupon.setOnClickListener(v -> {
+            applyCoupon();
+        });
+        
+        binding.etCoupon.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (s.length() == 0) {
+                    appliedCouponCode = "";
+                    appliedDiscount = 0.0;
+                    binding.tvCouponStatus.setVisibility(View.GONE);
+                    viewModel.refreshTotal();
+                }
+            }
+            
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
         binding.btnShopNow.setOnClickListener(v -> finish());
     }
-
-    private void showCouponDialog() {
+    
+    private void applyCoupon() {
         if (!sessionManager.isLoggedIn()) {
             Toast.makeText(this, "Please login to apply coupons!", Toast.LENGTH_SHORT).show();
             startActivity(new Intent(this, LoginActivity.class));
             return;
         }
-
-        android.widget.EditText etCoupon = new android.widget.EditText(this);
-        etCoupon.setHint("Enter coupon code");
-        etCoupon.setText(appliedCouponCode);
-
-        new androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("Apply Coupon")
-                .setView(etCoupon)
-                .setPositiveButton("Apply", (dialog, which) -> {
-                    String code = etCoupon.getText().toString().trim();
-                    if (code.isEmpty()) {
+        
+        String code = binding.etCoupon.getText().toString().trim();
+        if (code.isEmpty()) {
+            appliedCouponCode = "";
+            appliedDiscount = 0.0;
+            binding.tvCouponStatus.setVisibility(View.GONE);
+            viewModel.refreshTotal();
+            return;
+        }
+        
+        binding.tvCouponStatus.setVisibility(View.VISIBLE);
+        binding.tvCouponStatus.setText("Validating coupon...");
+        binding.tvCouponStatus.setTextColor(getResources().getColor(android.R.color.darker_gray));
+        
+        repository.validateAndApplyCoupon(code, cartManager.getTotalPrice(), new Callback<List<CouponValidationResult>>() {
+            @Override
+            public void onResponse(Call<List<CouponValidationResult>> call, Response<List<CouponValidationResult>> response) {
+                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                    CouponValidationResult result = response.body().get(0);
+                    if (result.isValid) {
+                        appliedCouponCode = code;
+                        appliedDiscount = result.discountAmount;
+                        binding.tvCouponStatus.setText("Coupon applied! -" + PriceUtils.formatPrice(appliedDiscount));
+                        binding.tvCouponStatus.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+                        viewModel.refreshTotal();
+                    } else {
+                        binding.tvCouponStatus.setText(result.message);
+                        binding.tvCouponStatus.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
                         appliedCouponCode = "";
                         appliedDiscount = 0.0;
-                        binding.tvCouponValue.setText("Select");
-                        viewModel.refreshTotal();
-                        return;
                     }
-
-                    repository.validateAndApplyCoupon(code, cartManager.getTotalPrice(), new Callback<List<CouponValidationResult>>() {
-                        @Override
-                        public void onResponse(Call<List<CouponValidationResult>> call, Response<List<CouponValidationResult>> response) {
-                            if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
-                                CouponValidationResult result = response.body().get(0);
-                                if (result.isValid) {
-                                    appliedCouponCode = code;
-                                    appliedDiscount = result.discountAmount;
-                                    binding.tvCouponValue.setText(code);
-                                    viewModel.refreshTotal();
-                                    Toast.makeText(CartActivity.this, "Coupon Applied!", Toast.LENGTH_SHORT).show();
-                                } else {
-                                    Toast.makeText(CartActivity.this, result.message, Toast.LENGTH_SHORT).show();
-                                }
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(Call<List<CouponValidationResult>> call, Throwable t) {
-                            Toast.makeText(CartActivity.this, "Error validating coupon", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+                } else {
+                    binding.tvCouponStatus.setText("Invalid coupon code");
+                    binding.tvCouponStatus.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+                }
+            }
+            
+            @Override
+            public void onFailure(Call<List<CouponValidationResult>> call, Throwable t) {
+                binding.tvCouponStatus.setText("Failed to validate coupon");
+                binding.tvCouponStatus.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+            }
+        });
     }
 
     private class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
         private List<Product> items;
+        private boolean isSaved;
 
-        public CartAdapter(List<Product> items) {
+        public CartAdapter(List<Product> items, boolean isSaved) {
             this.items = items;
+            this.isSaved = isSaved;
         }
 
         public void updateItems(List<Product> newItems) {
@@ -281,6 +334,18 @@ public class CartActivity extends BaseActivity {
                     .load(product.image_url)
                     .placeholder(R.drawable.ic_grocery_bag)
                     .into(holder.binding.ivCartProduct);
+            
+            holder.binding.tvAction.setText("Save for later");
+            holder.binding.tvAction.setOnClickListener(v -> {
+                cartManager.saveForLater(product);
+                viewModel.refreshTotal();
+                updateUIBasedOnItems();
+                updateSavedItems();
+                cartAdapter.notifyDataSetChanged();
+                savedAdapter.notifyDataSetChanged();
+            });
+            
+            holder.binding.layoutQty.setVisibility(View.VISIBLE);
 
             holder.binding.btnPlus.setOnClickListener(v -> {
                 if (!viewModel.addToCart(product)) {
@@ -295,6 +360,66 @@ public class CartActivity extends BaseActivity {
             return items.size();
         }
 
+        class ViewHolder extends RecyclerView.ViewHolder {
+            ItemCartProductBinding binding;
+            ViewHolder(ItemCartProductBinding binding) {
+                super(binding.getRoot());
+                this.binding = binding;
+            }
+        }
+    }
+    
+    private class SavedAdapter extends RecyclerView.Adapter<SavedAdapter.ViewHolder> {
+        private List<Product> items;
+        
+        public SavedAdapter(List<Product> items) {
+            this.items = items;
+        }
+        
+        public void updateItems(List<Product> newItems) {
+            this.items = newItems;
+            notifyDataSetChanged();
+        }
+        
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            return new ViewHolder(ItemCartProductBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false));
+        }
+        
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            Product product = items.get(position);
+            holder.binding.tvCartProductName.setText(product.name);
+            holder.binding.tvCartProductUnit.setText(product.unit);
+            holder.binding.tvCartProductPrice.setText(PriceUtils.formatPrice(product.getNmPrice()));
+            
+            int qty = cartManager.getSavedQuantity(product.id);
+            holder.binding.tvQty.setText(String.valueOf(qty));
+            
+            Glide.with(holder.itemView.getContext())
+                    .load(product.image_url)
+                    .placeholder(R.drawable.ic_grocery_bag)
+                    .into(holder.binding.ivCartProduct);
+            
+            holder.binding.tvAction.setText("Move to cart");
+            holder.binding.tvAction.setOnClickListener(v -> {
+                cartManager.moveToCart(product);
+                viewModel.refreshTotal();
+                updateUIBasedOnItems();
+                updateSavedItems();
+                cartAdapter.notifyDataSetChanged();
+                savedAdapter.notifyDataSetChanged();
+            });
+            
+            holder.binding.layoutQty.setVisibility(View.GONE);
+        }
+        
+        @Override
+        public int getItemCount() {
+            return items.size();
+        }
+        
         class ViewHolder extends RecyclerView.ViewHolder {
             ItemCartProductBinding binding;
             ViewHolder(ItemCartProductBinding binding) {

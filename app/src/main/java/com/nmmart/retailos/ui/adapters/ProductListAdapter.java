@@ -103,6 +103,7 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     class ProductViewHolder extends RecyclerView.ViewHolder {
         private ItemProductBinding binding;
+        private int currentQuantity = 1;
 
         ProductViewHolder(ItemProductBinding binding) {
             super(binding.getRoot());
@@ -121,12 +122,66 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                     Product product = productList.get(position);
                     com.nmmart.retailos.data.CartManager cartManager = com.nmmart.retailos.data.CartManager.getInstance(context);
                     if (cartManager.addToCart(product)) {
+                        currentQuantity = 1;
+                        binding.tvQuantity.setText(String.valueOf(currentQuantity));
+                        binding.btnAddToCart.setVisibility(View.GONE);
+                        binding.btnDecrease.setVisibility(View.VISIBLE);
+                        binding.tvQuantity.setVisibility(View.VISIBLE);
+                        binding.btnIncrease.setVisibility(View.VISIBLE);
                         android.widget.Toast.makeText(context, product.name + " added to cart!", android.widget.Toast.LENGTH_SHORT).show();
                         if (onCartUpdateListener != null) {
                             onCartUpdateListener.onCartUpdated();
                         }
                     } else {
                         android.widget.Toast.makeText(context, "Cannot add more. Only " + product.getStock() + " in stock.", android.widget.Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+
+            binding.btnIncrease.setOnClickListener(v -> {
+                int position = getAdapterPosition();
+                if (position != RecyclerView.NO_POSITION) {
+                    Product product = productList.get(position);
+                    com.nmmart.retailos.data.CartManager cartManager = com.nmmart.retailos.data.CartManager.getInstance(context);
+                    int cartQty = cartManager.getQuantity(product.id);
+                    if (cartQty < product.getStock()) {
+                        cartManager.updateQuantity(product.id, cartQty + 1);
+                        currentQuantity = cartQty + 1;
+                        binding.tvQuantity.setText(String.valueOf(currentQuantity));
+                        if (onCartUpdateListener != null) {
+                            onCartUpdateListener.onCartUpdated();
+                        }
+                    } else {
+                        android.widget.Toast.makeText(context, "Only " + product.getStock() + " in stock!", android.widget.Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+
+            binding.btnDecrease.setOnClickListener(v -> {
+                int position = getAdapterPosition();
+                if (position != RecyclerView.NO_POSITION) {
+                    Product product = productList.get(position);
+                    com.nmmart.retailos.data.CartManager cartManager = com.nmmart.retailos.data.CartManager.getInstance(context);
+                    int cartQty = cartManager.getQuantity(product.id);
+                    if (cartQty > 1) {
+                        cartManager.updateQuantity(product.id, cartQty - 1);
+                        currentQuantity = cartQty - 1;
+                        binding.tvQuantity.setText(String.valueOf(currentQuantity));
+                        if (onCartUpdateListener != null) {
+                            onCartUpdateListener.onCartUpdated();
+                        }
+                    } else {
+                        cartManager.removeFromCart(product.id);
+                        currentQuantity = 1;
+                        binding.tvQuantity.setText(String.valueOf(currentQuantity));
+                        binding.btnAddToCart.setVisibility(View.VISIBLE);
+                        binding.btnDecrease.setVisibility(View.GONE);
+                        binding.tvQuantity.setVisibility(View.GONE);
+                        binding.btnIncrease.setVisibility(View.GONE);
+                        if (onCartUpdateListener != null) {
+                            onCartUpdateListener.onCartUpdated();
+                        }
+                        android.widget.Toast.makeText(context, product.name + " removed from cart!", android.widget.Toast.LENGTH_SHORT).show();
                     }
                 }
             });
@@ -168,12 +223,35 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 binding.tvInventoryAlert.setVisibility(View.GONE);
             }
 
+            com.nmmart.retailos.data.CartManager cartManager = com.nmmart.retailos.data.CartManager.getInstance(context);
+            int cartQty = cartManager.getQuantity(product.id);
+            
+            if (cartQty > 0) {
+                currentQuantity = cartQty;
+                binding.tvQuantity.setText(String.valueOf(currentQuantity));
+                binding.btnAddToCart.setVisibility(View.GONE);
+                binding.btnDecrease.setVisibility(View.VISIBLE);
+                binding.tvQuantity.setVisibility(View.VISIBLE);
+                binding.btnIncrease.setVisibility(View.VISIBLE);
+            } else {
+                currentQuantity = 1;
+                binding.tvQuantity.setText(String.valueOf(currentQuantity));
+                binding.btnAddToCart.setVisibility(View.VISIBLE);
+                binding.btnDecrease.setVisibility(View.GONE);
+                binding.tvQuantity.setVisibility(View.GONE);
+                binding.btnIncrease.setVisibility(View.GONE);
+            }
+
             if (product.getStock() > 0) {
                 binding.btnAddToCart.setEnabled(true);
                 binding.btnAddToCart.setText("ADD");
+                binding.btnIncrease.setEnabled(true);
+                binding.btnDecrease.setEnabled(true);
             } else {
                 binding.btnAddToCart.setEnabled(false);
                 binding.btnAddToCart.setText("OFF");
+                binding.btnIncrease.setEnabled(false);
+                binding.btnDecrease.setEnabled(false);
             }
 
             if (product.image_url != null && !product.image_url.isEmpty()) {

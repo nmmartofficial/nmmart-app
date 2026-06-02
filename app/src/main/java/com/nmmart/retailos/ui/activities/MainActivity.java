@@ -41,6 +41,8 @@ import com.nmmart.retailos.ui.adapters.BannerAdapter;
 import com.nmmart.retailos.ui.adapters.BrandAdapter;
 import com.nmmart.retailos.ui.adapters.CategoryAdapter;
 import com.nmmart.retailos.ui.adapters.ProductListAdapter;
+import com.nmmart.retailos.ui.adapters.SearchHistoryAdapter;
+import com.nmmart.retailos.data.SearchHistoryManager;
 import com.nmmart.retailos.ui.viewmodels.MainViewModel;
 import com.nmmart.retailos.ui.viewmodels.ProductListViewModel;
 import com.nmmart.retailos.utils.PriceUtils;
@@ -63,6 +65,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private CategoryAdapter categoryAdapter;
     private BrandAdapter brandAdapter;
     private ProductListAdapter productListAdapter;
+    private SearchHistoryAdapter searchHistoryAdapter;
     
     private List<Category> categories = new ArrayList<>();
     private List<Brand> brands = new ArrayList<>();
@@ -99,15 +102,16 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             productListViewModel = new ViewModelProvider(this).get(ProductListViewModel.class);
             
             setupNavigation();
-            setupHeader();
-            setupCategories();
-            setupEverydayEssentials();
-            setupBestSelling();
-            setupBrands();
-            setupProductGrid();
-            setupBottomNavigation();
-            setupObservers();
-            setupClickListeners();
+        setupHeader();
+        setupCategories();
+        setupEverydayEssentials();
+        setupBestSelling();
+        // setupBrands();
+        setupProductGrid();
+        setupSearchHistory();
+        setupBottomNavigation();
+        setupObservers();
+        setupClickListeners();
             
             loadInitialData();
             updateCartBadge();
@@ -205,15 +209,15 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         binding.rvBestSelling.setAdapter(bestSellingAdapter);
     }
 
-    private void setupBrands() {
-        brandAdapter = new BrandAdapter(brand -> {
-            Intent intent = new Intent(this, ProductListActivity.class);
-            intent.putExtra("BRAND_NAME", brand.getName());
-            startActivity(intent);
-        });
-        binding.rvBrands.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        binding.rvBrands.setAdapter(brandAdapter);
-    }
+    // private void setupBrands() {
+    //     brandAdapter = new BrandAdapter(brand -> {
+    //         Intent intent = new Intent(this, ProductListActivity.class);
+    //         intent.putExtra("BRAND_NAME", brand.getName());
+    //         startActivity(intent);
+    //     });
+    //     binding.rvBrands.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+    //     binding.rvBrands.setAdapter(brandAdapter);
+    // }
 
     private void setupProductGrid() {
         productListAdapter = new ProductListAdapter(new ArrayList<>(), product -> {
@@ -253,6 +257,36 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         });
     }
 
+    private void setupSearchHistory() {
+        searchHistoryAdapter = new SearchHistoryAdapter(SearchHistoryManager.getInstance(this).getHistory(), query -> {
+            SearchHistoryManager.getInstance(this).addToHistory(query);
+            Intent intent = new Intent(this, ProductListActivity.class);
+            intent.putExtra("SEARCH_QUERY", query);
+            startActivity(intent);
+        });
+        
+        binding.rvSearchHistory.setLayoutManager(new LinearLayoutManager(this));
+        binding.rvSearchHistory.setAdapter(searchHistoryAdapter);
+        
+        binding.etSearch.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                updateSearchHistoryUI();
+            } else {
+                binding.rvSearchHistory.setVisibility(View.GONE);
+            }
+        });
+    }
+    
+    private void updateSearchHistoryUI() {
+        List<String> history = SearchHistoryManager.getInstance(this).getHistory();
+        if (history.isEmpty()) {
+            binding.rvSearchHistory.setVisibility(View.GONE);
+        } else {
+            searchHistoryAdapter.updateHistory(history);
+            binding.rvSearchHistory.setVisibility(View.VISIBLE);
+        }
+    }
+    
     private void setupClickListeners() {
         binding.btnMenu.setOnClickListener(v -> binding.drawerLayout.openDrawer(GravityCompat.START));
         binding.btnCart.setOnClickListener(v -> startActivity(new Intent(this, CartActivity.class)));
@@ -261,6 +295,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
                 String query = binding.etSearch.getText().toString().trim();
                 if (!query.isEmpty()) {
+                    SearchHistoryManager.getInstance(this).addToHistory(query);
                     Intent intent = new Intent(this, ProductListActivity.class);
                     intent.putExtra("SEARCH_QUERY", query);
                     startActivity(intent);
