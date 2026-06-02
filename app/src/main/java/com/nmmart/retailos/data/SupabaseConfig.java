@@ -14,6 +14,7 @@ import com.nmmart.retailos.models.Product;
 import com.nmmart.retailos.models.WalletMaster;
 import com.nmmart.retailos.models.WalletTransaction;
 import com.nmmart.retailos.models.PincodeMaster;
+import com.nmmart.retailos.data.CouponValidationResult;
 
 import java.util.List;
 import java.util.Map;
