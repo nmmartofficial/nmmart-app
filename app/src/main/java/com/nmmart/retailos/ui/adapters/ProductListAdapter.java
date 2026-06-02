@@ -178,12 +178,12 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             }
 
             if (product.getStock() > 0) {
-                binding.tvStock.setText("In Stock: " + product.getStock());
-                binding.tvStock.setTextColor(Color.parseColor("#388E3C"));
+                // binding.tvStock.setText("In Stock: " + product.getStock());
+                // binding.tvStock.setTextColor(Color.parseColor("#388E3C"));
                 binding.btnAddToCart.setEnabled(true);
             } else {
-                binding.tvStock.setText("Out of Stock");
-                binding.tvStock.setTextColor(Color.RED);
+                // binding.tvStock.setText("Out of Stock");
+                // binding.tvStock.setTextColor(Color.RED);
                 binding.btnAddToCart.setEnabled(false);
             }
 

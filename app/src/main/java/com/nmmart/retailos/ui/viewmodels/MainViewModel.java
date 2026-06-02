@@ -84,7 +84,8 @@ public class MainViewModel extends AndroidViewModel {
 
         isLoading.setValue(true);
         
-        Call<List<HomeConfig>> configCall = repository.getHomeConfig(new Callback<List<HomeConfig>>() {
+        Call<List<HomeConfig>> configCall = repository.getHomeConfigCall();
+        configCall.enqueue(new Callback<List<HomeConfig>>() {
             @Override
             public void onResponse(Call<List<HomeConfig>> call, Response<List<HomeConfig>> response) {
                 activeCalls.remove(call);
@@ -100,7 +101,8 @@ public class MainViewModel extends AndroidViewModel {
         });
         activeCalls.add(configCall);
         
-        Call<List<Category>> categoryCall = repository.getCategories(new Callback<List<Category>>() {
+        Call<List<Category>> categoryCall = repository.getCategoriesCall();
+        categoryCall.enqueue(new Callback<List<Category>>() {
             @Override
             public void onResponse(Call<List<Category>> call, Response<List<Category>> response) {
                 activeCalls.remove(call);
@@ -117,7 +119,8 @@ public class MainViewModel extends AndroidViewModel {
         });
         activeCalls.add(categoryCall);
 
-        Call<List<Product>> trendingCall = repository.getTrendingProducts(30, new Callback<List<Product>>() {
+        Call<List<Product>> trendingCall = repository.getTrendingProductsCall(30);
+        trendingCall.enqueue(new Callback<List<Product>>() {
             @Override
             public void onResponse(Call<List<Product>> call, Response<List<Product>> response) {
                 activeCalls.remove(call);
@@ -138,7 +141,8 @@ public class MainViewModel extends AndroidViewModel {
         });
         activeCalls.add(trendingCall);
 
-        Call<List<Product>> latestCall = repository.getLatestProducts(30, new Callback<List<Product>>() {
+        Call<List<Product>> latestCall = repository.getLatestProductsCall(30);
+        latestCall.enqueue(new Callback<List<Product>>() {
             @Override
             public void onResponse(Call<List<Product>> call, Response<List<Product>> response) {
                 activeCalls.remove(call);
@@ -154,7 +158,8 @@ public class MainViewModel extends AndroidViewModel {
         });
         activeCalls.add(latestCall);
         
-        Call<List<Banner>> bannerCall = repository.getLiveBanners(new Callback<List<Banner>>() {
+        Call<List<Banner>> bannerCall = repository.getLiveBannersCall();
+        bannerCall.enqueue(new Callback<List<Banner>>() {
             @Override
             public void onResponse(Call<List<Banner>> call, Response<List<Banner>> response) {
                 activeCalls.remove(call);

@@ -3,8 +3,11 @@ package com.nmmart.retailos.data;
 import android.content.Context;
 
 import com.nmmart.retailos.BuildConfig;
+import com.nmmart.retailos.models.Address;
+import com.nmmart.retailos.models.AppConfig;
 import com.nmmart.retailos.models.Banner;
 import com.nmmart.retailos.models.Category;
+import com.nmmart.retailos.models.Coupon;
 import com.nmmart.retailos.models.HomeConfig;
 import com.nmmart.retailos.models.Order;
 import com.nmmart.retailos.models.Product;
@@ -13,6 +16,7 @@ import com.nmmart.retailos.models.WalletTransaction;
 import com.nmmart.retailos.models.PincodeMaster;
 
 import java.util.List;
+import java.util.Map;
 
 import org.json.JSONObject;
 
@@ -28,6 +32,7 @@ import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.PATCH;
@@ -243,6 +248,14 @@ public class SupabaseConfig {
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
             @Body Map<String, Object> body
+        );
+
+        @PATCH("orders")
+        Call<Void> updateOrder(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth,
+            @Query("id") String orderId,
+            @Body Map<String, Object> data
         );
     }
 

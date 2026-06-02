@@ -16,4 +16,5 @@
     <!-- Standard Colors -->
     <color name="black">#FF000000</color>
     <color name="grey_light">#F5F5F5</color>
+    <color name="background">#F5F5F5</color>
 </resources>

@@ -24,6 +24,7 @@ import com.nmmart.retailos.R;
 import com.nmmart.retailos.data.SessionManager;
 import com.nmmart.retailos.data.SupabaseRepository;
 import com.nmmart.retailos.databinding.ActivityMainBinding;
+import com.nmmart.retailos.models.AppConfig;
 import com.nmmart.retailos.models.Banner;
 import com.nmmart.retailos.models.Brand;
 import com.nmmart.retailos.models.Category;
@@ -33,6 +34,7 @@ import com.nmmart.retailos.ui.adapters.BannerAdapter;
 import com.nmmart.retailos.ui.adapters.BrandAdapter;
 import com.nmmart.retailos.ui.adapters.CategoryAdapter;
 import com.nmmart.retailos.ui.adapters.ProductListAdapter;
+import com.nmmart.retailos.ui.viewmodels.MainViewModel;
 import com.nmmart.retailos.ui.viewmodels.ProductListViewModel;
 
 import java.util.ArrayList;
@@ -146,7 +148,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         binding.tvWalletBalance.setText("₹" + (int)sessionManager.getWalletBalance());
         
         // Voice Search Listener
-        binding.tilSearch.setEndIconOnClickListener(v -> {
+        binding.textInputLayout.setEndIconOnClickListener(v -> {
             Intent intent = new Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
             intent.putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
             intent.putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Say product name...");
@@ -249,13 +251,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         } else {
             binding.sectionRecentlyViewed.setVisibility(View.GONE);
         }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        updateRecentlyViewed();
-        updateCartBadge();
     }
 
     /**
@@ -749,6 +744,8 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 startBannerAutoScroll(itemCount);
             }
         }
+        // Update recently viewed products
+        updateRecentlyViewed();
         // Update header in case user logged in/out
         updateNavHeader();
         // Update cart badge

@@ -1,5 +1,6 @@
 package com.nmmart.retailos.ui.activities;
 
+import android.os.Handler;
 import com.nmmart.retailos.R;
 
 import android.content.Intent;
@@ -414,6 +415,10 @@ public class ProductDetailActivity extends AppCompatActivity {
         }
     }
 
+    interface OnSelect {
+        void onSelect(String selected);
+    }
+
     private class UnitOptionAdapter extends RecyclerView.Adapter<UnitOptionAdapter.VH> {
         private final List<String> options;
         private final OnSelect listener;
@@ -466,10 +471,6 @@ public class ProductDetailActivity extends AppCompatActivity {
                 super(itemView);
                 btn = itemView.findViewById(R.id.btnUnitOption);
             }
-        }
-
-        interface OnSelect {
-            void onSelect(String selected);
         }
     }
 }

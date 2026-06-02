@@ -77,6 +77,22 @@ public class AddressActivity extends AppCompatActivity {
         });
     }
 
+    private void fetchPincodes() {
+        repository.getPincodes(new Callback<List<PincodeMaster>>() {
+            @Override
+            public void onResponse(Call<List<PincodeMaster>> call, Response<List<PincodeMaster>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    pincodes = response.body();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<PincodeMaster>> call, Throwable t) {
+                // Ignore error, use fallback
+            }
+        });
+    }
+
     private void saveAddressToDatabase(String name, String house, String pin) {
         Toast.makeText(this, "Saving address...", Toast.LENGTH_SHORT).show();
         

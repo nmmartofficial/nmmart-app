@@ -4,9 +4,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Base64;
 
-import androidx.security.crypto.EncryptedSharedPreferences;
-import androidx.security.crypto.MasterKey;
-
 import org.json.JSONObject;
 
 public class SessionManager {
@@ -40,7 +37,7 @@ public class SessionManager {
 
     public SessionManager(Context context) {
         this.context = context;
-        pref = createSecurePreferences(context);
+        pref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         editor = pref.edit();
     }
 
@@ -229,23 +226,7 @@ public class SessionManager {
         editor.apply();
     }
 
-    private static SharedPreferences createSecurePreferences(Context context) {
-        try {
-            MasterKey masterKey = new MasterKey.Builder(context)
-                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                    .build();
 
-            return EncryptedSharedPreferences.create(
-                    context,
-                    PREF_NAME,
-                    masterKey,
-                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-            );
-        } catch (Exception e) {
-            return context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        }
-    }
 
     private static String extractRoleFromJwt(String jwt) {
         try {

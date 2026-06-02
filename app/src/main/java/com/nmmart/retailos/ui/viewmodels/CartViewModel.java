@@ -30,6 +30,10 @@ public class CartViewModel extends ViewModel {
         totalPrice.setValue(cartManager.getTotalPrice());
     }
 
+    public void refreshTotal() {
+        updateCartData();
+    }
+
     public boolean addToCart(Product product) {
         boolean success = cartManager.addToCart(product);
         updateCartData();

@@ -1,5 +1,7 @@
 package com.nmmart.retailos.data;
 
+import com.nmmart.retailos.models.Address;
+import com.nmmart.retailos.models.AppConfig;
 import com.nmmart.retailos.models.Banner;
 import com.nmmart.retailos.models.Category;
 import com.nmmart.retailos.models.HomeConfig;
@@ -42,6 +44,26 @@ public class SupabaseRepository {
 
     public Call<List<Product>> searchProductsCall(String query, int limit, int offset) {
         return apiService.searchProducts(apiKey, anonOrUserAuth(), "ilike.*" + query + "*", limit, offset);
+    }
+
+    public Call<List<HomeConfig>> getHomeConfigCall() {
+        return apiService.getHomeConfig(apiKey, anonOrUserAuth());
+    }
+
+    public Call<List<Category>> getCategoriesCall() {
+        return apiService.getCategories(apiKey, anonOrUserAuth());
+    }
+
+    public Call<List<Product>> getTrendingProductsCall(int limit) {
+        return apiService.getTrendingProducts(apiKey, anonOrUserAuth(), "stock.desc", limit);
+    }
+
+    public Call<List<Product>> getLatestProductsCall(int limit) {
+        return apiService.getLatestProducts(apiKey, anonOrUserAuth(), "id.desc", limit);
+    }
+
+    public Call<List<Banner>> getLiveBannersCall() {
+        return apiService.getBanners(apiKey, anonOrUserAuth(), "eq.true");
     }
 
     // --- Legacy enqueue methods (keep for backward compatibility) ---
@@ -134,5 +156,13 @@ public class SupabaseRepository {
         body.put("p_code", code);
         body.put("p_cart_total", cartTotal);
         apiService.validateAndApplyCoupon(apiKey, requireUserAuth(), body).enqueue(callback);
+    }
+
+    public void getCoupons(Callback<List<com.nmmart.retailos.models.Coupon>> callback) {
+        apiService.getCoupons(apiKey, requireUserAuth()).enqueue(callback);
+    }
+
+    public void updateOrderStatus(String orderId, Map<String, Object> data, Callback<Void> callback) {
+        apiService.updateOrder(apiKey, requireUserAuth(), "eq." + orderId, data).enqueue(callback);
     }
 }

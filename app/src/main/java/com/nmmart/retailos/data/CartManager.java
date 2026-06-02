@@ -127,6 +127,10 @@ public class CartManager {
         return cartQuantities.getOrDefault(productId, 0);
     }
 
+    public Map<String, Integer> getCartQuantities() {
+        return new HashMap<>(cartQuantities);
+    }
+
     public double getTotalPrice() {
         double total = 0;
         for (String id : cartItems.keySet()) {

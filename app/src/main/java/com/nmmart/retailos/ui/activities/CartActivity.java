@@ -21,9 +21,11 @@ import com.nmmart.retailos.data.SupabaseRepository;
 import com.nmmart.retailos.databinding.ActivityCartBinding;
 import com.nmmart.retailos.databinding.ItemCartProductBinding;
 import com.nmmart.retailos.models.Product;
+import com.nmmart.retailos.ui.adapters.ProductListAdapter;
 import com.nmmart.retailos.ui.viewmodels.CartViewModel;
 
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -39,6 +41,7 @@ public class CartActivity extends BaseActivity {
     private static final double HANDLING_CHARGE = 5.0;
     private SupabaseRepository repository;
     private com.nmmart.retailos.data.CartManager cartManager;
+    private SessionManager sessionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +53,7 @@ public class CartActivity extends BaseActivity {
         viewModel.init(this);
         repository = new SupabaseRepository();
         cartManager = com.nmmart.retailos.data.CartManager.getInstance(this);
+        sessionManager = new SessionManager(this);
 
         setupToolbar();
         setupRecyclerView();
@@ -114,8 +118,12 @@ public class CartActivity extends BaseActivity {
             // Calculate Savings
             double mrpTotal = 0;
             com.nmmart.retailos.data.CartManager cm = com.nmmart.retailos.data.CartManager.getInstance(this);
-            for (String id : cm.getCartItems().keySet()) {
-                mrpTotal += cm.getCartItems().get(id).getMrp() * cm.getCartQuantities().get(id);
+            Map<String, Product> cartItemsMap = new java.util.HashMap<>();
+            for (Product p : cm.getCartItems()) {
+                cartItemsMap.put(p.id, p);
+            }
+            for (String id : cartItemsMap.keySet()) {
+                mrpTotal += cartItemsMap.get(id).getMrp() * cm.getCartQuantities().get(id);
             }
             double savings = Math.max(0, mrpTotal - itemsTotal + appliedDiscount);
             if (savings > 0) {
@@ -126,34 +134,34 @@ public class CartActivity extends BaseActivity {
             }
         });
 
-        binding.btnApplyCoupon.setOnClickListener(v -> {
-            String code = binding.etCouponCode.getText().toString().trim();
-            if (code.isEmpty()) return;
+        // binding.btnApplyCoupon.setOnClickListener(v -> {
+        //     String code = binding.etCouponCode.getText().toString().trim();
+        //     if (code.isEmpty()) return;
 
-            repository.getCoupons(new retrofit2.Callback<List<com.nmmart.retailos.models.Coupon>>() {
-                @Override
-                public void onResponse(retrofit2.Call<List<com.nmmart.retailos.models.Coupon>> call, retrofit2.Response<List<com.nmmart.retailos.models.Coupon>> response) {
-                    if (response.isSuccessful() && response.body() != null) {
-                        for (com.nmmart.retailos.models.Coupon coupon : response.body()) {
-                            if (coupon.code.equalsIgnoreCase(code)) {
-                                if (cartManager.getTotalPrice() >= coupon.minOrderValue) {
-                                    appliedDiscount = coupon.discountAmount;
-                                    appliedCouponCode = coupon.code;
-                                    Toast.makeText(CartActivity.this, "Coupon Applied!", Toast.LENGTH_SHORT).show();
-                                    viewModel.refreshTotal(); // Trigger observer to update UI
-                                } else {
-                                    Toast.makeText(CartActivity.this, "Min order ₹" + coupon.minOrderValue + " required", Toast.LENGTH_SHORT).show();
-                                }
-                                return;
-                            }
-                        }
-                        Toast.makeText(CartActivity.this, "Invalid Coupon", Toast.LENGTH_SHORT).show();
-                    }
-                }
-                @Override
-                public void onFailure(retrofit2.Call<List<com.nmmart.retailos.models.Coupon>> call, Throwable t) {}
-            });
-        });
+        //     repository.getCoupons(new retrofit2.Callback<List<com.nmmart.retailos.models.Coupon>>() {
+        //         @Override
+        //         public void onResponse(retrofit2.Call<List<com.nmmart.retailos.models.Coupon>> call, retrofit2.Response<List<com.nmmart.retailos.models.Coupon>> response) {
+        //             if (response.isSuccessful() && response.body() != null) {
+        //                 for (com.nmmart.retailos.models.Coupon coupon : response.body()) {
+        //                     if (coupon.code.equalsIgnoreCase(code)) {
+        //                         if (cartManager.getTotalPrice() >= coupon.minOrderValue) {
+        //                             appliedDiscount = coupon.discountAmount;
+        //                             appliedCouponCode = coupon.code;
+        //                             Toast.makeText(CartActivity.this, "Coupon Applied!", Toast.LENGTH_SHORT).show();
+        //                             viewModel.refreshTotal(); // Trigger observer to update UI
+        //                         } else {
+        //                             Toast.makeText(CartActivity.this, "Min order ₹" + coupon.minOrderValue + " required", Toast.LENGTH_SHORT).show();
+        //                         }
+        //                         return;
+        //                     }
+        //                 }
+        //                 Toast.makeText(CartActivity.this, "Invalid Coupon", Toast.LENGTH_SHORT).show();
+        //             }
+        //         }
+        //         @Override
+        //         public void onFailure(retrofit2.Call<List<com.nmmart.retailos.models.Coupon>> call, Throwable t) {}
+        //     });
+        // });
 
         setupRecommended();
     }
