@@ -16,6 +16,7 @@
 
     <!-- Splash Screen Theme -->
     <style name="Theme.Splash" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="android:windowBackground">@color/white</item>
         <item name="android:statusBarColor">@color/white</item>
     </style>
 </resources>
