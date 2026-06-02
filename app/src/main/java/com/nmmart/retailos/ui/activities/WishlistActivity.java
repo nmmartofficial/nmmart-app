@@ -3,6 +3,7 @@ package com.nmmart.retailos.ui.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -18,6 +19,8 @@ public class WishlistActivity extends AppCompatActivity {
     private ProductListAdapter adapter;
     private RecyclerView rvWishlist;
     private View emptyLayout;
+    private TextView emptyText;
+    private android.widget.Button startShoppingBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +36,22 @@ public class WishlistActivity extends AppCompatActivity {
 
         rvWishlist = findViewById(R.id.rvOrders); // ID from activity_order_history
         emptyLayout = findViewById(R.id.emptyOrdersLayout);
+        emptyText = emptyLayout.findViewById(R.id.tvEmptyState);
+        startShoppingBtn = emptyLayout.findViewById(R.id.btnStartShopping);
+        
+        // Customize empty state for Wishlist
+        if (emptyText != null) {
+            emptyText.setText("Wishlist is empty!");
+        }
+        if (startShoppingBtn != null) {
+            startShoppingBtn.setText("BROWSE PRODUCTS");
+            startShoppingBtn.setOnClickListener(v -> {
+                Intent intent = new Intent(this, MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+                finish();
+            });
+        }
         
         setupRecyclerView();
         loadWishlist();

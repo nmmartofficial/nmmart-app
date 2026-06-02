@@ -8,7 +8,7 @@ import java.util.Locale;
 public class PriceUtils {
 
     public static String formatPrice(double price) {
-        return "₹" + String.format("%.0f", price);
+        return "₹" + String.format("%.2f", price);
     }
 
     public static String formatPriceWithDecimal(double price) {

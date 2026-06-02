@@ -266,16 +266,17 @@ public class ProductDetailActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
+    protected void onResume() {
+        super.onResume();
         if (stockUpdateHandler != null && stockUpdateRunnable != null) {
+            stockUpdateHandler.removeCallbacks(stockUpdateRunnable); // Remove any existing callbacks to prevent duplicates
             stockUpdateHandler.post(stockUpdateRunnable);
         }
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onPause() {
+        super.onPause();
         if (stockUpdateHandler != null && stockUpdateRunnable != null) {
             stockUpdateHandler.removeCallbacks(stockUpdateRunnable);
         }

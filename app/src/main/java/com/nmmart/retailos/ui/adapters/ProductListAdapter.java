@@ -12,6 +12,7 @@ import com.nmmart.retailos.R;
 import com.nmmart.retailos.databinding.ItemLoadingBinding;
 import com.nmmart.retailos.databinding.ItemProductBinding;
 import com.nmmart.retailos.models.Product;
+import com.nmmart.retailos.utils.PriceUtils;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -90,7 +91,7 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         ItemProductBinding binding = ItemProductBinding.inflate(
                 LayoutInflater.from(parent.getContext()), parent, false);
         context = parent.getContext();
-        return new ProductViewHolder(binding, context, productList, onProductClickListener);
+        return new ProductViewHolder(binding);
     }
 
     @Override
@@ -102,17 +103,10 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     class ProductViewHolder extends RecyclerView.ViewHolder {
         private ItemProductBinding binding;
-        private Context context;
-        private List<Product> productList;
-        private OnProductClickListener onProductClickListener;
 
-        ProductViewHolder(ItemProductBinding binding, Context context, List<Product> productList, 
-                          OnProductClickListener onProductClickListener) {
+        ProductViewHolder(ItemProductBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
-            this.context = context;
-            this.productList = productList;
-            this.onProductClickListener = onProductClickListener;
             
             binding.getRoot().setOnClickListener(v -> {
                 int position = getAdapterPosition();
@@ -128,7 +122,6 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                     com.nmmart.retailos.data.CartManager cartManager = com.nmmart.retailos.data.CartManager.getInstance(context);
                     if (cartManager.addToCart(product)) {
                         android.widget.Toast.makeText(context, product.name + " added to cart!", android.widget.Toast.LENGTH_SHORT).show();
-                        // Notify listener that cart is updated
                         if (onCartUpdateListener != null) {
                             onCartUpdateListener.onCartUpdated();
                         }
@@ -153,23 +146,21 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             binding.tvProductName.setText(product.name != null ? product.name : "Product");
             binding.tvUnit.setText(product.unit != null ? product.unit : "1 pcs");
 
-            // Wishlist icon update
             boolean isInWishlist = com.nmmart.retailos.data.WishlistManager.getInstance(context).isInWishlist(product.id);
             binding.ivWishlist.setImageResource(isInWishlist ? android.R.drawable.btn_star_big_on : android.R.drawable.btn_star_big_off);
             if (isInWishlist) binding.ivWishlist.setColorFilter(android.graphics.Color.parseColor("#FFC107"));
             else binding.ivWishlist.clearColorFilter();
 
             if (product.getMrp() > product.getNmPrice()) {
-                binding.tvMrp.setText(com.nmmart.retailos.utils.PriceUtils.formatPrice(product.getMrp()));
+                binding.tvMrp.setText(PriceUtils.formatPrice(product.getMrp()));
                 binding.tvMrp.setPaintFlags(binding.tvMrp.getPaintFlags() | android.graphics.Paint.STRIKE_THRU_TEXT_FLAG);
                 binding.tvMrp.setVisibility(View.VISIBLE);
             } else {
                 binding.tvMrp.setVisibility(View.GONE);
             }
 
-            binding.tvNmPrice.setText(com.nmmart.retailos.utils.PriceUtils.formatPrice(product.getNmPrice()));
+            binding.tvNmPrice.setText(PriceUtils.formatPrice(product.getNmPrice()));
 
-            // Inventory Alert Logic
             if (product.getStock() > 0 && product.getStock() <= 5) {
                 binding.tvInventoryAlert.setVisibility(View.VISIBLE);
                 binding.tvInventoryAlert.setText("Only " + product.getStock() + " left!");
@@ -178,13 +169,11 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             }
 
             if (product.getStock() > 0) {
-                // binding.tvStock.setText("In Stock: " + product.getStock());
-                // binding.tvStock.setTextColor(Color.parseColor("#388E3C"));
                 binding.btnAddToCart.setEnabled(true);
+                binding.btnAddToCart.setText("ADD");
             } else {
-                // binding.tvStock.setText("Out of Stock");
-                // binding.tvStock.setTextColor(Color.RED);
                 binding.btnAddToCart.setEnabled(false);
+                binding.btnAddToCart.setText("OFF");
             }
 
             if (product.image_url != null && !product.image_url.isEmpty()) {

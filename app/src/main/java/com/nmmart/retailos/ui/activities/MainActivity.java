@@ -1,6 +1,9 @@
 package com.nmmart.retailos.ui.activities;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -11,8 +14,11 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -47,6 +53,9 @@ import java.util.TimerTask;
 
 public class MainActivity extends BaseActivity implements NavigationView.OnNavigationItemSelectedListener {
 
+    // Notification Permission (Android 13+)
+    private ActivityResultLauncher<String> notificationPermissionLauncher;
+    
     // Views & Binding
     private ActivityMainBinding binding;
     
@@ -85,6 +94,16 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         super.onCreate(savedInstanceState);
         
         try {
+            // Initialize notification permission launcher
+            notificationPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                isGranted -> {
+                    if (!isGranted) {
+                        Toast.makeText(this, "Notifications are disabled. You won't receive order updates!", Toast.LENGTH_LONG).show();
+                    }
+                }
+            );
+            
             // Initialize UI
             binding = ActivityMainBinding.inflate(getLayoutInflater());
             setContentView(binding.getRoot());
@@ -106,9 +125,20 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             
             // Update cart badge
             updateCartBadge();
+            
+            // Request notification permission if needed
+            requestNotificationPermission();
         } catch (Exception e) {
             android.util.Log.e("MainActivity", "Error in onCreate", e);
             Toast.makeText(this, "Error starting app: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+    
+    private void requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+            }
         }
     }
 
@@ -433,36 +463,16 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         });
         
-        // Search
+        // Search - just keep the listener for future use if needed
         binding.etSearch.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (searchTimer != null) {
-                    searchTimer.cancel();
-                }
-            }
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
 
             @Override
-            public void afterTextChanged(Editable s) {
-                String query = s.toString().trim();
-                if (query.length() >= 3) {
-                    searchTimer = new Timer();
-                    searchTimer.schedule(new TimerTask() {
-                        @Override
-                        public void run() {
-                            runOnUiThread(() -> {
-                                // Navigate to search results
-                                Intent intent = new Intent(MainActivity.this, ProductListActivity.class);
-                                intent.putExtra("SEARCH_QUERY", query);
-                                startActivity(intent);
-                            });
-                        }
-                    }, SEARCH_DELAY);
-                }
-            }
+            public void afterTextChanged(Editable s) {}
         });
 
         binding.etSearch.setOnEditorActionListener((v, actionId, event) -> {
@@ -517,7 +527,9 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
      */
     private void loadInitialData() {
         productListViewModel.fetchProducts(null, null, 50, 0);
-        fetchWallet();
+        if (sessionManager.isLoggedIn()) {
+            fetchWallet();
+        }
         fetchBannersAndCategories();
     }
 
@@ -527,7 +539,9 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private void refreshData() {
         if (isNetworkAvailable()) {
             productListViewModel.fetchProducts(null, null, 50, 0);
-            fetchWallet();
+            if (sessionManager.isLoggedIn()) {
+                fetchWallet();
+            }
             fetchBannersAndCategories();
         } else {
             binding.swipeRefreshLayout.setRefreshing(false);
@@ -579,6 +593,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         try {
             binding.shimmerView.setVisibility(View.VISIBLE);
             binding.shimmerView.startShimmer();
+            binding.nestedScrollView.setVisibility(View.GONE);
             
             // Fetch App Config for Dynamic Delivery Time and Charges
             supabaseRepository.getAppConfig(new retrofit2.Callback<List<AppConfig>>() {
@@ -588,9 +603,12 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                         AppConfig config = response.body().get(0);
                         binding.tvDeliveryTime.setText(config.deliveryTimeMsg);
                         
-                        // Update CartManager delivery config
+                        // Update CartManager with all configs
+                        double minCheckout = config.minOrderCheckout > 0 ? config.minOrderCheckout : 499.0;
+                        double handling = config.handlingCharge > 0 ? config.handlingCharge : 5.0;
+                        double cashback = config.cashbackPercentage > 0 ? config.cashbackPercentage : 2.0;
                         com.nmmart.retailos.data.CartManager.getInstance(MainActivity.this)
-                            .updateDeliveryConfig(config.minOrderFreeDelivery, config.deliveryCharge);
+                            .updateAppConfig(config.minOrderFreeDelivery, config.deliveryCharge, minCheckout, handling, cashback);
                     }
                 }
                 @Override
@@ -665,12 +683,14 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     }
                     binding.shimmerView.stopShimmer();
                     binding.shimmerView.setVisibility(View.GONE);
+                    binding.nestedScrollView.setVisibility(View.VISIBLE);
                 }
                 @Override
                 public void onFailure(retrofit2.Call<List<Product>> call, Throwable t) {
                     android.util.Log.e("MainActivity", "Trending products fetch failed", t);
                     binding.shimmerView.stopShimmer();
                     binding.shimmerView.setVisibility(View.GONE);
+                    binding.nestedScrollView.setVisibility(View.VISIBLE);
                     Toast.makeText(MainActivity.this, "Failed to load products. Check internet.", Toast.LENGTH_SHORT).show();
                 }
             });
@@ -678,6 +698,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             android.util.Log.e("MainActivity", "Error in fetchBannersAndCategories", e);
             binding.shimmerView.stopShimmer();
             binding.shimmerView.setVisibility(View.GONE);
+            binding.nestedScrollView.setVisibility(View.VISIBLE);
         }
     }
 
@@ -772,6 +793,8 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             startActivity(new Intent(this, CustomerSupportActivity.class));
         } else if (id == R.id.nav_about) {
             startActivity(new Intent(this, AboutUsActivity.class));
+        } else if (id == R.id.nav_settings) {
+            startActivity(new Intent(this, SettingsActivity.class));
         } else if (id == R.id.nav_share) {
             Intent shareIntent = new Intent(Intent.ACTION_SEND);
             shareIntent.setType("text/plain");
@@ -782,7 +805,11 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             if (sessionManager.isLoggedIn()) {
                 sessionManager.logout();
                 Toast.makeText(this, "Logged out!", Toast.LENGTH_SHORT).show();
-                recreate();
+                // Clear activity stack and start LoginActivity
+                Intent intent = new Intent(this, LoginActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
             } else {
                 startActivity(new Intent(this, LoginActivity.class));
             }

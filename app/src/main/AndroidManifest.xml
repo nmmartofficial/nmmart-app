@@ -4,6 +4,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="false"
@@ -101,6 +102,11 @@
 
         <activity
             android:name=".ui.activities.WalletActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity" />
+
+        <activity
+            android:name=".ui.activities.SettingsActivity"
             android:exported="false"
             android:parentActivityName=".ui.activities.MainActivity" />
 

@@ -6,13 +6,16 @@ import android.widget.Toast;
 
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.textfield.TextInputEditText;
 import com.nmmart.retailos.R;
 import com.nmmart.retailos.data.CartManager;
 import com.nmmart.retailos.data.CouponValidationResult;
 import com.nmmart.retailos.data.SupabaseRepository;
 import com.nmmart.retailos.models.PincodeMaster;
+import com.nmmart.retailos.models.Product;
+import com.google.gson.Gson;
 
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,9 +25,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class CheckoutActivity extends BaseActivity {
-
-    private static final double HANDLING_CHARGE = 5.0;
-    private static final double DELIVERY_CHARGE = 10.0;
 
     private SupabaseRepository repository;
     private List<PincodeMaster> pincodes;
@@ -37,6 +37,8 @@ public class CheckoutActivity extends BaseActivity {
     private double appliedDiscount = 0.0;
     private double itemsTotal = 0.0;
     private double toPay = 0.0;
+    private CartManager cartManager;
+    private Gson gson = new Gson();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +46,7 @@ public class CheckoutActivity extends BaseActivity {
         setContentView(R.layout.activity_checkout);
 
         repository = new SupabaseRepository();
+        cartManager = CartManager.getInstance(this);
 
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -60,7 +63,7 @@ public class CheckoutActivity extends BaseActivity {
         tvToPay = findViewById(R.id.tvToPay);
         MaterialButton btnPlaceOrder = findViewById(R.id.btnPlaceOrder);
 
-        itemsTotal = CartManager.getInstance(this).getTotalPrice();
+        itemsTotal = cartManager.getTotalPrice();
         appliedCouponCode = getIntent().getStringExtra("COUPON_CODE");
         recalcToPay();
         applyCouponIfAny();
@@ -157,18 +160,28 @@ public class CheckoutActivity extends BaseActivity {
     }
 
     private void setupDateTimePickers() {
-        // Month Spinner
+        // Month Spinner with dynamic dates
         android.widget.Spinner spinnerMonth = findViewById(R.id.spinnerMonth);
         java.util.List<String> months = new java.util.ArrayList<>();
-        months.add("June 2026");
+        Calendar calendar = Calendar.getInstance();
+        String currentMonthYear = android.text.format.DateFormat.format("MMMM yyyy", calendar).toString();
+        months.add(currentMonthYear);
         android.widget.ArrayAdapter<String> monthAdapter = new android.widget.ArrayAdapter<>(this, android.R.layout.simple_spinner_item, months);
         monthAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerMonth.setAdapter(monthAdapter);
 
-        // Dates RecyclerView
+        // Dates RecyclerView - show today and tomorrow
         androidx.recyclerview.widget.RecyclerView rvDates = findViewById(R.id.rvDates);
         rvDates.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this, androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL, false));
-        // Use a simple adapter or just placeholder for now
+        // Create simple date items
+        List<String> datesList = new ArrayList<>();
+        Calendar today = Calendar.getInstance();
+        datesList.add(android.text.format.DateFormat.format("dd MMM", today).toString());
+        Calendar tomorrow = (Calendar) today.clone();
+        tomorrow.add(Calendar.DAY_OF_MONTH, 1);
+        datesList.add(android.text.format.DateFormat.format("dd MMM", tomorrow).toString());
+        android.widget.ArrayAdapter<String> datesAdapter = new android.widget.ArrayAdapter<>(this, android.R.layout.simple_spinner_item, datesList);
+        datesAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         
         // Time Slots RecyclerView
         androidx.recyclerview.widget.RecyclerView rvTimeSlots = findViewById(R.id.rvTimeSlots);
@@ -176,8 +189,10 @@ public class CheckoutActivity extends BaseActivity {
     }
 
     private void recalcToPay() {
-        toPay = Math.max(0.0, itemsTotal + HANDLING_CHARGE + DELIVERY_CHARGE - appliedDiscount);
-        tvToPay.setText(String.format("₹%.0f", toPay));
+        double deliveryCharge = cartManager.getDeliveryCharge();
+        double handlingCharge = cartManager.getHandlingCharge();
+        toPay = Math.max(0.0, itemsTotal + handlingCharge + deliveryCharge - appliedDiscount);
+        tvToPay.setText(String.format("₹%.2f", toPay));
     }
 
     private void applyCouponIfAny() {
@@ -231,22 +246,42 @@ public class CheckoutActivity extends BaseActivity {
     private void placeOrder(String name, String house, String landmark, String pin, double toPay) {
         Toast.makeText(this, "Placing your order... Please wait", Toast.LENGTH_SHORT).show();
 
+        // Prepare order items with quantities
+        List<Map<String, Object>> orderItems = new ArrayList<>();
+        List<Product> cartProducts = cartManager.getCartItems();
+        Map<String, Integer> quantities = cartManager.getCartQuantities();
+        for (Product product : cartProducts) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("product_id", product.id);
+            item.put("product_name", product.name);
+            item.put("quantity", quantities.get(product.id));
+            item.put("price", product.nm_price);
+            orderItems.add(item);
+        }
+
         Map<String, Object> orderData = new HashMap<>();
         orderData.put("customer_name", name);
         orderData.put("address", landmark.isEmpty() ? house : (house + ", " + landmark));
         orderData.put("pincode", pin);
-        orderData.put("user_mobile", sessionManager.getMobile());
+        // Send user identifier - mobile if available, else email
+        String userIdentifier = sessionManager.getMobile();
+        if (userIdentifier == null || userIdentifier.isEmpty()) {
+            userIdentifier = sessionManager.getEmail();
+        }
+        orderData.put("user_mobile", userIdentifier);
         orderData.put("total_amount", toPay);
         orderData.put("status", "Pending");
+        orderData.put("items", gson.toJson(orderItems)); // Send items as JSON
+        orderData.put("user_id", sessionManager.getUserId());
 
         repository.placeOrder(orderData, new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
-                    float cashback = (float) (CartManager.getInstance(CheckoutActivity.this).getTotalPrice() * 0.02);
+                    float cashback = (float) (itemsTotal * (cartManager.getCashbackPercentage() / 100.0));
                     sessionManager.setWalletBalance(sessionManager.getWalletBalance() + cashback);
 
-                    CartManager.getInstance(CheckoutActivity.this).clearCart();
+                    cartManager.clearCart();
 
                     com.nmmart.retailos.utils.NotificationHelper.showOrderNotification(CheckoutActivity.this, "Order Placed! 🎉", "Your order has been placed successfully and will be delivered soon.");
                     Intent intent = new Intent(CheckoutActivity.this, OrderSuccessActivity.class);

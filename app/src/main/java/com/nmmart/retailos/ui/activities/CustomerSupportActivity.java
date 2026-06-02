@@ -22,12 +22,12 @@ public class CustomerSupportActivity extends AppCompatActivity {
 
         binding.btnCallSupport.setOnClickListener(v -> {
             Intent intent = new Intent(Intent.ACTION_DIAL);
-            intent.setData(Uri.parse("tel:+919905814722"));
+            intent.setData(Uri.parse("tel:+917081154604"));
             startActivity(intent);
         });
 
         binding.btnWhatsappSupport.setOnClickListener(v -> {
-            String url = "https://api.whatsapp.com/send?phone=+919905814722";
+            String url = "https://api.whatsapp.com/send?phone=+917081154604";
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse(url));
             startActivity(intent);

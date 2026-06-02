@@ -13,8 +13,17 @@ public class AppConfig implements Serializable {
     @SerializedName("min_order_free_delivery")
     public double minOrderFreeDelivery;
     
+    @SerializedName("min_order_checkout")
+    public double minOrderCheckout;
+    
     @SerializedName("delivery_charge")
     public double deliveryCharge;
+    
+    @SerializedName("handling_charge")
+    public double handlingCharge;
+    
+    @SerializedName("cashback_percentage")
+    public double cashbackPercentage;
     
     @SerializedName("is_service_active")
     public boolean isServiceActive;

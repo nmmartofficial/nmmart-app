@@ -21,9 +21,11 @@ public class CartManager {
     private static final String KEY_CART_ITEMS = "cartItems";
     private static final String KEY_CART_QUANTITIES = "cartQuantities";
     
-    // Delivery Logic (Updated dynamically from AppConfig)
     private double minFreeDeliveryAmount = 500.0;
     private double deliveryCharge = 40.0;
+    private double minOrderCheckout = 499.0;
+    private double handlingCharge = 5.0;
+    private double cashbackPercentage = 2.0;
 
     private CartManager(Context context) {
         sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
@@ -35,137 +37,109 @@ public class CartManager {
     private void loadConfigFromPrefs() {
         minFreeDeliveryAmount = sharedPreferences.getFloat("minFreeDelivery", 500.0f);
         deliveryCharge = sharedPreferences.getFloat("deliveryCharge", 40.0f);
+        minOrderCheckout = sharedPreferences.getFloat("minOrderCheckout", 499.0f);
+        handlingCharge = sharedPreferences.getFloat("handlingCharge", 5.0f);
+        cashbackPercentage = sharedPreferences.getFloat("cashbackPercentage", 2.0f);
     }
 
-    public void updateDeliveryConfig(double minFree, double charge) {
+    public void updateAppConfig(double minFree, double charge, double minCheckout, double handling, double cashbackPercent) {
         this.minFreeDeliveryAmount = minFree;
         this.deliveryCharge = charge;
+        this.minOrderCheckout = minCheckout;
+        this.handlingCharge = handling;
+        this.cashbackPercentage = cashbackPercent;
         sharedPreferences.edit()
                 .putFloat("minFreeDelivery", (float) minFree)
                 .putFloat("deliveryCharge", (float) charge)
+                .putFloat("minOrderCheckout", (float) minCheckout)
+                .putFloat("handlingCharge", (float) handling)
+                .putFloat("cashbackPercentage", (float) cashbackPercent)
                 .apply();
     }
 
+    public double getMinOrderCheckout() { return minOrderCheckout; }
+    public double getHandlingCharge() { return handlingCharge; }
+    public double getCashbackPercentage() { return cashbackPercentage; }
+    public double getMinFreeDeliveryAmount() { return minFreeDeliveryAmount; }
+
     public static synchronized CartManager getInstance(Context context) {
-        if (instance == null) {
-            instance = new CartManager(context.getApplicationContext());
-        }
+        if (instance == null) instance = new CartManager(context.getApplicationContext());
         return instance;
     }
 
     private void loadCartFromPrefs() {
         String itemsJson = sharedPreferences.getString(KEY_CART_ITEMS, null);
         String quantitiesJson = sharedPreferences.getString(KEY_CART_QUANTITIES, null);
-
         if (itemsJson != null && quantitiesJson != null) {
-            Type productType = new TypeToken<HashMap<String, Product>>() {}.getType();
-            Type quantityType = new TypeToken<HashMap<String, Integer>>() {}.getType();
-            cartItems = gson.fromJson(itemsJson, productType);
-            cartQuantities = gson.fromJson(quantitiesJson, quantityType);
+            try {
+                Type productType = new TypeToken<HashMap<String, Product>>() {}.getType();
+                Type quantityType = new TypeToken<HashMap<String, Integer>>() {}.getType();
+                cartItems = gson.fromJson(itemsJson, productType);
+                cartQuantities = gson.fromJson(quantitiesJson, quantityType);
+            } catch (Exception e) {
+                cartItems = new HashMap<>();
+                cartQuantities = new HashMap<>();
+            }
         } else {
             cartItems = new HashMap<>();
             cartQuantities = new HashMap<>();
         }
-
         if (cartItems == null) cartItems = new HashMap<>();
         if (cartQuantities == null) cartQuantities = new HashMap<>();
     }
 
     private void saveCartToPrefs() {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        String itemsJson = gson.toJson(cartItems);
-        String quantitiesJson = gson.toJson(cartQuantities);
-        editor.putString(KEY_CART_ITEMS, itemsJson);
-        editor.putString(KEY_CART_QUANTITIES, quantitiesJson);
-        editor.apply();
+        sharedPreferences.edit()
+                .putString(KEY_CART_ITEMS, gson.toJson(cartItems))
+                .putString(KEY_CART_QUANTITIES, gson.toJson(cartQuantities))
+                .apply();
     }
 
     public boolean addToCart(Product product) {
-        String id = product.id;
-        int currentQty = cartQuantities.getOrDefault(id, 0);
-        int stock = product.getStock();
-
-        if (stock > 0 && currentQty >= stock) {
-            return false; // Cannot add more than available stock
-        }
-
-        if (cartItems.containsKey(id)) {
-            cartQuantities.put(id, currentQty + 1);
-        } else {
-            cartItems.put(id, product);
-            cartQuantities.put(id, 1);
-        }
+        if (product == null || product.id == null) return false;
+        int currentQty = cartQuantities.getOrDefault(product.id, 0);
+        if (product.getStock() > 0 && currentQty >= product.getStock()) return false;
+        cartItems.put(product.id, product);
+        cartQuantities.put(product.id, currentQty + 1);
         saveCartToPrefs();
         return true;
     }
 
     public void removeFromCart(Product product) {
-        String id = product.id;
-        if (cartItems.containsKey(id)) {
-            int qty = cartQuantities.get(id);
-            if (qty > 1) {
-                cartQuantities.put(id, qty - 1);
-            } else {
-                cartItems.remove(id);
-                cartQuantities.remove(id);
-            }
-            saveCartToPrefs();
+        if (product == null || product.id == null) return;
+        int currentQty = cartQuantities.getOrDefault(product.id, 0);
+        if (currentQty > 1) {
+            cartQuantities.put(product.id, currentQty - 1);
+        } else {
+            cartItems.remove(product.id);
+            cartQuantities.remove(product.id);
         }
-    }
-
-    public void removeCompletely(Product product) {
-        cartItems.remove(product.id);
-        cartQuantities.remove(product.id);
         saveCartToPrefs();
-    }
-
-    public List<Product> getCartItems() {
-        return new ArrayList<>(cartItems.values());
-    }
-
-    public int getQuantity(String productId) {
-        return cartQuantities.getOrDefault(productId, 0);
-    }
-
-    public Map<String, Integer> getCartQuantities() {
-        return new HashMap<>(cartQuantities);
     }
 
     public double getTotalPrice() {
         double total = 0;
         for (String id : cartItems.keySet()) {
-            total += cartItems.get(id).nm_price * cartQuantities.get(id);
+            Product p = cartItems.get(id);
+            if (p != null) {
+                total += p.getNmPrice() * cartQuantities.getOrDefault(id, 0);
+            }
         }
         return total;
     }
 
     public double getDeliveryCharge() {
         double subtotal = getTotalPrice();
-        if (subtotal == 0 || subtotal >= minFreeDeliveryAmount) {
-            return 0;
-        }
-        return deliveryCharge;
+        return (subtotal == 0 || subtotal >= minFreeDeliveryAmount) ? 0 : deliveryCharge;
     }
 
-    public double getGrandTotal() {
-        return getTotalPrice() + getDeliveryCharge();
-    }
-
-    public double getMinFreeDeliveryAmount() {
-        return minFreeDeliveryAmount;
-    }
-
-    public void clearCart() {
-        cartItems.clear();
-        cartQuantities.clear();
-        saveCartToPrefs();
-    }
-
+    public int getQuantity(String productId) { return cartQuantities.getOrDefault(productId, 0); }
+    public List<Product> getCartItems() { return new ArrayList<>(cartItems.values()); }
+    public Map<String, Integer> getCartQuantities() { return new HashMap<>(cartQuantities); }
+    public void clearCart() { cartItems.clear(); cartQuantities.clear(); saveCartToPrefs(); }
     public int getCartCount() {
         int count = 0;
-        for (int qty : cartQuantities.values()) {
-            count += qty;
-        }
+        for (int qty : cartQuantities.values()) count += qty;
         return count;
     }
 }
