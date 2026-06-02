@@ -127,6 +127,28 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
 
     private void setupNavigation() {
         binding.navView.setNavigationItemSelectedListener(this);
+        
+        // Apply custom layout to all menu items
+        Menu menu = binding.navView.getMenu();
+        for (int i = 0; i < menu.size(); i++) {
+            MenuItem item = menu.getItem(i);
+            item.setActionView(R.layout.nav_drawer_item);
+            
+            View actionView = item.getActionView();
+            if (actionView != null) {
+                ImageView iconView = actionView.findViewById(android.R.id.icon);
+                TextView titleView = actionView.findViewById(android.R.id.text1);
+                
+                if (iconView != null && item.getIcon() != null) {
+                    iconView.setImageDrawable(item.getIcon());
+                }
+                if (titleView != null) {
+                    titleView.setText(item.getTitle());
+                }
+                
+                actionView.setOnClickListener(v -> onNavigationItemSelected(item));
+            }
+        }
     }
 
     private void setupHeader() {
