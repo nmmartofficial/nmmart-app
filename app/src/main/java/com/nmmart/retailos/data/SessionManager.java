@@ -107,7 +107,11 @@ public class SessionManager {
     }
 
     public String getAccessToken() {
-        return pref.getString(KEY_ACCESS_TOKEN, "");
+        try {
+            return pref.getString(KEY_ACCESS_TOKEN, "");
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     public String getRefreshToken() {
@@ -201,7 +205,11 @@ public class SessionManager {
     }
 
     public String getDeliveryLocation() {
-        return pref.getString(KEY_DELIVERY_LOCATION, "Naya Nagar, Manjhanpur");
+        try {
+            return pref.getString(KEY_DELIVERY_LOCATION, "Naya Nagar, Manjhanpur");
+        } catch (Exception e) {
+            return "Naya Nagar, Manjhanpur";
+        }
     }
 
     public void setStoreTheme(String color) {
@@ -214,7 +222,11 @@ public class SessionManager {
     }
 
     public boolean isLoggedIn() {
-        return pref.getBoolean(KEY_IS_LOGGED_IN, false) && !getAccessToken().isEmpty();
+        try {
+            return pref.getBoolean(KEY_IS_LOGGED_IN, false) && !getAccessToken().isEmpty();
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public String getMobile() {
