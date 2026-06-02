@@ -30,14 +30,14 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Mobile Number field -->
+    <!-- Email Address field -->
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/tilMobile"
+        android:id="@+id/tilEmail"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:hint="Mobile Number"
-        app:startIconDrawable="@android:drawable/ic_menu_call"
+        android:hint="Email Address"
+        app:startIconDrawable="@android:drawable/ic_dialog_email"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         app:boxCornerRadiusTopStart="12dp"
         app:boxCornerRadiusTopEnd="12dp"
@@ -46,11 +46,10 @@
         app:layout_constraintTop_toBottomOf="@id/tvLoginTitle">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etMobile"
+            android:id="@+id/etEmail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="phone"
-            android:maxLength="10" />
+            android:inputType="textEmailAddress" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- OTP field (Initially hidden) -->

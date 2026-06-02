@@ -54,6 +54,18 @@ public class SupabaseAuthConfig {
                 @Header("apikey") String apiKey,
                 @Body VerifyRequest body
         );
+
+        @POST("otp")
+        Call<Void> requestEmailOtp(
+                @Header("apikey") String apiKey,
+                @Body EmailOtpRequest body
+        );
+
+        @POST("verify")
+        Call<AuthSessionResponse> verifyEmailOtp(
+                @Header("apikey") String apiKey,
+                @Body VerifyEmailRequest body
+        );
     }
 
     public static class OtpRequest {
@@ -65,6 +77,19 @@ public class SupabaseAuthConfig {
 
         public OtpRequest(String phone, boolean createUser) {
             this.phone = phone;
+            this.createUser = createUser;
+        }
+    }
+
+    public static class EmailOtpRequest {
+        @SerializedName("email")
+        public final String email;
+
+        @SerializedName("create_user")
+        public final boolean createUser;
+
+        public EmailOtpRequest(String email, boolean createUser) {
+            this.email = email;
             this.createUser = createUser;
         }
     }
@@ -82,6 +107,23 @@ public class SupabaseAuthConfig {
         public VerifyRequest(String type, String phone, String token) {
             this.type = type;
             this.phone = phone;
+            this.token = token;
+        }
+    }
+
+    public static class VerifyEmailRequest {
+        @SerializedName("type")
+        public final String type;
+
+        @SerializedName("email")
+        public final String email;
+
+        @SerializedName("token")
+        public final String token;
+
+        public VerifyEmailRequest(String type, String email, String token) {
+            this.type = type;
+            this.email = email;
             this.token = token;
         }
     }
