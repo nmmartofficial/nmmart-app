@@ -448,12 +448,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             startActivity(new Intent(this, AboutUsActivity.class));
         } else if (id == R.id.nav_settings) {
             startActivity(new Intent(this, SettingsActivity.class));
-        } else if (id == R.id.nav_share) {
-            Intent shareIntent = new Intent(Intent.ACTION_SEND);
-            shareIntent.setType("text/plain");
-            shareIntent.putExtra(Intent.EXTRA_SUBJECT, "NM Mart");
-            shareIntent.putExtra(Intent.EXTRA_TEXT, "Check out NM Mart app!");
-            startActivity(Intent.createChooser(shareIntent, "Share via"));
         } else if (id == R.id.nav_logout && sessionManager.isLoggedIn()) {
             sessionManager.logout();
             Intent intent = new Intent(this, LoginActivity.class);
