@@ -1,5 +1,6 @@
 package com.nmmart.retailos.ui.activities;
 
+import android.util.Log;
 import com.nmmart.retailos.R;
 
 import android.content.Intent;
@@ -20,30 +21,46 @@ public class SplashActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
 
-        ImageView logo = findViewById(R.id.ivSplashLogo);
-        TextView title = findViewById(R.id.tvSplashTitle);
+        try {
+            ImageView logo = findViewById(R.id.ivSplashLogo);
+            TextView title = findViewById(R.id.tvSplashTitle);
 
-        // Simple Fade & Scale Animation
-        Animation fadeIn = AnimationUtils.loadAnimation(this, android.R.anim.fade_in);
-        logo.startAnimation(fadeIn);
-        title.startAnimation(fadeIn);
+            // Simple Fade & Scale Animation
+            Animation fadeIn = AnimationUtils.loadAnimation(this, android.R.anim.fade_in);
+            logo.startAnimation(fadeIn);
+            title.startAnimation(fadeIn);
 
-        // 2 Seconds delay ke baad redirection logic
-        new Handler().postDelayed(() -> {
-            SessionManager sessionManager = new SessionManager(SplashActivity.this);
-            Intent intent;
-            
-            if (!sessionManager.isLoggedIn()) {
-                intent = new Intent(SplashActivity.this, LoginActivity.class);
-            } else if (sessionManager.getDeliveryLocation().isEmpty() || sessionManager.getDeliveryLocation().equals("Select Location")) {
-                intent = new Intent(SplashActivity.this, LocationSelectionActivity.class);
-            } else {
-                intent = new Intent(SplashActivity.this, MainActivity.class);
-            }
-            
+            // 2 Seconds delay ke baad redirection logic
+            new Handler().postDelayed(() -> {
+                try {
+                    SessionManager sessionManager = new SessionManager(SplashActivity.this);
+                    Intent intent;
+                    
+                    if (!sessionManager.isLoggedIn()) {
+                        intent = new Intent(SplashActivity.this, LoginActivity.class);
+                    } else if (sessionManager.getDeliveryLocation().isEmpty() || sessionManager.getDeliveryLocation().equals("Select Location")) {
+                        intent = new Intent(SplashActivity.this, LocationSelectionActivity.class);
+                    } else {
+                        intent = new Intent(SplashActivity.this, MainActivity.class);
+                    }
+                    
+                    startActivity(intent);
+                    overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                    finish();
+                } catch (Exception e) {
+                    Log.e("SplashActivity", "Error in navigation", e);
+                    // Fallback to LoginActivity
+                    Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
+                    startActivity(intent);
+                    finish();
+                }
+            }, 2500);
+        } catch (Exception e) {
+            Log.e("SplashActivity", "Error in onCreate", e);
+            // Fallback to LoginActivity
+            Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
             startActivity(intent);
-            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
             finish();
-        }, 2500);
+        }
     }
 }
