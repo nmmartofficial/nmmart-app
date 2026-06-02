@@ -88,9 +88,13 @@ public class SupabaseAuthConfig {
         @SerializedName("create_user")
         public final boolean createUser;
 
+        @SerializedName("data")
+        public final Object data;
+
         public EmailOtpRequest(String email, boolean createUser) {
             this.email = email;
             this.createUser = createUser;
+            this.data = new Object();
         }
     }
 
