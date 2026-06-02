@@ -29,7 +29,7 @@ public class LoginActivity extends AppCompatActivity {
     private SessionManager sessionManager;
 
     // Bypass number
-    private static final String BYPASS_NUMBER = "708154604";
+    private static final String BYPASS_NUMBER = "7081154604";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +86,16 @@ public class LoginActivity extends AppCompatActivity {
     private void bypassLogin() {
         // Bypass login - no OTP needed
         sessionManager.setLogin(true, BYPASS_NUMBER, "");
+        
+        // Set dummy auth session to satisfy isLoggedIn() check
+        long dummyExpiresAt = (System.currentTimeMillis() / 1000L) + (365 * 24 * 60 * 60L); // 1 year
+        sessionManager.setAuthSession(
+                "bypass_user_id", 
+                "+91" + BYPASS_NUMBER, 
+                "dummy_access_token", 
+                "dummy_refresh_token", 
+                dummyExpiresAt
+        );
         
         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
