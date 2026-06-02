@@ -13,4 +13,10 @@
         <item name="android:statusBarColor">@color/orange_dark</item>
         <!-- Customize your theme here. -->
     </style>
+
+    <!-- Splash Screen Theme - No Initial Icon -->
+    <style name="Theme.Splash" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="android:windowBackground">@color/white</item>
+        <item name="android:statusBarColor">@color/white</item>
+    </style>
 </resources>
