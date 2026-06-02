@@ -448,6 +448,20 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             startActivity(new Intent(this, AboutUsActivity.class));
         } else if (id == R.id.nav_settings) {
             startActivity(new Intent(this, SettingsActivity.class));
+        } else if (id == R.id.nav_share) {
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/plain");
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, "NM Mart");
+            shareIntent.putExtra(Intent.EXTRA_TEXT, "Check out NM Mart - Your local grocery app! Download now!");
+            // Try to open WhatsApp first
+            shareIntent.setPackage("com.whatsapp");
+            try {
+                startActivity(shareIntent);
+            } catch (Exception e) {
+                // If WhatsApp not installed, show chooser
+                shareIntent.setPackage(null);
+                startActivity(Intent.createChooser(shareIntent, "Share via"));
+            }
         } else if (id == R.id.nav_logout && sessionManager.isLoggedIn()) {
             sessionManager.logout();
             Intent intent = new Intent(this, LoginActivity.class);

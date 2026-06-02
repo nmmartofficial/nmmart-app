@@ -1,31 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="200dp"
-    android:background="#FFFFFF"
+    android:layout_height="220dp"
+    android:background="@color/orange_primary"
     android:gravity="center"
     android:orientation="vertical"
-    android:padding="20dp"
+    android:padding="24dp"
     android:theme="@style/ThemeOverlay.AppCompat.Light">
 
     <!-- Full NM Mart Logo -->
     <ImageView
         android:id="@+id/ivNavLogo"
-        android:layout_width="180dp"
-        android:layout_height="180dp"
+        android:layout_width="160dp"
+        android:layout_height="120dp"
         android:background="@null"
         android:elevation="0dp"
+        android:scaleType="centerInside"
         android:src="@drawable/nm_mart_logo" />
 
     <TextView
         android:id="@+id/nav_user_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="16dp"
         android:text="Welcome to NM Mart"
         android:textSize="18sp"
         android:textStyle="bold"
-        android:textColor="#D32F2F" />
+        android:textColor="#FFFFFF" />
 
     <TextView
         android:id="@+id/nav_user_mobile"
@@ -34,6 +35,6 @@
         android:layout_marginTop="4dp"
         android:text="Login to continue"
         android:textSize="14sp"
-        android:textColor="#616161" />
+        android:textColor="#F5F5F5" />
 
 </LinearLayout>

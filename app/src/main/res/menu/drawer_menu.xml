@@ -33,6 +33,10 @@
         android:icon="@android:drawable/ic_menu_preferences"
         android:title="Settings" />
     <item
+        android:id="@+id/nav_share"
+        android:icon="@drawable/ic_share"
+        android:title="Share App" />
+    <item
         android:id="@+id/nav_logout"
         android:icon="@drawable/ic_logout"
         android:title="Logout" />
