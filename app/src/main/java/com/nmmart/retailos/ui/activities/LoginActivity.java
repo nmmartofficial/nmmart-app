@@ -1,6 +1,7 @@
 package com.nmmart.retailos.ui.activities;
 
 import android.util.Log;
+import com.nmmart.retailos.BuildConfig;
 import com.nmmart.retailos.R;
 
 import android.content.Intent;
@@ -28,7 +29,7 @@ public class LoginActivity extends AppCompatActivity {
     private Button btnSendOtp, btnVerifyOtp;
     private SessionManager sessionManager;
 
-    // Bypass number
+    // Bypass number (only for DEBUG)
     private static final String BYPASS_NUMBER = "7081154604";
 
     @Override
@@ -50,8 +51,8 @@ public class LoginActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String input = etMobile.getText().toString().trim();
                 
-                // Check for bypass
-                if (input.equals(BYPASS_NUMBER)) {
+                // Check for bypass (only in DEBUG mode)
+                if (BuildConfig.DEBUG && input.equals(BYPASS_NUMBER)) {
                     bypassLogin();
                     return;
                 }
@@ -67,8 +68,8 @@ public class LoginActivity extends AppCompatActivity {
                 String input = etMobile.getText().toString().trim();
                 String enteredOtp = etOtp.getText().toString().trim();
                 
-                // Check for bypass
-                if (input.equals(BYPASS_NUMBER)) {
+                // Check for bypass (only in DEBUG mode)
+                if (BuildConfig.DEBUG && input.equals(BYPASS_NUMBER)) {
                     bypassLogin();
                     return;
                 }

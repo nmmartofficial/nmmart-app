@@ -453,8 +453,10 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                         @Override
                         public void run() {
                             runOnUiThread(() -> {
-                                // You can show suggestions here or direct search
-                                // For now, let's keep it simple
+                                // Open ProductListActivity with search query
+                                Intent intent = new Intent(MainActivity.this, ProductListActivity.class);
+                                intent.putExtra("SEARCH_QUERY", query);
+                                startActivity(intent);
                             });
                         }
                     }, SEARCH_DELAY);
@@ -547,115 +549,135 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
      * Fetch wallet balance
      */
     private void fetchWallet() {
-        supabaseRepository.getWallets(new retrofit2.Callback<List<WalletMaster>>() {
-            @Override
-            public void onResponse(retrofit2.Call<List<WalletMaster>> call, retrofit2.Response<List<WalletMaster>> response) {
-                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
-                    WalletMaster wallet = response.body().get(0);
-                    sessionManager.setWalletBalance((float)wallet.currentBalance);
-                    binding.tvWalletBalance.setText("₹" + (int)wallet.currentBalance);
+        try {
+            supabaseRepository.getWallets(new retrofit2.Callback<List<WalletMaster>>() {
+                @Override
+                public void onResponse(retrofit2.Call<List<WalletMaster>> call, retrofit2.Response<List<WalletMaster>> response) {
+                    if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                        WalletMaster wallet = response.body().get(0);
+                        sessionManager.setWalletBalance((float)wallet.currentBalance);
+                        binding.tvWalletBalance.setText("₹" + (int)wallet.currentBalance);
+                    }
                 }
-            }
 
-            @Override
-            public void onFailure(retrofit2.Call<List<WalletMaster>> call, Throwable t) {
-                // Handle failure
-            }
-        });
+                @Override
+                public void onFailure(retrofit2.Call<List<WalletMaster>> call, Throwable t) {
+                    android.util.Log.e("MainActivity", "Wallet fetch failed", t);
+                    // No need to show toast to user, silently fail
+                }
+            });
+        } catch (Exception e) {
+            android.util.Log.e("MainActivity", "Error calling fetchWallet", e);
+        }
     }
 
     /**
      * Fetch banners and categories
      */
     private void fetchBannersAndCategories() {
-        binding.shimmerView.setVisibility(View.VISIBLE);
-        binding.shimmerView.startShimmer();
-        
-        // Fetch App Config for Dynamic Delivery Time and Charges
-        supabaseRepository.getAppConfig(new retrofit2.Callback<List<AppConfig>>() {
-            @Override
-            public void onResponse(retrofit2.Call<List<AppConfig>> call, retrofit2.Response<List<AppConfig>> response) {
-                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
-                    AppConfig config = response.body().get(0);
-                    binding.tvDeliveryTime.setText(config.deliveryTimeMsg);
-                    
-                    // Update CartManager delivery config
-                    com.nmmart.retailos.data.CartManager.getInstance(MainActivity.this)
-                        .updateDeliveryConfig(config.minOrderFreeDelivery, config.deliveryCharge);
+        try {
+            binding.shimmerView.setVisibility(View.VISIBLE);
+            binding.shimmerView.startShimmer();
+            
+            // Fetch App Config for Dynamic Delivery Time and Charges
+            supabaseRepository.getAppConfig(new retrofit2.Callback<List<AppConfig>>() {
+                @Override
+                public void onResponse(retrofit2.Call<List<AppConfig>> call, retrofit2.Response<List<AppConfig>> response) {
+                    if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                        AppConfig config = response.body().get(0);
+                        binding.tvDeliveryTime.setText(config.deliveryTimeMsg);
+                        
+                        // Update CartManager delivery config
+                        com.nmmart.retailos.data.CartManager.getInstance(MainActivity.this)
+                            .updateDeliveryConfig(config.minOrderFreeDelivery, config.deliveryCharge);
+                    }
                 }
-            }
-            @Override
-            public void onFailure(retrofit2.Call<List<AppConfig>> call, Throwable t) {}
-        });
-
-        supabaseRepository.getLiveBanners(new retrofit2.Callback<List<Banner>>() {
-            @Override
-            public void onResponse(retrofit2.Call<List<Banner>> call, retrofit2.Response<List<Banner>> response) {
-                binding.swipeRefreshLayout.setRefreshing(false);
-                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
-                    binding.rvBanners.setLayoutManager(new LinearLayoutManager(MainActivity.this, LinearLayoutManager.HORIZONTAL, false));
-                    BannerAdapter bannerAdapter = new BannerAdapter(MainActivity.this, response.body());
-                    binding.rvBanners.setAdapter(bannerAdapter);
-                    startBannerAutoScroll(response.body().size());
+                @Override
+                public void onFailure(retrofit2.Call<List<AppConfig>> call, Throwable t) {
+                    android.util.Log.e("MainActivity", "AppConfig fetch failed", t);
                 }
-            }
+            });
 
-            @Override
-            public void onFailure(retrofit2.Call<List<Banner>> call, Throwable t) {
-                binding.swipeRefreshLayout.setRefreshing(false);
-            }
-        });
-        
-        supabaseRepository.getCategories(new retrofit2.Callback<List<Category>>() {
-            @Override
-            public void onResponse(retrofit2.Call<List<Category>> call, retrofit2.Response<List<Category>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    categories.clear();
-                    categories.addAll(response.body());
-                    categoryAdapter.notifyDataSetChanged();
-                    
-                    // After categories, fetch brands from Supabase if needed, 
-                    // or use categories to derive brands
+            supabaseRepository.getLiveBanners(new retrofit2.Callback<List<Banner>>() {
+                @Override
+                public void onResponse(retrofit2.Call<List<Banner>> call, retrofit2.Response<List<Banner>> response) {
+                    binding.swipeRefreshLayout.setRefreshing(false);
+                    if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                        binding.rvBanners.setLayoutManager(new LinearLayoutManager(MainActivity.this, LinearLayoutManager.HORIZONTAL, false));
+                        BannerAdapter bannerAdapter = new BannerAdapter(MainActivity.this, response.body());
+                        binding.rvBanners.setAdapter(bannerAdapter);
+                        startBannerAutoScroll(response.body().size());
+                    }
                 }
-            }
 
-            @Override
-            public void onFailure(retrofit2.Call<List<Category>> call, Throwable t) {
-                // Handle failure
-            }
-        });
-
-        // Real data for sections from Supabase
-        supabaseRepository.fetchLiveProducts("Everyday Essentials", 10, 0, new retrofit2.Callback<List<Product>>() {
-            @Override
-            public void onResponse(retrofit2.Call<List<Product>> call, retrofit2.Response<List<Product>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    everydayEssentials.clear();
-                    everydayEssentials.addAll(response.body());
-                    everydayAdapter.notifyDataSetChanged();
+                @Override
+                public void onFailure(retrofit2.Call<List<Banner>> call, Throwable t) {
+                    android.util.Log.e("MainActivity", "Banners fetch failed", t);
+                    binding.swipeRefreshLayout.setRefreshing(false);
+                    Toast.makeText(MainActivity.this, "Failed to load banners. Check internet.", Toast.LENGTH_SHORT).show();
                 }
-            }
-            @Override
-            public void onFailure(retrofit2.Call<List<Product>> call, Throwable t) {}
-        });
-
-        supabaseRepository.getTrendingProducts(10, new retrofit2.Callback<List<Product>>() {
-            @Override
-            public void onResponse(retrofit2.Call<List<Product>> call, retrofit2.Response<List<Product>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    bestSelling.clear();
-                    bestSelling.addAll(response.body());
-                    bestSellingAdapter.notifyDataSetChanged();
+            });
+            
+            supabaseRepository.getCategories(new retrofit2.Callback<List<Category>>() {
+                @Override
+                public void onResponse(retrofit2.Call<List<Category>> call, retrofit2.Response<List<Category>> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        categories.clear();
+                        categories.addAll(response.body());
+                        categoryAdapter.notifyDataSetChanged();
+                        
+                        // After categories, fetch brands from Supabase if needed, 
+                        // or use categories to derive brands
+                    }
                 }
-                binding.shimmerView.stopShimmer();
-                binding.shimmerView.setVisibility(View.GONE);
-            }
-            @Override
-            public void onFailure(retrofit2.Call<List<Product>> call, Throwable t) {
-                binding.shimmerView.stopShimmer();
-                binding.shimmerView.setVisibility(View.GONE);
-            }
-        });
+
+                @Override
+                public void onFailure(retrofit2.Call<List<Category>> call, Throwable t) {
+                    android.util.Log.e("MainActivity", "Categories fetch failed", t);
+                    Toast.makeText(MainActivity.this, "Failed to load categories. Check internet.", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            // Real data for sections from Supabase
+            supabaseRepository.fetchLiveProducts("Everyday Essentials", 10, 0, new retrofit2.Callback<List<Product>>() {
+                @Override
+                public void onResponse(retrofit2.Call<List<Product>> call, retrofit2.Response<List<Product>> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        everydayEssentials.clear();
+                        everydayEssentials.addAll(response.body());
+                        everydayAdapter.notifyDataSetChanged();
+                    }
+                }
+                @Override
+                public void onFailure(retrofit2.Call<List<Product>> call, Throwable t) {
+                    android.util.Log.e("MainActivity", "Everyday Essentials fetch failed", t);
+                }
+            });
+
+            supabaseRepository.getTrendingProducts(10, new retrofit2.Callback<List<Product>>() {
+                @Override
+                public void onResponse(retrofit2.Call<List<Product>> call, retrofit2.Response<List<Product>> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        bestSelling.clear();
+                        bestSelling.addAll(response.body());
+                        bestSellingAdapter.notifyDataSetChanged();
+                    }
+                    binding.shimmerView.stopShimmer();
+                    binding.shimmerView.setVisibility(View.GONE);
+                }
+                @Override
+                public void onFailure(retrofit2.Call<List<Product>> call, Throwable t) {
+                    android.util.Log.e("MainActivity", "Trending products fetch failed", t);
+                    binding.shimmerView.stopShimmer();
+                    binding.shimmerView.setVisibility(View.GONE);
+                    Toast.makeText(MainActivity.this, "Failed to load products. Check internet.", Toast.LENGTH_SHORT).show();
+                }
+            });
+        } catch (Exception e) {
+            android.util.Log.e("MainActivity", "Error in fetchBannersAndCategories", e);
+            binding.shimmerView.stopShimmer();
+            binding.shimmerView.setVisibility(View.GONE);
+        }
     }
 
     /**

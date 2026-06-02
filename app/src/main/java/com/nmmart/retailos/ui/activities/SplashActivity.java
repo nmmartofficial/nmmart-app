@@ -26,12 +26,34 @@ public class SplashActivity extends AppCompatActivity {
         logo.startAnimation(fadeIn);
         title.startAnimation(fadeIn);
 
-        // 2 Seconds delay ke baad always go to LoginActivity
+        // 2 Seconds delay ke baad check login state
         new Handler().postDelayed(() -> {
-            Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
-            startActivity(intent);
-            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-            finish();
+            try {
+                com.nmmart.retailos.data.SessionManager sessionManager = new com.nmmart.retailos.data.SessionManager(SplashActivity.this);
+                Intent intent;
+                
+                if (sessionManager.isLoggedIn()) {
+                    // Check if user has selected location
+                    String location = sessionManager.getDeliveryLocation();
+                    if (location == null || location.isEmpty() || location.equals("Select Location")) {
+                        intent = new Intent(SplashActivity.this, LocationSelectionActivity.class);
+                    } else {
+                        intent = new Intent(SplashActivity.this, MainActivity.class);
+                    }
+                } else {
+                    intent = new Intent(SplashActivity.this, LoginActivity.class);
+                }
+                
+                startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                finish();
+            } catch (Exception e) {
+                android.util.Log.e("SplashActivity", "Error navigating", e);
+                // Fallback to LoginActivity
+                Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
+                startActivity(intent);
+                finish();
+            }
         }, 2000);
     }
 }
