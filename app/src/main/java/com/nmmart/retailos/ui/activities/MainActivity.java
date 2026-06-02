@@ -439,10 +439,30 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (searchTimer != null) {
+                    searchTimer.cancel();
+                }
+            }
 
             @Override
-            public void afterTextChanged(Editable s) {}
+            public void afterTextChanged(Editable s) {
+                String query = s.toString().trim();
+                if (query.length() >= 3) {
+                    searchTimer = new Timer();
+                    searchTimer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            runOnUiThread(() -> {
+                                // Navigate to search results
+                                Intent intent = new Intent(MainActivity.this, ProductListActivity.class);
+                                intent.putExtra("SEARCH_QUERY", query);
+                                startActivity(intent);
+                            });
+                        }
+                    }, SEARCH_DELAY);
+                }
+            }
         });
 
         binding.etSearch.setOnEditorActionListener((v, actionId, event) -> {
