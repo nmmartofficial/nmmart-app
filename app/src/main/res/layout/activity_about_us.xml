@@ -31,11 +31,24 @@
             android:orientation="vertical"
             android:padding="24dp">
 
-            <ImageView
-                android:layout_width="200dp"
-                android:layout_height="200dp"
+            <!-- Text Logo -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="NM Mart"
+                android:textSize="40sp"
+                android:textStyle="bold"
+                android:textColor="#D32F2F"
+                android:layout_gravity="center" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Shop More. Save More."
+                android:textSize="16sp"
+                android:textColor="#616161"
                 android:layout_gravity="center"
-                android:src="@drawable/nm_mart_logo" />
+                android:layout_marginTop="8dp" />
 
             <TextView
                 android:layout_width="match_parent"
