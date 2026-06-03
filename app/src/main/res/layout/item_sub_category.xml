@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="16dp">
+
+        <ImageView
+            android:id="@+id/ivSubCategory"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:src="@drawable/ic_grocery_bag"
+            app:tint="@color/orange_primary" />
+
+        <TextView
+            android:id="@+id/tvSubCategoryName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Sub Category"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/black_soft" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

@@ -35,6 +35,21 @@
             android:exported="false" />
 
         <activity
+            android:name=".ui.activities.SubCategoryActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity" />
+
+        <activity
+            android:name=".ui.activities.AddressListActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity" />
+
+        <activity
+            android:name=".ui.activities.OrderTrackingActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity" />
+
+        <activity
             android:name=".ui.activities.LocationSelectionActivity"
             android:exported="false" />
 

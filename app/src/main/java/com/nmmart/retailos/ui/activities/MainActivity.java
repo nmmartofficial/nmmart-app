@@ -371,6 +371,11 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             startVoiceInput();
         });
         
+        // Notifications click listener
+        binding.btnNotifications.setOnClickListener(v -> {
+            Toast.makeText(this, "Notifications coming soon!", Toast.LENGTH_SHORT).show();
+        });
+        
         // Quick Actions Click Listeners
         binding.btnQuickOrderAgain.setOnClickListener(v -> startActivity(new Intent(this, OrderHistoryActivity.class)));
         binding.btnQuickTrackOrder.setOnClickListener(v -> startActivity(new Intent(this, OrderHistoryActivity.class)));
