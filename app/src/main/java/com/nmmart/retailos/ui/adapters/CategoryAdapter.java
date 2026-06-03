@@ -32,6 +32,12 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
         this.listener = listener;
     }
 
+    // Update categories data
+    public void setCategories(List<Category> categories) {
+        this.categories = categories;
+        notifyDataSetChanged();
+    }
+
     @NonNull
     @Override
     public CategoryViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {

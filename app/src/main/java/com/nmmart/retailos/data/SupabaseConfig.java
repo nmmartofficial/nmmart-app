@@ -6,6 +6,7 @@ import com.nmmart.retailos.BuildConfig;
 import com.nmmart.retailos.models.Address;
 import com.nmmart.retailos.models.AppConfig;
 import com.nmmart.retailos.models.Banner;
+import com.nmmart.retailos.models.Brand;
 import com.nmmart.retailos.models.Category;
 import com.nmmart.retailos.models.Coupon;
 import com.nmmart.retailos.models.HomeConfig;
@@ -240,6 +241,12 @@ public class SupabaseConfig {
         
         @GET("item_group_master")
         Call<List<Category>> getCategories(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth
+        );
+        
+        @GET("brand_master")
+        Call<List<Brand>> getBrands(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth
         );

@@ -3,6 +3,7 @@ package com.nmmart.retailos.data;
 import com.nmmart.retailos.models.Address;
 import com.nmmart.retailos.models.AppConfig;
 import com.nmmart.retailos.models.Banner;
+import com.nmmart.retailos.models.Brand;
 import com.nmmart.retailos.models.Category;
 import com.nmmart.retailos.models.HomeConfig;
 import com.nmmart.retailos.models.Order;
@@ -52,6 +53,10 @@ public class SupabaseRepository {
 
     public Call<List<Category>> getCategoriesCall() {
         return apiService.getCategories(apiKey, anonOrUserAuth());
+    }
+    
+    public Call<List<Brand>> getBrandsCall() {
+        return apiService.getBrands(apiKey, anonOrUserAuth());
     }
 
     public Call<List<Product>> getTrendingProductsCall(int limit) {
@@ -149,6 +154,10 @@ public class SupabaseRepository {
     
     public void getCategories(Callback<List<Category>> callback) {
         apiService.getCategories(apiKey, anonOrUserAuth()).enqueue(callback);
+    }
+    
+    public void getBrands(Callback<List<Brand>> callback) {
+        apiService.getBrands(apiKey, anonOrUserAuth()).enqueue(callback);
     }
 
     public void validateAndApplyCoupon(String code, double cartTotal, Callback<List<CouponValidationResult>> callback) {

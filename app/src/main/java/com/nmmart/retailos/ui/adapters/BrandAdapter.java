@@ -9,6 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.nmmart.retailos.R;
 import com.nmmart.retailos.models.Brand;
 
@@ -76,7 +77,15 @@ public class BrandAdapter extends RecyclerView.Adapter<BrandAdapter.BrandViewHol
         // Bind data to views
         void bind(Brand brand) {
             tvBrandName.setText(brand.getName());
-            ivBrandLogo.setImageResource(brand.getLogoResId());
+            if (brand.getIconUrl() != null && !brand.getIconUrl().isEmpty()) {
+                Glide.with(itemView.getContext())
+                        .load(brand.getIconUrl())
+                        .placeholder(R.drawable.ic_placeholder)
+                        .error(R.drawable.ic_placeholder)
+                        .into(ivBrandLogo);
+            } else {
+                ivBrandLogo.setImageResource(R.drawable.ic_placeholder);
+            }
         }
     }
 }

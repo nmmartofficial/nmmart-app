@@ -454,6 +454,19 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             @Override
             public void onFailure(retrofit2.Call<List<Category>> call, Throwable t) {}
         });
+        
+        supabaseRepository.getBrands(new retrofit2.Callback<List<Brand>>() {
+            @Override
+            public void onResponse(retrofit2.Call<List<Brand>> call, retrofit2.Response<List<Brand>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    brands.clear();
+                    brands.addAll(response.body());
+                    brandAdapter.setBrands(brands);
+                }
+            }
+            @Override
+            public void onFailure(retrofit2.Call<List<Brand>> call, Throwable t) {}
+        });
 
         supabaseRepository.fetchLiveProducts("Everyday Essentials", 10, 0, new retrofit2.Callback<List<Product>>() {
             @Override
