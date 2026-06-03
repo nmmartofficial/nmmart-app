@@ -20,7 +20,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- Menu Button (Person Icon) -->
         <ImageButton
             android:id="@+id/btnMenu"
             android:layout_width="45dp"
@@ -34,7 +33,6 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <!-- Location & User Name Layout -->
         <LinearLayout
             android:id="@+id/locationLayout"
             android:layout_width="0dp"
@@ -106,7 +104,6 @@
                 android:layout_marginTop="1dp" />
         </LinearLayout>
 
-        <!-- Wallet Badge -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/walletBadge"
             android:layout_width="wrap_content"
@@ -147,7 +144,6 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Cart Button -->
         <ImageButton
             android:id="@+id/btnCart"
             android:layout_width="45dp"
@@ -239,90 +235,13 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <!-- Quick Category Chips -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginBottom="16dp">
-                        <HorizontalScrollView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:scrollbars="none">
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal">
-                                
-                                <com.google.android.material.chip.Chip
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="All"
-                                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                                    app:chipBackgroundColor="@color/orange_primary"
-                                    android:textColor="@color/white"
-                                    android:layout_marginEnd="8dp"
-                                    app:checkedIconVisible="false" />
-                                    
-                                <com.google.android.material.chip.Chip
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Aata-Dal"
-                                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                                    app:chipBackgroundColor="@color/white"
-                                    android:textColor="@color/black"
-                                    android:layout_marginEnd="8dp"
-                                    app:checkedIconVisible="false" />
-                                    
-                                <com.google.android.material.chip.Chip
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Dairy"
-                                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                                    app:chipBackgroundColor="@color/white"
-                                    android:textColor="@color/black"
-                                    android:layout_marginEnd="8dp"
-                                    app:checkedIconVisible="false" />
-                                    
-                                <com.google.android.material.chip.Chip
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Snacks"
-                                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                                    app:chipBackgroundColor="@color/white"
-                                    android:textColor="@color/black"
-                                    android:layout_marginEnd="8dp"
-                                    app:checkedIconVisible="false" />
-                                    
-                                <com.google.android.material.chip.Chip
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Beverages"
-                                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                                    app:chipBackgroundColor="@color/white"
-                                    android:textColor="@color/black"
-                                    android:layout_marginEnd="8dp"
-                                    app:checkedIconVisible="false" />
-                                    
-                                <com.google.android.material.chip.Chip
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Cleaning"
-                                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                                    app:chipBackgroundColor="@color/white"
-                                    android:textColor="@color/black"
-                                    app:checkedIconVisible="false" />
-                            </LinearLayout>
-                        </HorizontalScrollView>
-                    </LinearLayout>
-
                     <!-- 1. BANNER SLIDER -->
                     <LinearLayout
                         android:id="@+id/sectionBanner"
                         android:layout_width="match_parent"
                         android:layout_height="160dp"
                         android:orientation="vertical"
-                        android:layout_marginBottom="8dp">
+                        android:layout_marginBottom="16dp">
                         <androidx.recyclerview.widget.RecyclerView
                             android:id="@+id/rvBanners"
                             android:layout_width="match_parent"
@@ -331,64 +250,143 @@
                             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
                     </LinearLayout>
 
-                    <!-- 2. EVERYDAY ESSENTIALS -->
+                    <!-- 2. QUICK ACTIONS ROW -->
                     <LinearLayout
-                        android:id="@+id/sectionEverydayEssentials"
+                        android:id="@+id/sectionQuickActions"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginTop="24dp"
-                        android:layout_marginBottom="8dp">
-                        <TextView
-                            android:layout_width="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:layout_marginBottom="16dp">
+                        
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="Everyday Essentials"
-                            android:textSize="20sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/black"
-                            android:fontFamily="sans-serif" />
-                        <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/rvEverydayEssentials"
-                            android:layout_width="match_parent"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="?attr/selectableItemBackgroundBorderless">
+                            <com.google.android.material.card.MaterialCardView
+                                android:layout_width="56dp"
+                                android:layout_height="56dp"
+                                app:cardCornerRadius="28dp"
+                                app:cardBackgroundColor="#FF9800"
+                                app:cardElevation="0dp">
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:text="🔄"
+                                    android:textSize="24sp"
+                                    android:gravity="center" />
+                            </com.google.android.material.card.MaterialCardView>
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Order Again"
+                                android:textSize="12sp"
+                                android:textColor="#333333"
+                                android:layout_marginTop="8dp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="12dp"
-                            android:orientation="horizontal"
-                            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="?attr/selectableItemBackgroundBorderless">
+                            <com.google.android.material.card.MaterialCardView
+                                android:layout_width="56dp"
+                                android:layout_height="56dp"
+                                app:cardCornerRadius="28dp"
+                                app:cardBackgroundColor="#4CAF50"
+                                app:cardElevation="0dp">
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:text="📍"
+                                    android:textSize="24sp"
+                                    android:gravity="center" />
+                            </com.google.android.material.card.MaterialCardView>
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Track Order"
+                                android:textSize="12sp"
+                                android:textColor="#333333"
+                                android:layout_marginTop="8dp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="?attr/selectableItemBackgroundBorderless">
+                            <com.google.android.material.card.MaterialCardView
+                                android:layout_width="56dp"
+                                android:layout_height="56dp"
+                                app:cardCornerRadius="28dp"
+                                app:cardBackgroundColor="#E91E63"
+                                app:cardElevation="0dp">
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:text="🎁"
+                                    android:textSize="24sp"
+                                    android:gravity="center" />
+                            </com.google.android.material.card.MaterialCardView>
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Offers"
+                                android:textSize="12sp"
+                                android:textColor="#333333"
+                                android:layout_marginTop="8dp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:background="?attr/selectableItemBackgroundBorderless">
+                            <com.google.android.material.card.MaterialCardView
+                                android:layout_width="56dp"
+                                android:layout_height="56dp"
+                                app:cardCornerRadius="28dp"
+                                app:cardBackgroundColor="#2196F3"
+                                app:cardElevation="0dp">
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:text="👛"
+                                    android:textSize="24sp"
+                                    android:gravity="center" />
+                            </com.google.android.material.card.MaterialCardView>
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Wallet"
+                                android:textSize="12sp"
+                                android:textColor="#333333"
+                                android:layout_marginTop="8dp" />
+                        </LinearLayout>
                     </LinearLayout>
 
-                    <!-- 3. BEST SELLING -->
-                    <LinearLayout
-                        android:id="@+id/sectionBestSelling"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginTop="24dp"
-                        android:layout_marginBottom="8dp">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="🔥 Best Selling"
-                            android:textSize="20sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/black"
-                            android:fontFamily="sans-serif" />
-                        <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/rvBestSelling"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="12dp"
-                            android:orientation="horizontal"
-                            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-                    </LinearLayout>
-
-                    <!-- 5. SHOP BY CATEGORY -->
+                    <!-- 3. SHOP BY CATEGORY -->
                     <LinearLayout
                         android:id="@+id/sectionCategories"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:layout_marginTop="24dp"
-                        android:layout_marginBottom="8dp">
+                        android:layout_marginBottom="16dp">
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -406,13 +404,144 @@
                             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
                     </LinearLayout>
 
-                    <!-- 6. TWO-COLUMN PRODUCT GRID -->
+                    <!-- 4. SHOP BY BRAND -->
+                    <LinearLayout
+                        android:id="@+id/sectionBrands"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="16dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Shop by Brand"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/black"
+                            android:fontFamily="sans-serif" />
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvBrands"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:orientation="horizontal"
+                            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                    </LinearLayout>
+
+                    <!-- 5. FLASH SALE SECTION -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/sectionFlashSale"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        app:cardCornerRadius="16dp"
+                        app:cardElevation="2dp"
+                        app:cardBackgroundColor="#FFF3E0">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="⚡ Flash Sale"
+                                    android:textSize="20sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#E65100" />
+
+                                <View
+                                    android:layout_width="0dp"
+                                    android:layout_height="0dp"
+                                    android:layout_weight="1" />
+
+                                <TextView
+                                    android:id="@+id/tvTimer"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="23:59:59"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold"
+                                    android:background="#E65100"
+                                    android:textColor="#FFFFFF"
+                                    android:paddingStart="12dp"
+                                    android:paddingEnd="12dp"
+                                    android:paddingTop="6dp"
+                                    android:paddingBottom="6dp" />
+                            </LinearLayout>
+
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/rvFlashSale"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:orientation="horizontal"
+                                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- 6. BEST SELLING -->
+                    <LinearLayout
+                        android:id="@+id/sectionBestSelling"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="16dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🔥 Best Selling"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/black"
+                            android:fontFamily="sans-serif" />
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvBestSelling"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:orientation="horizontal"
+                            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                    </LinearLayout>
+
+                    <!-- 7. EVERYDAY ESSENTIALS -->
+                    <LinearLayout
+                        android:id="@+id/sectionEverydayEssentials"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="16dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Everyday Essentials"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/black"
+                            android:fontFamily="sans-serif" />
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvEverydayEssentials"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:orientation="horizontal"
+                            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                    </LinearLayout>
+
+                    <!-- 8. TWO-COLUMN PRODUCT GRID -->
                     <LinearLayout
                         android:id="@+id/sectionProducts"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginTop="24dp">
+                        android:orientation="vertical">
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -466,7 +595,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- Bottom Navigation Bar -->
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottom_navigation"
             android:layout_width="match_parent"
@@ -481,7 +609,6 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Navigation Drawer -->
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"
         android:layout_width="wrap_content"

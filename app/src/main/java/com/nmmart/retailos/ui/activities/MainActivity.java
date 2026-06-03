@@ -74,11 +74,15 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     
     private ProductListAdapter everydayAdapter;
     private ProductListAdapter bestSellingAdapter;
+    private ProductListAdapter flashSaleAdapter;
     
     private int currentBannerPosition = 0;
     private Handler bannerHandler;
     private Runnable bannerRunnable;
     private java.util.Timer bannerTimer;
+    private Handler timerHandler;
+    private Runnable timerRunnable;
+    private long timeLeftMillis = 86400000; // 24 hours in ms
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,9 +108,10 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             setupNavigation();
         setupHeader();
         setupCategories();
+        setupBrands();
         setupEverydayEssentials();
         setupBestSelling();
-        // setupBrands();
+        setupFlashSale();
         setupProductGrid();
         setupSearchHistory();
         setupBottomNavigation();
@@ -209,15 +214,60 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         binding.rvBestSelling.setAdapter(bestSellingAdapter);
     }
 
-    // private void setupBrands() {
-    //     brandAdapter = new BrandAdapter(brand -> {
-    //         Intent intent = new Intent(this, ProductListActivity.class);
-    //         intent.putExtra("BRAND_NAME", brand.getName());
-    //         startActivity(intent);
-    //     });
-    //     binding.rvBrands.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-    //     binding.rvBrands.setAdapter(brandAdapter);
-    // }
+    private void setupFlashSale() {
+        // Reuse best-selling products for flash sale
+        flashSaleAdapter = new ProductListAdapter(new ArrayList<>(), product -> {
+            Intent intent = new Intent(this, ProductDetailActivity.class);
+            intent.putExtra("PRODUCT", product);
+            startActivity(intent);
+        });
+        flashSaleAdapter.setOnCartUpdateListener(this::updateCartBadge);
+        binding.rvFlashSale.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        binding.rvFlashSale.setAdapter(flashSaleAdapter);
+
+        startTimer();
+    }
+
+    private void startTimer() {
+        timerHandler = new Handler(Looper.getMainLooper());
+        timerRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (timeLeftMillis <= 0) {
+                    timeLeftMillis = 86400000; // Reset to 24h
+                }
+
+                int hours = (int) (timeLeftMillis / 3600000);
+                int minutes = (int) ((timeLeftMillis % 3600000) / 60000);
+                int seconds = (int) ((timeLeftMillis % 60000) / 1000);
+
+                String timeString = String.format("%02d:%02d:%02d", hours, minutes, seconds);
+                binding.tvTimer.setText(timeString);
+
+                timeLeftMillis -= 1000;
+                timerHandler.postDelayed(this, 1000);
+            }
+        };
+        timerHandler.post(timerRunnable);
+    }
+
+    private void stopTimer() {
+        if (timerHandler != null && timerRunnable != null) {
+            timerHandler.removeCallbacks(timerRunnable);
+            timerHandler = null;
+            timerRunnable = null;
+        }
+    }
+
+    private void setupBrands() {
+        brandAdapter = new BrandAdapter(brand -> {
+            Intent intent = new Intent(this, ProductListActivity.class);
+            intent.putExtra("BRAND_NAME", brand.getName());
+            startActivity(intent);
+        });
+        binding.rvBrands.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        binding.rvBrands.setAdapter(brandAdapter);
+    }
 
     private void setupProductGrid() {
         productListAdapter = new ProductListAdapter(new ArrayList<>(), product -> {
@@ -417,6 +467,9 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     bestSelling.clear();
                     bestSelling.addAll(response.body());
                     bestSellingAdapter.notifyDataSetChanged();
+                    
+                    // Also set flash sale products
+                    flashSaleAdapter.setProducts(new ArrayList<>(bestSelling));
                 }
                 binding.shimmerView.stopShimmer();
                 binding.shimmerView.setVisibility(View.GONE);
@@ -502,14 +555,15 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     }
 
     @Override
-    protected void onPause() { super.onPause(); stopBannerAutoScroll(); }
+    protected void onPause() { super.onPause(); stopBannerAutoScroll(); stopTimer(); }
     @Override
     protected void onResume() {
         super.onResume();
         if (binding.rvBanners.getAdapter() != null) startBannerAutoScroll(binding.rvBanners.getAdapter().getItemCount());
+        startTimer();
         updateNavHeader();
         updateCartBadge();
     }
     @Override
-    protected void onDestroy() { super.onDestroy(); stopBannerAutoScroll(); }
+    protected void onDestroy() { super.onDestroy(); stopBannerAutoScroll(); stopTimer(); }
 }
