@@ -40,8 +40,10 @@ import com.nmmart.retailos.models.AppConfig;
 import com.nmmart.retailos.models.Banner;
 import com.nmmart.retailos.models.Brand;
 import com.nmmart.retailos.models.Category;
+import com.nmmart.retailos.models.Offer;
 import com.nmmart.retailos.models.Product;
 import com.nmmart.retailos.models.WalletMaster;
+import com.nmmart.retailos.ui.adapters.OfferAdapter;
 import com.nmmart.retailos.ui.adapters.BannerAdapter;
 import com.nmmart.retailos.ui.adapters.BrandAdapter;
 import com.nmmart.retailos.ui.adapters.CategoryAdapter;
@@ -78,10 +80,12 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private List<Brand> brands = new ArrayList<>();
     private List<Product> everydayEssentials = new ArrayList<>();
     private List<Product> bestSelling = new ArrayList<>();
+    private List<Offer> offers = new ArrayList<>();
     
     private ProductListAdapter everydayAdapter;
     private ProductListAdapter bestSellingAdapter;
     private ProductListAdapter flashSaleAdapter;
+    private OfferAdapter offerAdapter;
     
     private int currentBannerPosition = 0;
     private Handler bannerHandler;
@@ -136,6 +140,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         setupEverydayEssentials();
         setupBestSelling();
         setupFlashSale();
+        setupOffers();
         setupProductGrid();
         setupSearchHistory();
         setupBottomNavigation();
@@ -376,13 +381,16 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             Toast.makeText(this, "Notifications coming soon!", Toast.LENGTH_SHORT).show();
         });
         
-        // Quick Actions Click Listeners
-        binding.btnQuickOrderAgain.setOnClickListener(v -> startActivity(new Intent(this, OrderHistoryActivity.class)));
-        binding.btnQuickTrackOrder.setOnClickListener(v -> startActivity(new Intent(this, OrderHistoryActivity.class)));
+        // Quick Offers button click listener - toggle offers section visibility
         binding.btnQuickOffers.setOnClickListener(v -> {
-            Toast.makeText(this, "Offers coming soon!", Toast.LENGTH_SHORT).show();
+            if (binding.sectionOffers.getVisibility() == View.GONE) {
+                binding.sectionOffers.setVisibility(View.VISIBLE);
+            } else {
+                binding.sectionOffers.setVisibility(View.GONE);
+            }
         });
         
+        // Search action listener
         binding.etSearch.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
                 String query = binding.etSearch.getText().toString().trim();
@@ -397,7 +405,22 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             return false;
         });
         
+        // Swipe to refresh listener
         binding.swipeRefreshLayout.setOnRefreshListener(this::refreshData);
+    }
+    
+    private void setupOffers() {
+        offerAdapter = new OfferAdapter(offers);
+        binding.rvOffers.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        binding.rvOffers.setAdapter(offerAdapter);
+        
+        // For now, add some dummy offers (replace with Supabase offers_master fetch later!)
+        offers.add(new Offer("1", "Flat 20% OFF on Grains", "Get 20% off on all grain products!", "", "20% OFF"));
+        offers.add(new Offer("2", "Buy 1 Get 1 Free", "Buy 1 pack of biscuits and get 1 free!", "", "BOGO"));
+        offers.add(new Offer("3", "10% Discount on Snacks", "Special discount on all snack items!", "", "10% OFF"));
+        
+        offerAdapter.setOffers(offers);
+        binding.sectionOffers.setVisibility(View.VISIBLE);
     }
 
     private void setupObservers() {
