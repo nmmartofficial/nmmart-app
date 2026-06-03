@@ -31,6 +31,7 @@ public class SessionManager {
     private static final String KEY_STORE_THEME = "storeTheme";
     private static final String KEY_DARK_MODE = "darkMode";
     private static final String KEY_STORE_LOGO = "storeLogoUrl";
+    private static final String KEY_ONBOARDING_COMPLETED = "onboardingCompleted";
 
     // Default logo link provided by user
     private static final String DEFAULT_LOGO_URL = "https://i.postimg.cc/1XFXZgzX/logo-nm-mart-app.png";
@@ -244,6 +245,15 @@ public class SessionManager {
 
     public String getMobile() {
         return pref.getString(KEY_MOBILE, null);
+    }
+
+    public void setOnboardingCompleted(boolean completed) {
+        editor.putBoolean(KEY_ONBOARDING_COMPLETED, completed);
+        editor.apply();
+    }
+
+    public boolean isOnboardingCompleted() {
+        return pref.getBoolean(KEY_ONBOARDING_COMPLETED, false);
     }
 
     public void logout() {

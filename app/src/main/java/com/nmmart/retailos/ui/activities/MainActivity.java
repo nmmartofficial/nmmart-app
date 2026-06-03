@@ -7,6 +7,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.speech.RecognizerIntent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -14,6 +15,10 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -57,7 +62,9 @@ import java.util.TimerTask;
 
 public class MainActivity extends BaseActivity implements NavigationView.OnNavigationItemSelectedListener {
 
+    private static final int REQUEST_CODE_SPEECH_INPUT = 1000;
     private ActivityResultLauncher<String> notificationPermissionLauncher;
+    private ActivityResultLauncher<Intent> speechInputLauncher;
     private ActivityMainBinding binding;
     private SessionManager sessionManager;
     private SupabaseRepository supabaseRepository;
@@ -94,6 +101,23 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 isGranted -> {
                     if (!isGranted) {
                         Toast.makeText(this, "Notifications are disabled. You won't receive order updates!", Toast.LENGTH_LONG).show();
+                    }
+                }
+            );
+            
+            speechInputLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        java.util.ArrayList<String> resultArray = result.getData().getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                        if (resultArray != null && !resultArray.isEmpty()) {
+                            String voiceInput = resultArray.get(0);
+                            binding.etSearch.setText(voiceInput);
+                            SearchHistoryManager.getInstance(this).addToHistory(voiceInput);
+                            Intent intent = new Intent(this, ProductListActivity.class);
+                            intent.putExtra("SEARCH_QUERY", voiceInput);
+                            startActivity(intent);
+                        }
                     }
                 }
             );
@@ -342,6 +366,11 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         binding.btnCart.setOnClickListener(v -> startActivity(new Intent(this, CartActivity.class)));
         binding.walletBadge.setOnClickListener(v -> startActivity(new Intent(this, WalletActivity.class)));
         
+        // Voice search click listener
+        binding.textInputLayout.setEndIconOnClickListener(v -> {
+            startVoiceInput();
+        });
+        
         // Quick Actions Click Listeners
         binding.btnQuickOrderAgain.setOnClickListener(v -> startActivity(new Intent(this, OrderHistoryActivity.class)));
         binding.btnQuickTrackOrder.setOnClickListener(v -> startActivity(new Intent(this, OrderHistoryActivity.class)));
@@ -587,4 +616,17 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     }
     @Override
     protected void onDestroy() { super.onDestroy(); stopBannerAutoScroll(); stopTimer(); }
+    
+    private void startVoiceInput() {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "hi-IN"); // Hindi
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Kya khojna chahte hain?");
+        
+        try {
+            speechInputLauncher.launch(intent);
+        } catch (Exception e) {
+            Toast.makeText(this, "Voice search not supported!", Toast.LENGTH_SHORT).show();
+        }
+    }
 }

@@ -16,14 +16,19 @@
         android:theme="@style/Theme.NMMart">
         
         <activity
-            android:name=".ui.activities.SplashActivity"
+            android:name=".ui.activities.OnboardingActivity"
             android:exported="true"
-            android:theme="@style/Theme.Splash">
+            android:theme="@style/Theme.NMMart">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ui.activities.SplashActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Splash" />
 
         <activity
             android:name=".ui.activities.MainActivity"
