@@ -77,9 +77,9 @@ public class BrandAdapter extends RecyclerView.Adapter<BrandAdapter.BrandViewHol
         // Bind data to views
         void bind(Brand brand) {
             tvBrandName.setText(brand.getName());
-            if (brand.getIconUrl() != null && !brand.getIconUrl().isEmpty()) {
+            if (brand.getLogoUrl() != null && !brand.getLogoUrl().isEmpty()) {
                 Glide.with(itemView.getContext())
-                        .load(brand.getIconUrl())
+                        .load(brand.getLogoUrl())
                         .placeholder(R.drawable.ic_placeholder)
                         .error(R.drawable.ic_placeholder)
                         .into(ivBrandLogo);

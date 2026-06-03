@@ -110,7 +110,7 @@ public class SupabaseConfig {
             @Header("Authorization") String auth
         );
 
-        @GET("products")
+        @GET("products?is_trending=eq.true")
         Call<List<Product>> getTrendingProducts(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
@@ -178,34 +178,33 @@ public class SupabaseConfig {
             @Query("limit") int limit
         );
 
-        @GET("banner_master")
+        @GET("banners?is_active=eq.true")
         Call<List<Banner>> getBanners(
             @Header("apikey") String apiKey,
-            @Header("Authorization") String auth,
-            @Query("is_active") String isActive
+            @Header("Authorization") String auth
         );
 
-        @GET("coupons")
+        @GET("coupons?is_active=eq.true")
         Call<List<Coupon>> getCoupons(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth
         );
 
-        @GET("user_addresses")
+        @GET("addresses")
         Call<List<Address>> getUserAddresses(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
             @Query("user_id") String userId
         );
 
-        @POST("user_addresses")
+        @POST("addresses")
         Call<Void> addAddress(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
             @Body Map<String, Object> addressData
         );
 
-        @PATCH("user_addresses")
+        @PATCH("addresses")
         Call<Void> updateAddress(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
@@ -213,7 +212,7 @@ public class SupabaseConfig {
             @Body Map<String, Object> addressData
         );
 
-        @DELETE("user_addresses")
+        @DELETE("addresses")
         Call<Void> deleteAddress(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
@@ -239,13 +238,13 @@ public class SupabaseConfig {
             @Header("Authorization") String auth
         );
         
-        @GET("item_group_master")
+        @GET("categories?is_active=eq.true&order=position.asc")
         Call<List<Category>> getCategories(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth
         );
         
-        @GET("brand_master")
+        @GET("brands?is_active=eq.true&order=position.asc")
         Call<List<Brand>> getBrands(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth

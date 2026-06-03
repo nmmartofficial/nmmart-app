@@ -6,9 +6,19 @@ import com.nmmart.retailos.data.SessionManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class SplashActivity extends AppCompatActivity {
+
+    private int tapCount = 0;
+    private long lastTapTime = 0;
+    private boolean navigateScheduled = false;
+    private Handler handler;
+    private Runnable navigateRunnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -16,12 +26,37 @@ public class SplashActivity extends AppCompatActivity {
         setContentView(R.layout.activity_splash);
 
         SessionManager sessionManager = new SessionManager(this);
+        handler = new Handler();
 
-        // 1 Second delay to show the logo
-        new Handler().postDelayed(() -> {
+        TextView tvSplashTitle = findViewById(R.id.tvSplashTitle);
+        tvSplashTitle.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    long currentTime = System.currentTimeMillis();
+                    if (currentTime - lastTapTime < 500) {
+                        tapCount++;
+                        if (tapCount == 5) {
+                            tapCount = 0;
+                            cancelNavigation();
+                            launchDebugAudit();
+                            return true;
+                        }
+                    } else {
+                        tapCount = 1;
+                    }
+                    lastTapTime = currentTime;
+                }
+                return false;
+            }
+        });
+
+        navigateRunnable = () -> {
             try {
                 Intent intent;
-                if (sessionManager.isLoggedIn()) {
+                if (!sessionManager.isOnboardingCompleted()) {
+                    intent = new Intent(SplashActivity.this, OnboardingActivity.class);
+                } else if (sessionManager.isLoggedIn()) {
                     String location = sessionManager.getDeliveryLocation();
                     if (location == null || location.isEmpty() || location.equals("Select Location")) {
                         intent = new Intent(SplashActivity.this, LocationSelectionActivity.class);
@@ -41,6 +76,28 @@ public class SplashActivity extends AppCompatActivity {
                 startActivity(intent);
                 finish();
             }
-        }, 1000);
+        };
+
+        handler.postDelayed(navigateRunnable, 1000);
+        navigateScheduled = true;
+    }
+
+    private void cancelNavigation() {
+        if (navigateScheduled && handler != null && navigateRunnable != null) {
+            handler.removeCallbacks(navigateRunnable);
+            navigateScheduled = false;
+        }
+    }
+
+    private void launchDebugAudit() {
+        Toast.makeText(this, "🔍 Opening Debug Audit Panel...", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(this, DebugAuditActivity.class);
+        startActivity(intent);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        cancelNavigation();
     }
 }

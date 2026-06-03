@@ -77,9 +77,9 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
         // Bind data to views
         void bind(Category category) {
             tvCategoryName.setText(category.getName());
-            if (category.getIconUrl() != null && !category.getIconUrl().isEmpty()) {
+            if (category.getImageUrl() != null && !category.getImageUrl().isEmpty()) {
                 Glide.with(itemView.getContext())
-                        .load(category.getIconUrl())
+                        .load(category.getImageUrl())
                         .placeholder(R.drawable.ic_launcher_foreground)
                         .error(R.drawable.ic_launcher_foreground)
                         .into(ivCategoryIcon);

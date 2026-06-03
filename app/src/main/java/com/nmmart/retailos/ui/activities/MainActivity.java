@@ -80,12 +80,10 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private List<Brand> brands = new ArrayList<>();
     private List<Product> everydayEssentials = new ArrayList<>();
     private List<Product> bestSelling = new ArrayList<>();
-    private List<Offer> offers = new ArrayList<>();
     
     private ProductListAdapter everydayAdapter;
     private ProductListAdapter bestSellingAdapter;
     private ProductListAdapter flashSaleAdapter;
-    private OfferAdapter offerAdapter;
     
     private int currentBannerPosition = 0;
     private Handler bannerHandler;
@@ -98,11 +96,13 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        logDebug("onCreate: Initializing MainActivity");
         
         try {
             notificationPermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
                 isGranted -> {
+                    logDebug("Notification permission result: " + isGranted);
                     if (!isGranted) {
                         Toast.makeText(this, "Notifications are disabled. You won't receive order updates!", Toast.LENGTH_LONG).show();
                     }
@@ -112,12 +112,15 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             speechInputLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
+                    logDebug("Speech input result code: " + result.getResultCode());
                     if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                         java.util.ArrayList<String> resultArray = result.getData().getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                         if (resultArray != null && !resultArray.isEmpty()) {
                             String voiceInput = resultArray.get(0);
+                            logInfo("Voice input received: " + voiceInput);
                             binding.etSearch.setText(voiceInput);
                             SearchHistoryManager.getInstance(this).addToHistory(voiceInput);
+                            logNavigation("ProductListActivity (voice search: " + voiceInput + ")");
                             Intent intent = new Intent(this, ProductListActivity.class);
                             intent.putExtra("SEARCH_QUERY", voiceInput);
                             startActivity(intent);
@@ -128,10 +131,12 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             
             binding = ActivityMainBinding.inflate(getLayoutInflater());
             setContentView(binding.getRoot());
+            logDebug("View binding initialized");
             
             sessionManager = new SessionManager(this);
             supabaseRepository = new SupabaseRepository();
             productListViewModel = new ViewModelProvider(this).get(ProductListViewModel.class);
+            logDebug("Managers and ViewModel initialized");
             
             setupNavigation();
         setupHeader();
@@ -140,18 +145,19 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         setupEverydayEssentials();
         setupBestSelling();
         setupFlashSale();
-        setupOffers();
         setupProductGrid();
         setupSearchHistory();
         setupBottomNavigation();
         setupObservers();
         setupClickListeners();
+        logDebug("All UI components set up");
             
             loadInitialData();
             updateCartBadge();
             requestNotificationPermission();
+            logDebug("MainActivity initialization complete");
         } catch (Exception e) {
-            android.util.Log.e("MainActivity", "Error in onCreate", e);
+            logError("Error in onCreate", e);
         }
     }
     
@@ -367,27 +373,31 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     }
     
     private void setupClickListeners() {
-        binding.btnMenu.setOnClickListener(v -> binding.drawerLayout.openDrawer(GravityCompat.START));
-        binding.btnCart.setOnClickListener(v -> startActivity(new Intent(this, CartActivity.class)));
-        binding.walletBadge.setOnClickListener(v -> startActivity(new Intent(this, WalletActivity.class)));
+        binding.btnMenu.setOnClickListener(v -> {
+            logButtonClick("Menu");
+            binding.drawerLayout.openDrawer(GravityCompat.START);
+        });
+        binding.btnCart.setOnClickListener(v -> {
+            logButtonClick("Cart");
+            logNavigation("CartActivity");
+            startActivity(new Intent(this, CartActivity.class));
+        });
+        binding.walletBadge.setOnClickListener(v -> {
+            logButtonClick("Wallet");
+            logNavigation("WalletActivity");
+            startActivity(new Intent(this, WalletActivity.class));
+        });
         
         // Voice search click listener
         binding.textInputLayout.setEndIconOnClickListener(v -> {
+            logButtonClick("Voice Search");
             startVoiceInput();
         });
         
         // Notifications click listener
         binding.btnNotifications.setOnClickListener(v -> {
+            logButtonClick("Notifications");
             Toast.makeText(this, "Notifications coming soon!", Toast.LENGTH_SHORT).show();
-        });
-        
-        // Quick Offers button click listener - toggle offers section visibility
-        binding.btnQuickOffers.setOnClickListener(v -> {
-            if (binding.sectionOffers.getVisibility() == View.GONE) {
-                binding.sectionOffers.setVisibility(View.VISIBLE);
-            } else {
-                binding.sectionOffers.setVisibility(View.GONE);
-            }
         });
         
         // Search action listener
@@ -395,7 +405,10 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
                 String query = binding.etSearch.getText().toString().trim();
                 if (!query.isEmpty()) {
+                    logButtonClick("Search");
+                    logInfo("Search query: " + query);
                     SearchHistoryManager.getInstance(this).addToHistory(query);
+                    logNavigation("ProductListActivity (search: " + query + ")");
                     Intent intent = new Intent(this, ProductListActivity.class);
                     intent.putExtra("SEARCH_QUERY", query);
                     startActivity(intent);
@@ -406,21 +419,10 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         });
         
         // Swipe to refresh listener
-        binding.swipeRefreshLayout.setOnRefreshListener(this::refreshData);
-    }
-    
-    private void setupOffers() {
-        offerAdapter = new OfferAdapter(offers);
-        binding.rvOffers.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        binding.rvOffers.setAdapter(offerAdapter);
-        
-        // For now, add some dummy offers (replace with Supabase offers_master fetch later!)
-        offers.add(new Offer("1", "Flat 20% OFF on Grains", "Get 20% off on all grain products!", "", "20% OFF"));
-        offers.add(new Offer("2", "Buy 1 Get 1 Free", "Buy 1 pack of biscuits and get 1 free!", "", "BOGO"));
-        offers.add(new Offer("3", "10% Discount on Snacks", "Special discount on all snack items!", "", "10% OFF"));
-        
-        offerAdapter.setOffers(offers);
-        binding.sectionOffers.setVisibility(View.VISIBLE);
+        binding.swipeRefreshLayout.setOnRefreshListener(() -> {
+            logButtonClick("Swipe to Refresh");
+            refreshData();
+        });
     }
 
     private void setupObservers() {
@@ -446,6 +448,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     }
 
     private void fetchWallet() {
+        logDebug("fetchWallet called");
         supabaseRepository.getWallets(new retrofit2.Callback<List<WalletMaster>>() {
             @Override
             public void onResponse(retrofit2.Call<List<WalletMaster>> call, retrofit2.Response<List<WalletMaster>> response) {
@@ -453,14 +456,18 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     WalletMaster wallet = response.body().get(0);
                     sessionManager.setWalletBalance((float)wallet.currentBalance);
                     binding.tvWalletBalance.setText(PriceUtils.formatPrice(wallet.currentBalance));
+                    logDebug("Wallet balance updated: " + wallet.currentBalance);
                 }
             }
             @Override
-            public void onFailure(retrofit2.Call<List<WalletMaster>> call, Throwable t) {}
+            public void onFailure(retrofit2.Call<List<WalletMaster>> call, Throwable t) {
+                logError("Failed to fetch wallet", t);
+            }
         });
     }
 
     private void fetchBannersAndCategories() {
+        logDebug("fetchBannersAndCategories called");
         binding.shimmerView.setVisibility(View.VISIBLE);
         binding.shimmerView.startShimmer();
         binding.nestedScrollView.setVisibility(View.GONE);
@@ -475,6 +482,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     double handling = config.handlingCharge > 0 ? config.handlingCharge : 5.0;
                     com.nmmart.retailos.data.CartManager.getInstance(MainActivity.this)
                         .updateAppConfig(config.minOrderFreeDelivery, config.deliveryCharge, minCheckout, handling, config.cashbackPercentage);
+                    logDebug("App config loaded successfully");
                     
                     if (config.storeLogoUrl != null && !config.storeLogoUrl.isEmpty()) {
                         sessionManager.setStoreLogoUrl(config.storeLogoUrl);
@@ -483,7 +491,9 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 }
             }
             @Override
-            public void onFailure(retrofit2.Call<List<AppConfig>> call, Throwable t) {}
+            public void onFailure(retrofit2.Call<List<AppConfig>> call, Throwable t) {
+                logError("Failed to fetch app config", t);
+            }
         });
 
         supabaseRepository.getLiveBanners(new retrofit2.Callback<List<Banner>>() {
@@ -493,10 +503,13 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     binding.rvBanners.setLayoutManager(new LinearLayoutManager(MainActivity.this, LinearLayoutManager.HORIZONTAL, false));
                     binding.rvBanners.setAdapter(new BannerAdapter(MainActivity.this, response.body()));
                     startBannerAutoScroll(response.body().size());
+                    logDebug("Banners loaded: " + response.body().size());
                 }
             }
             @Override
-            public void onFailure(retrofit2.Call<List<Banner>> call, Throwable t) {}
+            public void onFailure(retrofit2.Call<List<Banner>> call, Throwable t) {
+                logError("Failed to fetch banners", t);
+            }
         });
         
         supabaseRepository.getCategories(new retrofit2.Callback<List<Category>>() {
@@ -506,10 +519,13 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     categories.clear();
                     categories.addAll(response.body());
                     categoryAdapter.notifyDataSetChanged();
+                    logDebug("Categories loaded: " + categories.size());
                 }
             }
             @Override
-            public void onFailure(retrofit2.Call<List<Category>> call, Throwable t) {}
+            public void onFailure(retrofit2.Call<List<Category>> call, Throwable t) {
+                logError("Failed to fetch categories", t);
+            }
         });
         
         supabaseRepository.getBrands(new retrofit2.Callback<List<Brand>>() {
@@ -519,10 +535,13 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     brands.clear();
                     brands.addAll(response.body());
                     brandAdapter.setBrands(brands);
+                    logDebug("Brands loaded: " + brands.size());
                 }
             }
             @Override
-            public void onFailure(retrofit2.Call<List<Brand>> call, Throwable t) {}
+            public void onFailure(retrofit2.Call<List<Brand>> call, Throwable t) {
+                logError("Failed to fetch brands", t);
+            }
         });
 
         supabaseRepository.fetchLiveProducts("Everyday Essentials", 10, 0, new retrofit2.Callback<List<Product>>() {
@@ -532,10 +551,13 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     everydayEssentials.clear();
                     everydayEssentials.addAll(response.body());
                     everydayAdapter.notifyDataSetChanged();
+                    logDebug("Everyday essentials loaded: " + everydayEssentials.size());
                 }
             }
             @Override
-            public void onFailure(retrofit2.Call<List<Product>> call, Throwable t) {}
+            public void onFailure(retrofit2.Call<List<Product>> call, Throwable t) {
+                logError("Failed to fetch everyday essentials", t);
+            }
         });
 
         supabaseRepository.getTrendingProducts(10, new retrofit2.Callback<List<Product>>() {
@@ -548,6 +570,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     
                     // Also set flash sale products
                     flashSaleAdapter.setProducts(new ArrayList<>(bestSelling));
+                    logDebug("Best selling products loaded: " + bestSelling.size());
                 }
                 binding.shimmerView.stopShimmer();
                 binding.shimmerView.setVisibility(View.GONE);
@@ -555,6 +578,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             }
             @Override
             public void onFailure(retrofit2.Call<List<Product>> call, Throwable t) {
+                logError("Failed to fetch best selling products", t);
                 binding.shimmerView.stopShimmer();
                 binding.shimmerView.setVisibility(View.GONE);
                 binding.nestedScrollView.setVisibility(View.VISIBLE);
