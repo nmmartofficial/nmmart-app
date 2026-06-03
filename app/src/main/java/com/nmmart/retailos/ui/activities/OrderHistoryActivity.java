@@ -148,6 +148,7 @@ public class OrderHistoryActivity extends BaseActivity {
             if (status.equals("pending")) {
                 holder.binding.dotPending.setBackgroundResource(android.R.color.holo_orange_dark);
                 holder.binding.btnCancelOrder.setVisibility(View.VISIBLE);
+                holder.binding.btnOrderAgain.setVisibility(View.GONE);
                 holder.binding.btnCancelOrder.setOnClickListener(v -> {
                     new androidx.appcompat.app.AlertDialog.Builder(OrderHistoryActivity.this)
                         .setTitle("Cancel Order")
@@ -162,6 +163,7 @@ public class OrderHistoryActivity extends BaseActivity {
                 holder.binding.dotPending.setBackgroundResource(android.R.color.holo_orange_dark);
                 holder.binding.dotShipped.setBackgroundResource(android.R.color.holo_orange_dark);
                 holder.binding.btnCancelOrder.setVisibility(View.GONE);
+                holder.binding.btnOrderAgain.setVisibility(View.GONE);
             } else if (status.equals("delivered")) {
                 holder.binding.dotPending.setBackgroundResource(android.R.color.holo_green_dark);
                 holder.binding.dotShipped.setBackgroundResource(android.R.color.holo_green_dark);
@@ -169,10 +171,18 @@ public class OrderHistoryActivity extends BaseActivity {
                 holder.binding.cardStatus.setCardBackgroundColor(android.graphics.Color.parseColor("#E8F5E9"));
                 holder.binding.tvStatus.setTextColor(android.graphics.Color.parseColor("#2E7D32"));
                 holder.binding.btnCancelOrder.setVisibility(View.GONE);
+                holder.binding.btnOrderAgain.setVisibility(View.VISIBLE);
+                holder.binding.btnOrderAgain.setOnClickListener(v -> {
+                    Intent intent = new Intent(OrderHistoryActivity.this, MainActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivity(intent);
+                    Toast.makeText(OrderHistoryActivity.this, "Go to home to reorder items!", Toast.LENGTH_SHORT).show();
+                });
             } else if (status.equals("cancelled")) {
                 holder.binding.cardStatus.setCardBackgroundColor(android.graphics.Color.parseColor("#FFEBEE"));
                 holder.binding.tvStatus.setTextColor(android.graphics.Color.parseColor("#D32F2F"));
                 holder.binding.btnCancelOrder.setVisibility(View.GONE);
+                holder.binding.btnOrderAgain.setVisibility(View.GONE);
             }
         }
 

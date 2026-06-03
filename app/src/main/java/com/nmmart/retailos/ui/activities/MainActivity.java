@@ -340,6 +340,14 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private void setupClickListeners() {
         binding.btnMenu.setOnClickListener(v -> binding.drawerLayout.openDrawer(GravityCompat.START));
         binding.btnCart.setOnClickListener(v -> startActivity(new Intent(this, CartActivity.class)));
+        binding.walletBadge.setOnClickListener(v -> startActivity(new Intent(this, WalletActivity.class)));
+        
+        // Quick Actions Click Listeners
+        binding.btnQuickOrderAgain.setOnClickListener(v -> startActivity(new Intent(this, OrderHistoryActivity.class)));
+        binding.btnQuickTrackOrder.setOnClickListener(v -> startActivity(new Intent(this, OrderHistoryActivity.class)));
+        binding.btnQuickOffers.setOnClickListener(v -> {
+            Toast.makeText(this, "Offers coming soon!", Toast.LENGTH_SHORT).show();
+        });
         
         binding.etSearch.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
