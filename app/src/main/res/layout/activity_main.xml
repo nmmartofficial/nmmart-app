@@ -360,14 +360,32 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:layout_marginBottom="16dp">
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Shop by Category"
-                            android:textSize="20sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/black"
-                            android:fontFamily="sans-serif" />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Shop by Category"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/black"
+                                android:fontFamily="sans-serif" />
+                            <TextView
+                                android:id="@+id/btnViewAllCategories"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="View All"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/orange_primary"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:padding="8dp" />
+                        </LinearLayout>
                         <androidx.recyclerview.widget.RecyclerView
                             android:id="@+id/rvCategories"
                             android:layout_width="match_parent"
@@ -384,14 +402,32 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:layout_marginBottom="16dp">
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Shop by Brand"
-                            android:textSize="20sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/black"
-                            android:fontFamily="sans-serif" />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Shop by Brand"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/black"
+                                android:fontFamily="sans-serif" />
+                            <TextView
+                                android:id="@+id/btnViewAllBrands"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="View All"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/orange_primary"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:padding="8dp" />
+                        </LinearLayout>
                         <androidx.recyclerview.widget.RecyclerView
                             android:id="@+id/rvBrands"
                             android:layout_width="match_parent"
@@ -468,14 +504,32 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:layout_marginBottom="16dp">
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="🔥 Best Selling"
-                            android:textSize="20sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/black"
-                            android:fontFamily="sans-serif" />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="🔥 Best Selling"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/black"
+                                android:fontFamily="sans-serif" />
+                            <TextView
+                                android:id="@+id/btnViewAllBestSelling"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="View All"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/orange_primary"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:padding="8dp" />
+                        </LinearLayout>
                         <androidx.recyclerview.widget.RecyclerView
                             android:id="@+id/rvBestSelling"
                             android:layout_width="match_parent"
@@ -492,14 +546,32 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:layout_marginBottom="16dp">
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Everyday Essentials"
-                            android:textSize="20sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/black"
-                            android:fontFamily="sans-serif" />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Everyday Essentials"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/black"
+                                android:fontFamily="sans-serif" />
+                            <TextView
+                                android:id="@+id/btnViewAllEverydayEssentials"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="View All"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/orange_primary"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:padding="8dp" />
+                        </LinearLayout>
                         <androidx.recyclerview.widget.RecyclerView
                             android:id="@+id/rvEverydayEssentials"
                             android:layout_width="match_parent"

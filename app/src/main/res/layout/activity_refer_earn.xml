@@ -96,7 +96,7 @@
             android:backgroundTint="@color/orange_primary"
             app:cornerRadius="12dp"
             android:textStyle="bold"
-            app:icon="@android:drawable/stat_notify_chat"
+            app:icon="@drawable/ic_whatsapp"
             app:iconGravity="textStart"
             app:iconSize="24dp"
             app:iconTint="@color/white" />
