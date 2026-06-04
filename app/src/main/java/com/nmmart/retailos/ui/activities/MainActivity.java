@@ -499,11 +499,22 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         supabaseRepository.getLiveBanners(new retrofit2.Callback<List<Banner>>() {
             @Override
             public void onResponse(retrofit2.Call<List<Banner>> call, retrofit2.Response<List<Banner>> response) {
+                logDebug("Banners API Response Code: " + response.code());
+                logDebug("Banners API Response Successful: " + response.isSuccessful());
+                logDebug("Banners API Body: " + (response.body() != null ? response.body().size() : "null"));
                 if (response.isSuccessful() && response.body() != null) {
+                    for (int i=0; i<response.body().size(); i++) {
+                        Banner b = response.body().get(i);
+                        logDebug("Banner " + i + ": imageUrl=" + b.imageUrl + ", isActive=" + b.isActive + ", title=" + b.title);
+                    }
                     binding.rvBanners.setLayoutManager(new LinearLayoutManager(MainActivity.this, LinearLayoutManager.HORIZONTAL, false));
                     binding.rvBanners.setAdapter(new BannerAdapter(MainActivity.this, response.body()));
                     startBannerAutoScroll(response.body().size());
                     logDebug("Banners loaded: " + response.body().size());
+                } else {
+                    try {
+                        logError("Banners API Error Body: " + (response.errorBody() != null ? response.errorBody().string() : "no error body"));
+                    } catch (Exception e) { e.printStackTrace(); }
                 }
             }
             @Override

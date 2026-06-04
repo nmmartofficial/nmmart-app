@@ -178,7 +178,7 @@ public class SupabaseConfig {
             @Query("limit") int limit
         );
 
-        @GET("banners?is_active=eq.true")
+        @GET("banners?is_active=eq.true&order=position.asc")
         Call<List<Banner>> getBanners(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth
@@ -276,10 +276,26 @@ public class SupabaseConfig {
 
     public static String getAuthorizationHeader() {
         String accessToken = getAccessTokenOrEmpty();
+        String authHeader;
         if (accessToken.isEmpty()) {
-            return "Bearer " + API_KEY;
+            authHeader = "Bearer " + API_KEY;
+            android.util.Log.d("SupabaseConfig", "Using anon key for auth");
+        } else {
+            // Quick sanity check: is this a valid JWT? (should have 3 parts separated by dots)
+            if (accessToken.split("\\.").length != 3) {
+                android.util.Log.e("SupabaseConfig", "Invalid JWT token found! Clearing session!");
+                // Clear invalid session
+                if (appContext != null) {
+                    new SessionManager(appContext).logout();
+                }
+                authHeader = "Bearer " + API_KEY;
+            } else {
+                authHeader = "Bearer " + accessToken;
+                android.util.Log.d("SupabaseConfig", "Using user access token");
+            }
         }
-        return "Bearer " + accessToken;
+        android.util.Log.d("SupabaseConfig", "Auth Header: " + (authHeader.length() > 50 ? authHeader.substring(0, 50) + "..." : authHeader));
+        return authHeader;
     }
 
     public static String getUserAuthorizationHeaderOrEmpty() {
