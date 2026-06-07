@@ -132,9 +132,12 @@ public class OrderHistoryActivity extends BaseActivity {
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             Order order = items.get(position);
             holder.binding.tvOrderId.setText("Order #" + (order.id.length() > 8 ? order.id.substring(0, 8) : order.id));
-            holder.binding.tvOrderTotal.setText("₹" + (int)order.totalAmount);
+            holder.binding.tvOrderTotal.setText("₹" + String.format("%.0f", order.totalAmount != null ? order.totalAmount : 0.0));
             holder.binding.tvOrderItems.setText(order.itemsSummary != null ? order.itemsSummary : "Order Items");
-            holder.binding.tvStatus.setText(order.status != null ? order.status.toUpperCase() : "PENDING");
+            
+            // Use orderStatus if available, else status
+            String orderStatusValue = order.orderStatus != null ? order.orderStatus : order.status;
+            holder.binding.tvStatus.setText(orderStatusValue != null ? orderStatusValue.toUpperCase() : "PENDING");
 
             // Format date if needed (assuming ISO format from Supabase)
             if (order.createdAt != null && order.createdAt.length() >= 10) {
@@ -142,7 +145,7 @@ public class OrderHistoryActivity extends BaseActivity {
             }
 
             // Timeline logic
-            String status = order.status != null ? order.status.toLowerCase() : "pending";
+            String status = orderStatusValue != null ? orderStatusValue.toLowerCase() : "pending";
             resetTimeline(holder);
             
             if (status.equals("pending")) {

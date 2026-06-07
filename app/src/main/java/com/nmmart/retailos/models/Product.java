@@ -6,14 +6,20 @@ import java.io.Serializable;
 public class Product implements Serializable {
     public String id;
     
-    @SerializedName("name")
+    @SerializedName("item_name")
     public String name;
     
     @SerializedName("description")
     public String description;
     
+    @SerializedName("category_id")
+    public String categoryId;
+    
     @SerializedName("category")
     public String category;
+    
+    @SerializedName("brand_id")
+    public String brandId;
     
     @SerializedName("brand")
     public String brand;
@@ -30,11 +36,14 @@ public class Product implements Serializable {
     @SerializedName("image_url")
     public String image_url;
 
+    @SerializedName("unit_id")
+    public String unitId;
+
     @SerializedName("unit")
     public String unit;
 
     @SerializedName("stock")
-    public Integer stock;
+    public Double stock;
 
     @SerializedName("is_featured")
     public Boolean is_featured;
@@ -55,8 +64,8 @@ public class Product implements Serializable {
         return discount != null ? discount : 0.0;
     }
 
-    public int getStock() {
-        return stock != null ? stock : 0;
+    public double getStock() {
+        return stock != null ? stock : 0.0;
     }
 
     public String getBrand() {

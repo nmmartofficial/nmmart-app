@@ -16,10 +16,10 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         
-        buildConfigField "String", "SUPABASE_URL", "\"https://pqmgfxntxhnvknrvdyub.supabase.co/rest/v1/\""
-        buildConfigField "String", "SUPABASE_KEY", "\"sb_publishable_z251RLg-OLDByiBi4ch5uQ_Xez66ygH\""
-        buildConfigField "String", "SUPABASE_AUTH_URL", "\"https://pqmgfxntxhnvknrvdyub.supabase.co/auth/v1/\""
-        buildConfigField "String", "SUPABASE_FUNCTIONS_URL", "\"https://pqmgfxntxhnvknrvdyub.supabase.co/functions/v1/\""
+        buildConfigField "String", "SUPABASE_URL", "\"https://cpipmysooynedtpreekt.supabase.co/rest/v1/\""
+        buildConfigField "String", "SUPABASE_KEY", "\"sb_publishable_bmVp0-jv3JLAZaIQpvhYwQ_E6JzdERh\""
+        buildConfigField "String", "SUPABASE_AUTH_URL", "\"https://cpipmysooynedtpreekt.supabase.co/auth/v1/\""
+        buildConfigField "String", "SUPABASE_FUNCTIONS_URL", "\"https://cpipmysooynedtpreekt.supabase.co/functions/v1/\""
     }
 
     buildTypes {

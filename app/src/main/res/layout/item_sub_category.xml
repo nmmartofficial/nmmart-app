@@ -5,7 +5,9 @@
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
     app:cardCornerRadius="12dp"
-    app:cardElevation="2dp">
+    app:cardElevation="3dp"
+    app:strokeWidth="1dp"
+    app:strokeColor="#E0E0E0">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -19,17 +21,19 @@
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:src="@drawable/ic_grocery_bag"
+            android:background="#FFF3E0"
+            android:padding="16dp"
             app:tint="@color/orange_primary" />
 
         <TextView
             android:id="@+id/tvSubCategoryName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="12dp"
             android:text="Sub Category"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="@color/black_soft" />
+            android:textColor="#212121" />
 
     </LinearLayout>
 

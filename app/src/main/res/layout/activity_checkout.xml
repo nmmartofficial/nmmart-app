@@ -120,12 +120,6 @@
                         android:textColor="@color/black_soft"
                         android:textStyle="bold" />
 
-                    <Spinner
-                        android:id="@+id/spinnerMonth"
-                        android:layout_width="match_parent"
-                        android:layout_height="48dp"
-                        android:layout_marginTop="8dp" />
-
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/rvDates"
                         android:layout_width="match_parent"
@@ -163,37 +157,11 @@
                         android:textColor="@color/black_soft"
                         android:textStyle="bold" />
 
-                    <RadioGroup
-                        android:id="@+id/rgPayment"
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvPaymentMethods"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp">
-
-                        <RadioButton
-                            android:id="@+id/rbCod"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:checked="true"
-                            android:text="Cash on Delivery" />
-
-                        <RadioButton
-                            android:id="@+id/rbPhonePe"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="PhonePe" />
-
-                        <RadioButton
-                            android:id="@+id/rbGPay"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Google Pay" />
-
-                        <RadioButton
-                            android:id="@+id/rbPaytm"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Paytm" />
-                    </RadioGroup>
+                        android:layout_marginTop="8dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>

@@ -136,6 +136,15 @@
             android:exported="false"
             android:theme="@style/Theme.MaterialComponents.DayNight.DarkActionBar" />
 
+        <activity
+            android:name=".ui.activities.NotificationsActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".ui.activities.CategoriesActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity" />
+
         <service
             android:name=".utils.MyFirebaseMessagingService"
             android:exported="false">

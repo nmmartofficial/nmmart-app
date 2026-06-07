@@ -23,7 +23,6 @@ import androidx.core.content.ContextCompat;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -139,18 +138,18 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             logDebug("Managers and ViewModel initialized");
             
             setupNavigation();
-        setupHeader();
-        setupCategories();
-        setupBrands();
-        setupEverydayEssentials();
-        setupBestSelling();
-        setupFlashSale();
-        setupProductGrid();
-        setupSearchHistory();
-        setupBottomNavigation();
-        setupObservers();
-        setupClickListeners();
-        logDebug("All UI components set up");
+            setupHeader();
+            setupCategories();
+            setupBrands();
+            setupEverydayEssentials();
+            setupBestSelling();
+            setupFlashSale();
+            setupProductGrid();
+            setupSearchHistory();
+            setupBottomNavigation();
+            setupObservers();
+            setupClickListeners();
+            logDebug("All UI components set up");
             
             loadInitialData();
             updateCartBadge();
@@ -327,7 +326,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             int id = item.getItemId();
             if (id == R.id.nav_home) return true;
             if (id == R.id.nav_categories) {
-                Toast.makeText(this, "Categories section", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(this, CategoriesActivity.class));
                 return true;
             }
             if (id == R.id.nav_cart) {
@@ -397,7 +396,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         // Notifications click listener
         binding.btnNotifications.setOnClickListener(v -> {
             logButtonClick("Notifications");
-            Toast.makeText(this, "Notifications coming soon!", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, NotificationsActivity.class));
         });
         
         // Search action listener

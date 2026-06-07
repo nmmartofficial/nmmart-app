@@ -12,6 +12,10 @@ import com.nmmart.retailos.data.CouponValidationResult;
 import com.nmmart.retailos.data.SupabaseRepository;
 import com.nmmart.retailos.models.PincodeMaster;
 import com.nmmart.retailos.models.Product;
+import com.nmmart.retailos.ui.adapters.DateAdapter;
+import com.nmmart.retailos.ui.adapters.TimeSlotAdapter;
+import com.nmmart.retailos.ui.adapters.PaymentMethodAdapter;
+import com.nmmart.retailos.models.PaymentMethod;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
@@ -39,6 +43,10 @@ public class CheckoutActivity extends BaseActivity {
     private double toPay = 0.0;
     private CartManager cartManager;
     private Gson gson = new Gson();
+    
+    private String selectedDate = "";
+    private String selectedTimeSlot = "";
+    private String selectedPaymentMethod = "Cash on Delivery";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +79,7 @@ public class CheckoutActivity extends BaseActivity {
         fetchPincodes();
         fetchAddresses();
         setupDateTimePickers();
+        setupPaymentMethods();
 
         btnAddAddress.setOnClickListener(v -> {
             startActivity(new Intent(this, AddressActivity.class));
@@ -95,6 +104,25 @@ public class CheckoutActivity extends BaseActivity {
             placeOrder(selectedAddress.fullName, selectedAddress.houseNo, selectedAddress.landmark != null ? selectedAddress.landmark : "", selectedAddress.pincode, toPay);
         });
     }
+    
+    private void setupPaymentMethods() {
+        androidx.recyclerview.widget.RecyclerView rvPaymentMethods = findViewById(R.id.rvPaymentMethods);
+        rvPaymentMethods.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
+        
+        List<PaymentMethod> paymentMethods = new ArrayList<>();
+        paymentMethods.add(new PaymentMethod("Cash on Delivery", R.drawable.ic_cod, false));
+        paymentMethods.add(new PaymentMethod("PhonePe", R.drawable.ic_phonepe, true));
+        paymentMethods.add(new PaymentMethod("Google Pay", R.drawable.ic_gpay, true));
+        paymentMethods.add(new PaymentMethod("Paytm", R.drawable.ic_paytm, true));
+        
+        PaymentMethodAdapter adapter = new PaymentMethodAdapter(this, paymentMethods, method -> {
+            selectedPaymentMethod = method.name;
+            if (method.isComingSoon) {
+                Toast.makeText(this, method.name + " integration coming soon!", Toast.LENGTH_SHORT).show();
+            }
+        });
+        rvPaymentMethods.setAdapter(adapter);
+    }
 
     private void fetchAddresses() {
         if (!sessionManager.isLoggedIn()) return;
@@ -104,7 +132,6 @@ public class CheckoutActivity extends BaseActivity {
             public void onResponse(Call<List<com.nmmart.retailos.models.Address>> call, Response<List<com.nmmart.retailos.models.Address>> response) {
                 if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
                     userAddresses = response.body();
-                    // Auto-select default or first address
                     selectedAddress = userAddresses.get(0);
                     for (com.nmmart.retailos.models.Address a : userAddresses) {
                         if (a.isDefault) {
@@ -160,32 +187,33 @@ public class CheckoutActivity extends BaseActivity {
     }
 
     private void setupDateTimePickers() {
-        // Month Spinner with dynamic dates
-        android.widget.Spinner spinnerMonth = findViewById(R.id.spinnerMonth);
-        java.util.List<String> months = new java.util.ArrayList<>();
-        Calendar calendar = Calendar.getInstance();
-        String currentMonthYear = android.text.format.DateFormat.format("MMMM yyyy", calendar).toString();
-        months.add(currentMonthYear);
-        android.widget.ArrayAdapter<String> monthAdapter = new android.widget.ArrayAdapter<>(this, android.R.layout.simple_spinner_item, months);
-        monthAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerMonth.setAdapter(monthAdapter);
-
-        // Dates RecyclerView - show today and tomorrow
         androidx.recyclerview.widget.RecyclerView rvDates = findViewById(R.id.rvDates);
         rvDates.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this, androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL, false));
-        // Create simple date items
         List<String> datesList = new ArrayList<>();
         Calendar today = Calendar.getInstance();
-        datesList.add(android.text.format.DateFormat.format("dd MMM", today).toString());
-        Calendar tomorrow = (Calendar) today.clone();
-        tomorrow.add(Calendar.DAY_OF_MONTH, 1);
-        datesList.add(android.text.format.DateFormat.format("dd MMM", tomorrow).toString());
-        android.widget.ArrayAdapter<String> datesAdapter = new android.widget.ArrayAdapter<>(this, android.R.layout.simple_spinner_item, datesList);
-        datesAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        for (int i = 0; i < 7; i++) {
+            Calendar cal = (Calendar) today.clone();
+            cal.add(Calendar.DAY_OF_MONTH, i);
+            String dayName = android.text.format.DateFormat.format("EEE", cal).toString();
+            String dateNum = android.text.format.DateFormat.format("dd", cal).toString();
+            datesList.add(dateNum + " " + dayName);
+        }
+        DateAdapter dateAdapter = new DateAdapter(this, datesList, date -> selectedDate = date);
+        rvDates.setAdapter(dateAdapter);
+        selectedDate = datesList.get(0);
         
-        // Time Slots RecyclerView
         androidx.recyclerview.widget.RecyclerView rvTimeSlots = findViewById(R.id.rvTimeSlots);
         rvTimeSlots.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this, androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL, false));
+        List<String> timeSlots = new ArrayList<>();
+        timeSlots.add("9:00 AM - 11:00 AM");
+        timeSlots.add("11:00 AM - 1:00 PM");
+        timeSlots.add("1:00 PM - 3:00 PM");
+        timeSlots.add("3:00 PM - 5:00 PM");
+        timeSlots.add("5:00 PM - 7:00 PM");
+        timeSlots.add("7:00 PM - 9:00 PM");
+        TimeSlotAdapter timeSlotAdapter = new TimeSlotAdapter(this, timeSlots, time -> selectedTimeSlot = time);
+        rvTimeSlots.setAdapter(timeSlotAdapter);
+        selectedTimeSlot = timeSlots.get(0);
     }
 
     private void recalcToPay() {
@@ -223,8 +251,7 @@ public class CheckoutActivity extends BaseActivity {
             }
 
             @Override
-            public void onFailure(Call<List<CouponValidationResult>> call, Throwable t) {
-            }
+            public void onFailure(Call<List<CouponValidationResult>> call, Throwable t) {}
         });
     }
 
@@ -238,15 +265,13 @@ public class CheckoutActivity extends BaseActivity {
             }
 
             @Override
-            public void onFailure(Call<List<PincodeMaster>> call, Throwable t) {
-            }
+            public void onFailure(Call<List<PincodeMaster>> call, Throwable t) {}
         });
     }
 
     private void placeOrder(String name, String house, String landmark, String pin, double toPay) {
         Toast.makeText(this, "Placing your order... Please wait", Toast.LENGTH_SHORT).show();
 
-        // Prepare order items with quantities
         List<Map<String, Object>> orderItems = new ArrayList<>();
         List<Product> cartProducts = cartManager.getCartItems();
         Map<String, Integer> quantities = cartManager.getCartQuantities();
@@ -263,7 +288,9 @@ public class CheckoutActivity extends BaseActivity {
         orderData.put("customer_name", name);
         orderData.put("address", landmark.isEmpty() ? house : (house + ", " + landmark));
         orderData.put("pincode", pin);
-        // Send user identifier - mobile if available, else email
+        orderData.put("delivery_date", selectedDate);
+        orderData.put("delivery_time", selectedTimeSlot);
+        orderData.put("payment_method", selectedPaymentMethod);
         String userIdentifier = sessionManager.getMobile();
         if (userIdentifier == null || userIdentifier.isEmpty()) {
             userIdentifier = sessionManager.getEmail();
@@ -271,7 +298,7 @@ public class CheckoutActivity extends BaseActivity {
         orderData.put("user_mobile", userIdentifier);
         orderData.put("total_amount", toPay);
         orderData.put("status", "Pending");
-        orderData.put("items", gson.toJson(orderItems)); // Send items as JSON
+        orderData.put("items", gson.toJson(orderItems));
         orderData.put("user_id", sessionManager.getUserId());
 
         repository.placeOrder(orderData, new Callback<Void>() {
