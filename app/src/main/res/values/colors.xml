@@ -1,20 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Brand Colors: Professional Orange Theme -->
-    <color name="orange_primary">#FFC107</color>
-    <color name="orange_dark">#F57C00</color>
-    <color name="orange_light">#FFE0B2</color>
-    <color name="black_soft">#212121</color>
-    <color name="white">#FFFFFF</color>
-    <color name="grey_background">#F5F5F5</color>
+    <!-- Professional Brand Colors: Modern Orange Theme -->
+    <color name="orange_primary">#FF7043</color>
+    <color name="orange_dark">#E64A19</color>
+    <color name="orange_light">#FFCCBC</color>
+    <color name="orange_50">#FFF3E0</color>
     
-    <!-- NM MART Brand Colors -->
-    <color name="burgundy">#FFC107</color>
-    <color name="gold">#DAA520</color>
-    <color name="slate">#708090</color>
+    <!-- Accent Colors -->
+    <color name="green_success">#4CAF50</color>
+    <color name="green_50">#E8F5E9</color>
+    <color name="red_error">#F44336</color>
+    <color name="blue_info">#2196F3</color>
+    
+    <!-- Neutral Colors -->
+    <color name="black_soft">#212121</color>
+    <color name="grey_900">#424242</color>
+    <color name="grey_700">#616161</color>
+    <color name="grey_500">#9E9E9E</color>
+    <color name="grey_300">#E0E0E0</color>
+    <color name="grey_100">#F5F5F5</color>
+    <color name="white">#FFFFFF</color>
+    <color name="grey_background">#F5F7FA</color>
     
     <!-- Standard Colors -->
     <color name="black">#FF000000</color>
-    <color name="grey_light">#F5F5F5</color>
-    <color name="background">#F5F5F5</color>
+    <color name="background">#F5F7FA</color>
+    
+    <!-- Missing Colors -->
+    <color name="burgundy">#800020</color>
+    <color name="slate">#708090</color>
+    <color name="grey_light">#E0E0E0</color>
 </resources>

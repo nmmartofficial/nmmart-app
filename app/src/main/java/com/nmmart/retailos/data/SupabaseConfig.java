@@ -257,6 +257,20 @@ public class SupabaseConfig {
             @Body Map<String, Object> body
         );
 
+        @GET("products?is_active=eq.true&is_live_on_app=eq.true")
+        Call<List<Product>> getProductByBarcode(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth,
+            @Query("barcode") String barcode
+        );
+
+        @POST("rpc/decrement_stock")
+        Call<Void> decrementStock(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth,
+            @Body Map<String, Object> body
+        );
+
         @PATCH("orders")
         Call<Void> updateOrder(
             @Header("apikey") String apiKey,

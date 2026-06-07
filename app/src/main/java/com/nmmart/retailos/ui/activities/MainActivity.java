@@ -31,7 +31,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.navigation.NavigationView;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 import com.nmmart.retailos.R;
+import com.nmmart.retailos.data.SelfCheckoutCartManager;
 import com.nmmart.retailos.data.SessionManager;
 import com.nmmart.retailos.data.SupabaseRepository;
 import com.nmmart.retailos.databinding.ActivityMainBinding;
@@ -421,6 +424,68 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         binding.swipeRefreshLayout.setOnRefreshListener(() -> {
             logButtonClick("Swipe to Refresh");
             refreshData();
+        });
+
+        // Scan & Go FAB click listener
+        binding.fabScan.setOnClickListener(v -> {
+            logButtonClick("Scan & Go");
+            SelfCheckoutCartManager cartManager = SelfCheckoutCartManager.getInstance(this);
+            if (cartManager.getCartCount() > 0) {
+                // Go to cart if there are items
+                startActivity(new Intent(this, SelfCheckoutCartActivity.class));
+            } else {
+                // Start scanner if cart is empty
+                startBarcodeScanner();
+            }
+        });
+    }
+
+    private void startBarcodeScanner() {
+        IntentIntegrator integrator = new IntentIntegrator(this);
+        integrator.setDesiredBarcodeFormats(IntentIntegrator.ALL_CODE_TYPES);
+        integrator.setPrompt("Scan Product Barcode");
+        integrator.setCameraId(0);
+        integrator.setBeepEnabled(true);
+        integrator.setBarcodeImageEnabled(false);
+        integrator.initiateScan();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        if (result != null) {
+            if (result.getContents() != null) {
+                String barcode = result.getContents();
+                logInfo("Scanned barcode: " + barcode);
+                fetchProductByBarcode(barcode);
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+    private void fetchProductByBarcode(String barcode) {
+        supabaseRepository.getProductByBarcode(barcode, new retrofit2.Callback<List<Product>>() {
+            @Override
+            public void onResponse(retrofit2.Call<List<Product>> call, retrofit2.Response<List<Product>> response) {
+                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                    Product product = response.body().get(0);
+                    SelfCheckoutCartManager cartManager = SelfCheckoutCartManager.getInstance(MainActivity.this);
+                    if (cartManager.addItem(product)) {
+                        Toast.makeText(MainActivity.this, product.name + " added to cart!", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(MainActivity.this, SelfCheckoutCartActivity.class));
+                    } else {
+                        Toast.makeText(MainActivity.this, "Product out of stock!", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(MainActivity.this, "Product not found!", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<List<Product>> call, Throwable t) {
+                Toast.makeText(MainActivity.this, "Failed to fetch product: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
         });
     }
 

@@ -51,6 +51,9 @@ public class Product implements Serializable {
     @SerializedName("badge")
     public String badge;
 
+    @SerializedName("barcode")
+    public String barcode;
+
     // Null-safe getters for all fields
     public double getMrp() {
         return mrp != null ? mrp : 0.0;

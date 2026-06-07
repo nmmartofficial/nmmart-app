@@ -1,4 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@color/white" />
+    <!-- Background Gradient -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="135"
+                android:startColor="@color/orange_dark"
+                android:endColor="@color/orange_primary"
+                android:type="linear"/>
+        </shape>
+    </item>
+    <!-- Center Logo Placeholder -->
+    <item
+        android:width="120dp"
+        android:height="120dp"
+        android:gravity="center">
+        <shape android:shape="oval">
+            <solid android:color="@color/white"/>
+        </shape>
+    </item>
+    <!-- Logo Text Placeholder -->
+    <item
+        android:gravity="center_horizontal|bottom"
+        android:bottom="80dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent"/>
+        </shape>
+    </item>
 </layer-list>

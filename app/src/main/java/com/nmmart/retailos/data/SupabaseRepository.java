@@ -224,4 +224,17 @@ public class SupabaseRepository {
         Log.d(TAG, "updateOrderStatus called with orderId: " + orderId);
         apiService.updateOrder(apiKey, requireUserAuth(), "eq." + orderId, data).enqueue(wrapCallback("updateOrderStatus", callback));
     }
+
+    public void getProductByBarcode(String barcode, Callback<List<Product>> callback) {
+        Log.d(TAG, "getProductByBarcode called with barcode: " + barcode);
+        apiService.getProductByBarcode(apiKey, anonOrUserAuth(), barcode).enqueue(wrapCallback("getProductByBarcode", callback));
+    }
+
+    public void decrementStock(String productId, int quantity, Callback<Void> callback) {
+        Log.d(TAG, "decrementStock called with productId: " + productId + ", quantity: " + quantity);
+        Map<String, Object> body = new HashMap<>();
+        body.put("product_id", productId);
+        body.put("quantity", quantity);
+        apiService.decrementStock(apiKey, requireUserAuth(), body).enqueue(wrapCallback("decrementStock", callback));
+    }
 }
