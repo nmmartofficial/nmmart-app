@@ -75,16 +75,16 @@ public class SupabaseConfig {
     }
 
     public interface SupabaseService {
-        @GET("products")
+        @GET("products?is_active=eq.true&is_live_on_app=eq.true")
         Call<List<Product>> searchProducts(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
-            @Query("name") String nameQuery,
+            @Query("item_name") String nameQuery,
             @Query("limit") int limit,
             @Query("offset") int offset
         );
 
-        @GET("products")
+        @GET("products?is_active=eq.true&is_live_on_app=eq.true")
         Call<List<Product>> getProductsSorted(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
@@ -95,7 +95,7 @@ public class SupabaseConfig {
             @Query("offset") int offset
         );
 
-        @GET("products")
+        @GET("products?is_active=eq.true&is_live_on_app=eq.true")
         Call<List<Product>> getRelatedProducts(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
@@ -110,7 +110,7 @@ public class SupabaseConfig {
             @Header("Authorization") String auth
         );
 
-        @GET("products?is_trending=eq.true")
+        @GET("products?is_active=eq.true&is_live_on_app=eq.true")
         Call<List<Product>> getTrendingProducts(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
@@ -118,7 +118,7 @@ public class SupabaseConfig {
             @Query("limit") int limit
         );
 
-        @GET("products")
+        @GET("products?is_active=eq.true&is_live_on_app=eq.true")
         Call<List<Product>> getLatestProducts(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
@@ -126,14 +126,14 @@ public class SupabaseConfig {
             @Query("limit") int limit
         );
 
-        @GET("products")
+        @GET("products?is_active=eq.true&is_live_on_app=eq.true")
         Call<List<Product>> getProducts(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
             @Query("category") String category
         );
 
-        @GET("products")
+        @GET("products?is_active=eq.true&is_live_on_app=eq.true")
         Call<List<Product>> getAllProducts(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
