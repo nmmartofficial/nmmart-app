@@ -84,6 +84,15 @@ public class SupabaseRepository {
         return apiService.getBrands(apiKey, anonOrUserAuth());
     }
 
+    public Call<List<Category>> getSubCategoriesCall(String parentId) {
+        return apiService.getSubCategories(apiKey, anonOrUserAuth(), parentId);
+    }
+
+    public void getSubCategories(String parentId, Callback<List<Category>> callback) {
+        Log.d(TAG, "getSubCategories called with parentId: " + parentId);
+        getSubCategoriesCall(parentId).enqueue(wrapCallback("getSubCategories", callback));
+    }
+
     public Call<List<Product>> getTrendingProductsCall(int limit) {
         return apiService.getTrendingProducts(apiKey, anonOrUserAuth(), "stock.desc", limit);
     }

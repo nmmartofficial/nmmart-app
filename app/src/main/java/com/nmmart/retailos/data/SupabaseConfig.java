@@ -250,6 +250,13 @@ public class SupabaseConfig {
             @Header("Authorization") String auth
         );
 
+        @GET("categories?is_active=eq.true&order=position.asc")
+        Call<List<Category>> getSubCategories(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth,
+            @Query("parent_id") String parentId
+        );
+
         @POST("rpc/validate_and_apply_coupon")
         Call<List<CouponValidationResult>> validateAndApplyCoupon(
             @Header("apikey") String apiKey,

@@ -144,8 +144,9 @@ public class CategoriesActivity extends AppCompatActivity {
             }
 
             holder.itemView.setOnClickListener(v -> {
-                Intent intent = new Intent(CategoriesActivity.this, ProductListActivity.class);
+                Intent intent = new Intent(CategoriesActivity.this, SubCategoryActivity.class);
                 intent.putExtra("CATEGORY_NAME", category.getName());
+                intent.putExtra("CATEGORY_ID", category.getId());
                 startActivity(intent);
             });
         }

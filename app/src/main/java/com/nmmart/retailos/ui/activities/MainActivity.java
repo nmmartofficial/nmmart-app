@@ -803,8 +803,9 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
 
     private void openProductList(Category category) {
         if (category == null || category.getName() == null) return;
-        Intent intent = new Intent(this, ProductListActivity.class);
+        Intent intent = new Intent(this, SubCategoryActivity.class);
         intent.putExtra("CATEGORY_NAME", category.getName());
+        intent.putExtra("CATEGORY_ID", category.getId());
         startActivity(intent);
     }
 
