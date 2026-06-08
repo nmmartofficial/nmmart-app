@@ -66,6 +66,21 @@ public class SupabaseAuthConfig {
                 @Header("apikey") String apiKey,
                 @Body VerifyEmailRequest body
         );
+
+        @POST("token?grant_type=refresh_token")
+        Call<AuthSessionResponse> refreshAccessToken(
+                @Header("apikey") String apiKey,
+                @Body RefreshTokenRequest body
+        );
+    }
+
+    public static class RefreshTokenRequest {
+        @SerializedName("refresh_token")
+        public final String refreshToken;
+
+        public RefreshTokenRequest(String refreshToken) {
+            this.refreshToken = refreshToken;
+        }
     }
 
     public static class OtpRequest {
