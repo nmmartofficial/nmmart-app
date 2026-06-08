@@ -82,10 +82,18 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private List<Brand> brands = new ArrayList<>();
     private List<Product> everydayEssentials = new ArrayList<>();
     private List<Product> bestSelling = new ArrayList<>();
+    private List<Product> discountItems = new ArrayList<>();
+    private List<Product> newArrivals = new ArrayList<>();
+    private List<Product> buyAgain = new ArrayList<>();
+    private List<Product> featuredItems = new ArrayList<>();
     
     private ProductListAdapter everydayAdapter;
     private ProductListAdapter bestSellingAdapter;
     private ProductListAdapter flashSaleAdapter;
+    private ProductListAdapter discountItemsAdapter;
+    private ProductListAdapter newArrivalsAdapter;
+    private ProductListAdapter buyAgainAdapter;
+    private ProductListAdapter featuredItemsAdapter;
     
     private int currentBannerPosition = 0;
     private Handler bannerHandler;
@@ -144,6 +152,10 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             setupHeader();
             setupCategories();
             setupBrands();
+            setupDiscountItems();
+            setupNewArrivals();
+            setupBuyAgain();
+            setupFeaturedItems();
             setupEverydayEssentials();
             setupBestSelling();
             setupFlashSale();
@@ -263,6 +275,50 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         binding.rvFlashSale.setAdapter(flashSaleAdapter);
 
         startTimer();
+    }
+
+    private void setupDiscountItems() {
+        discountItemsAdapter = new ProductListAdapter(discountItems, product -> {
+            Intent intent = new Intent(this, ProductDetailActivity.class);
+            intent.putExtra("PRODUCT", product);
+            startActivity(intent);
+        });
+        discountItemsAdapter.setOnCartUpdateListener(this::updateCartBadge);
+        binding.rvDiscountItems.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        binding.rvDiscountItems.setAdapter(discountItemsAdapter);
+    }
+
+    private void setupNewArrivals() {
+        newArrivalsAdapter = new ProductListAdapter(newArrivals, product -> {
+            Intent intent = new Intent(this, ProductDetailActivity.class);
+            intent.putExtra("PRODUCT", product);
+            startActivity(intent);
+        });
+        newArrivalsAdapter.setOnCartUpdateListener(this::updateCartBadge);
+        binding.rvNewArrivals.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        binding.rvNewArrivals.setAdapter(newArrivalsAdapter);
+    }
+
+    private void setupBuyAgain() {
+        buyAgainAdapter = new ProductListAdapter(buyAgain, product -> {
+            Intent intent = new Intent(this, ProductDetailActivity.class);
+            intent.putExtra("PRODUCT", product);
+            startActivity(intent);
+        });
+        buyAgainAdapter.setOnCartUpdateListener(this::updateCartBadge);
+        binding.rvBuyAgain.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        binding.rvBuyAgain.setAdapter(buyAgainAdapter);
+    }
+
+    private void setupFeaturedItems() {
+        featuredItemsAdapter = new ProductListAdapter(featuredItems, product -> {
+            Intent intent = new Intent(this, ProductDetailActivity.class);
+            intent.putExtra("PRODUCT", product);
+            startActivity(intent);
+        });
+        featuredItemsAdapter.setOnCartUpdateListener(this::updateCartBadge);
+        binding.rvFeaturedItems.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        binding.rvFeaturedItems.setAdapter(featuredItemsAdapter);
     }
 
     private void startTimer() {
@@ -632,6 +688,71 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             @Override
             public void onFailure(retrofit2.Call<List<Product>> call, Throwable t) {
                 logError("Failed to fetch everyday essentials", t);
+            }
+        });
+
+        supabaseRepository.getDiscountProducts(10, new retrofit2.Callback<List<Product>>() {
+            @Override
+            public void onResponse(retrofit2.Call<List<Product>> call, retrofit2.Response<List<Product>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    discountItems.clear();
+                    discountItems.addAll(response.body());
+                    discountItemsAdapter.notifyDataSetChanged();
+                    logDebug("Discount items loaded: " + discountItems.size());
+                }
+            }
+            @Override
+            public void onFailure(retrofit2.Call<List<Product>> call, Throwable t) {
+                logError("Failed to fetch discount items", t);
+            }
+        });
+
+        supabaseRepository.getNewArrivalProducts(10, new retrofit2.Callback<List<Product>>() {
+            @Override
+            public void onResponse(retrofit2.Call<List<Product>> call, retrofit2.Response<List<Product>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    newArrivals.clear();
+                    newArrivals.addAll(response.body());
+                    newArrivalsAdapter.notifyDataSetChanged();
+                    logDebug("New arrivals loaded: " + newArrivals.size());
+                }
+            }
+            @Override
+            public void onFailure(retrofit2.Call<List<Product>> call, Throwable t) {
+                logError("Failed to fetch new arrivals", t);
+            }
+        });
+
+        // For Buy Again, use best selling products for now (we'll fetch order history later if needed)
+        supabaseRepository.getTrendingProducts(10, new retrofit2.Callback<List<Product>>() {
+            @Override
+            public void onResponse(retrofit2.Call<List<Product>> call, retrofit2.Response<List<Product>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    buyAgain.clear();
+                    buyAgain.addAll(response.body());
+                    buyAgainAdapter.notifyDataSetChanged();
+                    logDebug("Buy Again items loaded: " + buyAgain.size());
+                }
+            }
+            @Override
+            public void onFailure(retrofit2.Call<List<Product>> call, Throwable t) {
+                logError("Failed to fetch buy again items", t);
+            }
+        });
+
+        supabaseRepository.getFeaturedProducts(10, new retrofit2.Callback<List<Product>>() {
+            @Override
+            public void onResponse(retrofit2.Call<List<Product>> call, retrofit2.Response<List<Product>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    featuredItems.clear();
+                    featuredItems.addAll(response.body());
+                    featuredItemsAdapter.notifyDataSetChanged();
+                    logDebug("Featured items loaded: " + featuredItems.size());
+                }
+            }
+            @Override
+            public void onFailure(retrofit2.Call<List<Product>> call, Throwable t) {
+                logError("Failed to fetch featured items", t);
             }
         });
 

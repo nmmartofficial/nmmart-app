@@ -257,6 +257,28 @@ public class SupabaseConfig {
             @Body Map<String, Object> body
         );
 
+        @GET("products?is_active=eq.true&is_live_on_app=eq.true&discount=gt.0")
+        Call<List<Product>> getDiscountProducts(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth,
+            @Query("limit") int limit
+        );
+
+        @GET("products?is_active=eq.true&is_live_on_app=eq.true")
+        Call<List<Product>> getNewArrivalProducts(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth,
+            @Query("order") String order,
+            @Query("limit") int limit
+        );
+
+        @GET("products?is_active=eq.true&is_live_on_app=eq.true&is_featured=eq.true")
+        Call<List<Product>> getFeaturedProducts(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth,
+            @Query("limit") int limit
+        );
+
         @GET("products?is_active=eq.true&is_live_on_app=eq.true")
         Call<List<Product>> getProductByBarcode(
             @Header("apikey") String apiKey,

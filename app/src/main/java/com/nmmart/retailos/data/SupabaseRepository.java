@@ -230,6 +230,33 @@ public class SupabaseRepository {
         apiService.getProductByBarcode(apiKey, anonOrUserAuth(), barcode).enqueue(wrapCallback("getProductByBarcode", callback));
     }
 
+    public Call<List<Product>> getDiscountProductsCall(int limit) {
+        return apiService.getDiscountProducts(apiKey, anonOrUserAuth(), limit);
+    }
+
+    public Call<List<Product>> getNewArrivalProductsCall(int limit) {
+        return apiService.getNewArrivalProducts(apiKey, anonOrUserAuth(), "id.desc", limit);
+    }
+
+    public Call<List<Product>> getFeaturedProductsCall(int limit) {
+        return apiService.getFeaturedProducts(apiKey, anonOrUserAuth(), limit);
+    }
+
+    public void getDiscountProducts(int limit, Callback<List<Product>> callback) {
+        Log.d(TAG, "getDiscountProducts called with limit: " + limit);
+        apiService.getDiscountProducts(apiKey, anonOrUserAuth(), limit).enqueue(wrapCallback("getDiscountProducts", callback));
+    }
+
+    public void getNewArrivalProducts(int limit, Callback<List<Product>> callback) {
+        Log.d(TAG, "getNewArrivalProducts called with limit: " + limit);
+        apiService.getNewArrivalProducts(apiKey, anonOrUserAuth(), "id.desc", limit).enqueue(wrapCallback("getNewArrivalProducts", callback));
+    }
+
+    public void getFeaturedProducts(int limit, Callback<List<Product>> callback) {
+        Log.d(TAG, "getFeaturedProducts called with limit: " + limit);
+        apiService.getFeaturedProducts(apiKey, anonOrUserAuth(), limit).enqueue(wrapCallback("getFeaturedProducts", callback));
+    }
+
     public void decrementStock(String productId, int quantity, Callback<Void> callback) {
         Log.d(TAG, "decrementStock called with productId: " + productId + ", quantity: " + quantity);
         Map<String, Object> body = new HashMap<>();
