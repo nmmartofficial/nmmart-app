@@ -22,6 +22,10 @@ android {
         buildConfigField "String", "SUPABASE_FUNCTIONS_URL", "\"https://cpipmysooynedtpreekt.supabase.co/functions/v1/\""
     }
 
+    aaptOptions {
+        noCompress 'bin', 'dat'
+    }
+
     buildTypes {
         release {
             minifyEnabled true
