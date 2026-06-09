@@ -59,13 +59,13 @@ public class SelfCheckoutCartAdapter extends RecyclerView.Adapter<SelfCheckoutCa
             Glide.with(context).load(product.image_url).into(holder.ivProduct);
         }
         
-        int qty = cartManager.getQuantity(product.id);
+        int qty = cartManager.getQuantity(product);
         holder.tvQty.setText(String.valueOf(qty));
         
         holder.btnPlus.setOnClickListener(v -> {
             int newQty = qty + 1;
             if (product.getStock() > 0 && newQty <= product.getStock()) {
-                cartManager.updateQuantity(product.id, newQty);
+                cartManager.updateQuantity(product, newQty);
                 holder.tvQty.setText(String.valueOf(newQty));
                 if (listener != null) listener.onCartUpdated();
             }
@@ -74,11 +74,11 @@ public class SelfCheckoutCartAdapter extends RecyclerView.Adapter<SelfCheckoutCa
         holder.btnMinus.setOnClickListener(v -> {
             int newQty = qty - 1;
             if (newQty <= 0) {
-                cartManager.removeItem(product.id);
+                cartManager.removeItem(product);
                 items.remove(position);
                 notifyItemRemoved(position);
             } else {
-                cartManager.updateQuantity(product.id, newQty);
+                cartManager.updateQuantity(product, newQty);
                 holder.tvQty.setText(String.valueOf(newQty));
             }
             if (listener != null) listener.onCartUpdated();

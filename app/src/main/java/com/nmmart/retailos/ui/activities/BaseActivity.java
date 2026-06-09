@@ -12,14 +12,19 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        logDebug("onCreate started");
+        // Initialize session manager first (before any UI)
         sessionManager = new SessionManager(this);
+        
+        // Set dark mode BEFORE calling super.onCreate()
         if (sessionManager.isDarkMode()) {
             androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES);
         } else {
             androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO);
         }
+        
         super.onCreate(savedInstanceState);
+        
+        logDebug("onCreate started");
         logDebug("onCreate completed");
     }
 

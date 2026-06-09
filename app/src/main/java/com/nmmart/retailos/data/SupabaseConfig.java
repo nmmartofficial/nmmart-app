@@ -5,6 +5,7 @@ import android.content.Context;
 import com.nmmart.retailos.BuildConfig;
 import com.nmmart.retailos.models.Address;
 import com.nmmart.retailos.models.AppConfig;
+import com.nmmart.retailos.models.AppError;
 import com.nmmart.retailos.models.Banner;
 import com.nmmart.retailos.models.Brand;
 import com.nmmart.retailos.models.Category;
@@ -76,30 +77,30 @@ public class SupabaseConfig {
 
     public interface SupabaseService {
         @GET("products?is_active=eq.true&is_live_on_app=eq.true")
-        Call<List<Product>> searchProducts(
-            @Header("apikey") String apiKey,
-            @Header("Authorization") String auth,
-            @Query("item_name") String nameQuery,
-            @Query("limit") int limit,
-            @Query("offset") int offset
-        );
+    Call<List<Product>> searchProducts(
+        @Header("apikey") String apiKey,
+        @Header("Authorization") String auth,
+        @Query("item_name") String nameQuery,
+        @Query("limit") Integer limit,
+        @Query("offset") Integer offset
+    );
 
         @GET("products?is_active=eq.true&is_live_on_app=eq.true")
-        Call<List<Product>> getProductsSorted(
-            @Header("apikey") String apiKey,
-            @Header("Authorization") String auth,
-            @Query("category") String category,
-            @Query("brand") String brand,
-            @Query("order") String order,
-            @Query("limit") int limit,
-            @Query("offset") int offset
-        );
+    Call<List<Product>> getProductsSorted(
+        @Header("apikey") String apiKey,
+        @Header("Authorization") String auth,
+        @Query("category_id") String categoryId,
+        @Query("brand_id") String brandId,
+        @Query("order") String order,
+        @Query("limit") Integer limit,
+        @Query("offset") Integer offset
+    );
 
         @GET("products?is_active=eq.true&is_live_on_app=eq.true")
         Call<List<Product>> getRelatedProducts(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
-            @Query("category") String category,
+            @Query("category_id") String categoryId,
             @Query("id") String notEqualId,
             @Query("limit") int limit
         );
@@ -130,7 +131,7 @@ public class SupabaseConfig {
         Call<List<Product>> getProducts(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
-            @Query("category") String category
+            @Query("category_id") String categoryId
         );
 
         @GET("products?is_active=eq.true&is_live_on_app=eq.true")
@@ -306,6 +307,28 @@ public class SupabaseConfig {
             @Header("Authorization") String auth,
             @Query("id") String orderId,
             @Body Map<String, Object> data
+        );
+
+        @POST("app_errors")
+        Call<Void> insertAppError(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth,
+            @Body AppError error
+        );
+        
+        @PATCH("wallet_master")
+        Call<Void> updateWalletBalance(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth,
+            @Query("user_id") String userId,
+            @Body Map<String, Object> walletData
+        );
+        
+        @POST("wallet_transactions")
+        Call<Void> insertWalletTransaction(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth,
+            @Body Map<String, Object> transactionData
         );
     }
 

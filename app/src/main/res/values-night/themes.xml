@@ -1,17 +1,48 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme for Dark Mode. -->
+    <!-- Base application theme with Material 3 styling for Dark Mode. -->
     <style name="Theme.NMMart" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/orange_primary</item>
-        <item name="colorPrimaryVariant">#000000</item>
+        <item name="colorPrimaryVariant">@color/orange_dark</item>
         <item name="colorOnPrimary">@color/black</item>
         <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/orange_primary</item>
-        <item name="colorSecondaryVariant">@color/orange_primary</item>
+        <item name="colorSecondary">@color/orange_light</item>
+        <item name="colorSecondaryVariant">@color/orange_50</item>
         <item name="colorOnSecondary">@color/black</item>
+        <!-- Surface colors. -->
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/black_soft</item>
+        <!-- Error color. -->
+        <item name="colorError">@color/red_error</item>
+        <!-- Background colors. -->
+        <item name="android:windowBackground">@color/grey_background</item>
         <!-- Status bar color. -->
-        <item name="android:statusBarColor">#000000</item>
-        <!-- Customize your theme here. -->
-        <item name="android:windowBackground">@color/background</item>
+        <item name="android:statusBarColor">@color/orange_primary</item>
+        <!-- Material 3 components styling. -->
+        <item name="materialButtonStyle">@style/Widget.NMMart.Button</item>
+        <item name="cardViewStyle">@style/Widget.NMMart.CardView</item>
+        <item name="android:textAppearanceButton">@style/TextAppearance.NMMart.Button</item>
+    </style>
+
+    <!-- NM MART Button Style -->
+    <style name="Widget.NMMart.Button" parent="Widget.MaterialComponents.Button">
+        <item name="cornerRadius">16dp</item>
+        <item name="elevation">4dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- NM MART Card View Style -->
+    <style name="Widget.NMMart.CardView" parent="Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">16dp</item>
+        <item name="cardElevation">4dp</item>
+        <item name="strokeWidth">0.5dp</item>
+        <item name="strokeColor">@color/grey_300</item>
+    </style>
+
+    <!-- NM MART Text Appearance -->
+    <style name="TextAppearance.NMMart.Button" parent="TextAppearance.MaterialComponents.Button">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
     </style>
 </resources>

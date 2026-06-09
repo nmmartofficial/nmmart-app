@@ -143,9 +143,9 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 if (position != RecyclerView.NO_POSITION) {
                     Product product = productList.get(position);
                     com.nmmart.retailos.data.CartManager cartManager = com.nmmart.retailos.data.CartManager.getInstance(context);
-                    int cartQty = cartManager.getQuantity(product.id);
+                    int cartQty = cartManager.getQuantity(product);
                     if (cartQty < product.getStock()) {
-                        cartManager.updateQuantity(product.id, cartQty + 1);
+                        cartManager.updateQuantity(product, cartQty + 1);
                         currentQuantity = cartQty + 1;
                         binding.tvQuantity.setText(String.valueOf(currentQuantity));
                         if (onCartUpdateListener != null) {
@@ -162,16 +162,16 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 if (position != RecyclerView.NO_POSITION) {
                     Product product = productList.get(position);
                     com.nmmart.retailos.data.CartManager cartManager = com.nmmart.retailos.data.CartManager.getInstance(context);
-                    int cartQty = cartManager.getQuantity(product.id);
+                    int cartQty = cartManager.getQuantity(product);
                     if (cartQty > 1) {
-                        cartManager.updateQuantity(product.id, cartQty - 1);
+                        cartManager.updateQuantity(product, cartQty - 1);
                         currentQuantity = cartQty - 1;
                         binding.tvQuantity.setText(String.valueOf(currentQuantity));
                         if (onCartUpdateListener != null) {
                             onCartUpdateListener.onCartUpdated();
                         }
                     } else {
-                        cartManager.removeFromCart(product.id);
+                        cartManager.removeFromCart(product);
                         currentQuantity = 1;
                         binding.tvQuantity.setText(String.valueOf(currentQuantity));
                         binding.btnAddToCart.setVisibility(View.VISIBLE);
@@ -224,7 +224,7 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             }
 
             com.nmmart.retailos.data.CartManager cartManager = com.nmmart.retailos.data.CartManager.getInstance(context);
-            int cartQty = cartManager.getQuantity(product.id);
+            int cartQty = cartManager.getQuantity(product);
             
             if (cartQty > 0) {
                 currentQuantity = cartQty;

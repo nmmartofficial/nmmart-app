@@ -12,13 +12,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.nmmart.retailos.R;
 import com.nmmart.retailos.models.Category;
+import com.nmmart.retailos.utils.NMMartLogger;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.CategoryViewHolder> {
 
     // Data & Listener
-    private List<Category> categories;
+    private List<Category> categories = new ArrayList<>();
     private OnCategoryClickListener listener;
 
     // Click listener interface
@@ -28,13 +30,13 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
 
     // Constructor
     public CategoryAdapter(List<Category> categories, OnCategoryClickListener listener) {
-        this.categories = categories;
+        this.categories = categories != null ? categories : new ArrayList<>();
         this.listener = listener;
     }
 
     // Update categories data
     public void setCategories(List<Category> categories) {
-        this.categories = categories;
+        this.categories = categories != null ? categories : new ArrayList<>();
         notifyDataSetChanged();
     }
 
@@ -47,7 +49,13 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
 
     @Override
     public void onBindViewHolder(@NonNull CategoryViewHolder holder, int position) {
-        holder.bind(categories.get(position));
+        try {
+            if (position >= 0 && position < categories.size()) {
+                holder.bind(categories.get(position));
+            }
+        } catch (Exception e) {
+            NMMartLogger.logError("CategoryAdapter.java", "onBindViewHolder", e.getMessage());
+        }
     }
 
     @Override
@@ -67,24 +75,34 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
             
             // Handle clicks in ViewHolder (best practice)
             itemView.setOnClickListener(v -> {
-                int position = getAdapterPosition();
-                if (position != RecyclerView.NO_POSITION && listener != null) {
-                    listener.onCategoryClick(categories.get(position));
+                try {
+                    int position = getAdapterPosition();
+                    if (position != RecyclerView.NO_POSITION && listener != null && position < categories.size()) {
+                        NMMartLogger.logClick("CategoryItem");
+                        listener.onCategoryClick(categories.get(position));
+                    }
+                } catch (Exception e) {
+                    NMMartLogger.logError("CategoryAdapter.java", "CategoryViewHolder click", e.getMessage());
                 }
             });
         }
 
         // Bind data to views
         void bind(Category category) {
-            tvCategoryName.setText(category.getName());
-            if (category.getImageUrl() != null && !category.getImageUrl().isEmpty()) {
-                Glide.with(itemView.getContext())
-                        .load(category.getImageUrl())
-                        .placeholder(R.drawable.ic_launcher_foreground)
-                        .error(R.drawable.ic_launcher_foreground)
-                        .into(ivCategoryIcon);
-            } else {
-                ivCategoryIcon.setImageResource(R.drawable.ic_launcher_foreground);
+            try {
+                if (category == null) return;
+                tvCategoryName.setText(category.getName() != null ? category.getName() : "");
+                if (category.getImageUrl() != null && !category.getImageUrl().isEmpty()) {
+                    Glide.with(itemView.getContext())
+                            .load(category.getImageUrl())
+                            .placeholder(R.drawable.ic_launcher_foreground)
+                            .error(R.drawable.ic_launcher_foreground)
+                            .into(ivCategoryIcon);
+                } else {
+                    ivCategoryIcon.setImageResource(R.drawable.ic_launcher_foreground);
+                }
+            } catch (Exception e) {
+                NMMartLogger.logError("CategoryAdapter.java", "bind", e.getMessage());
             }
         }
     }

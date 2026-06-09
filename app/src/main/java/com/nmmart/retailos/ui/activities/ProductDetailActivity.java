@@ -200,7 +200,7 @@ public class ProductDetailActivity extends BaseActivity {
         });
 
         btnBuyNow.setOnClickListener(v -> {
-            if (cartManager.getQuantity(product.id) == 0) {
+            if (cartManager.getQuantity(product) == 0) {
                 if (!cartManager.addToCart(product)) {
                     Toast.makeText(this, "Out of stock!", Toast.LENGTH_SHORT).show();
                     return;
@@ -301,12 +301,12 @@ public class ProductDetailActivity extends BaseActivity {
     }
 
     private void updateQtyFromCart() {
-        int qty = cartManager.getQuantity(product.id);
+        int qty = cartManager.getQuantity(product);
         tvQtyValue.setText(String.valueOf(Math.max(0, qty)));
     }
 
     private void fetchSimilarProducts() {
-        String cat = product.category != null ? "eq." + product.category : null;
+        String cat = product.categoryId != null ? "eq." + product.categoryId : null;
         String idNot = product.id != null ? "neq." + product.id : null;
         SupabaseConfig.getService()
                 .getRelatedProducts(SupabaseConfig.getApiKey(), SupabaseConfig.getAuthorizationHeader(), cat, idNot, 6)

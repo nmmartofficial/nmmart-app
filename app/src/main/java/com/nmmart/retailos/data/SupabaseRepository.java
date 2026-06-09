@@ -3,6 +3,7 @@ package com.nmmart.retailos.data;
 import android.util.Log;
 import com.nmmart.retailos.models.Address;
 import com.nmmart.retailos.models.AppConfig;
+import com.nmmart.retailos.models.AppError;
 import com.nmmart.retailos.models.Banner;
 import com.nmmart.retailos.models.Brand;
 import com.nmmart.retailos.models.Category;
@@ -12,6 +13,7 @@ import com.nmmart.retailos.models.Product;
 import com.nmmart.retailos.models.WalletMaster;
 import com.nmmart.retailos.models.WalletTransaction;
 import com.nmmart.retailos.models.PincodeMaster;
+import com.nmmart.retailos.utils.NMMartLogger;
 
 import java.util.List;
 import java.util.HashMap;
@@ -23,6 +25,7 @@ import retrofit2.Response;
 
 public class SupabaseRepository {
     private static final String TAG = "SupabaseRepository";
+    private static final String FILE_NAME = "SupabaseRepository.java";
     private SupabaseConfig.SupabaseService apiService;
     private String apiKey;
 
@@ -30,6 +33,56 @@ public class SupabaseRepository {
         Log.d(TAG, "Initializing SupabaseRepository");
         this.apiService = SupabaseConfig.getService();
         this.apiKey = SupabaseConfig.getApiKey();
+    }
+
+    public void insertAppError(AppError error) {
+        final String FUNCTION_NAME = "insertAppError";
+        NMMartLogger.logFunction(FUNCTION_NAME);
+        try {
+            apiService.insertAppError(apiKey, anonOrUserAuth(), error).enqueue(new Callback<Void>() {
+                @Override
+                public void onResponse(Call<Void> call, Response<Void> response) {
+                    if (response.isSuccessful()) {
+                        Log.d(TAG, "App error inserted successfully");
+                    } else {
+                        Log.e(TAG, "Failed to insert app error: " + response.message());
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<Void> call, Throwable t) {
+                    Log.e(TAG, "Failed to insert app error", t);
+                }
+            });
+        } catch (Exception e) {
+            NMMartLogger.logError(FILE_NAME, FUNCTION_NAME, e.getMessage());
+        }
+    }
+    
+    public void updateWalletBalance(String userId, double newBalance, Callback<Void> callback) {
+        final String FUNCTION_NAME = "updateWalletBalance";
+        NMMartLogger.logFunction(FUNCTION_NAME);
+        try {
+            Map<String, Object> walletData = new HashMap<>();
+            walletData.put("current_balance", newBalance);
+            apiService.updateWalletBalance(apiKey, anonOrUserAuth(), userId, walletData)
+                .enqueue(wrapCallback(FUNCTION_NAME, callback));
+        } catch (Exception e) {
+            NMMartLogger.logError(FILE_NAME, FUNCTION_NAME, e.getMessage());
+            callback.onFailure(null, e);
+        }
+    }
+    
+    public void insertWalletTransaction(Map<String, Object> transactionData, Callback<Void> callback) {
+        final String FUNCTION_NAME = "insertWalletTransaction";
+        NMMartLogger.logFunction(FUNCTION_NAME);
+        try {
+            apiService.insertWalletTransaction(apiKey, anonOrUserAuth(), transactionData)
+                .enqueue(wrapCallback(FUNCTION_NAME, callback));
+        } catch (Exception e) {
+            NMMartLogger.logError(FILE_NAME, FUNCTION_NAME, e.getMessage());
+            callback.onFailure(null, e);
+        }
     }
 
     private String anonOrUserAuth() {
@@ -64,11 +117,13 @@ public class SupabaseRepository {
     }
 
     // --- Methods that return Call objects (for ViewModel tracking) ---
-    public Call<List<Product>> getProductsSortedCall(String category, String brand, String order, int limit, int offset) {
-        return apiService.getProductsSorted(apiKey, anonOrUserAuth(), category, brand, order, limit, offset);
+    public Call<List<Product>> getProductsSortedCall(String categoryId, String brandId, String order, Integer limit, Integer offset) {
+        String catParam = categoryId != null ? "eq." + categoryId : null;
+        String brandParam = brandId != null ? "eq." + brandId : null;
+        return apiService.getProductsSorted(apiKey, anonOrUserAuth(), catParam, brandParam, order, limit, offset);
     }
 
-    public Call<List<Product>> searchProductsCall(String query, int limit, int offset) {
+    public Call<List<Product>> searchProductsCall(String query, Integer limit, Integer offset) {
         return apiService.searchProducts(apiKey, anonOrUserAuth(), "ilike.%" + query + "%", limit, offset);
     }
 
@@ -85,12 +140,20 @@ public class SupabaseRepository {
     }
 
     public Call<List<Category>> getSubCategoriesCall(String parentId) {
-        return apiService.getSubCategories(apiKey, anonOrUserAuth(), parentId);
+        String parentIdParam = parentId != null ? "eq." + parentId : null;
+        return apiService.getSubCategories(apiKey, anonOrUserAuth(), parentIdParam);
     }
 
     public void getSubCategories(String parentId, Callback<List<Category>> callback) {
-        Log.d(TAG, "getSubCategories called with parentId: " + parentId);
-        getSubCategoriesCall(parentId).enqueue(wrapCallback("getSubCategories", callback));
+        final String FUNCTION_NAME = "getSubCategories";
+        NMMartLogger.logFunction(FUNCTION_NAME);
+        try {
+            Log.d(TAG, "getSubCategories called with parentId: " + parentId);
+            getSubCategoriesCall(parentId).enqueue(wrapCallback(FUNCTION_NAME, callback));
+        } catch (Exception e) {
+            NMMartLogger.logError(FILE_NAME, FUNCTION_NAME, e.getMessage());
+            Log.e(TAG, "Error in getSubCategories", e);
+        }
     }
 
     public Call<List<Product>> getTrendingProductsCall(int limit) {
@@ -106,9 +169,9 @@ public class SupabaseRepository {
     }
 
     // --- Legacy enqueue methods (keep for backward compatibility) ---
-    public void getProducts(String category, Callback<List<Product>> callback) {
-        Log.d(TAG, "getProducts called with category: " + category);
-        apiService.getProducts(apiKey, anonOrUserAuth(), "eq." + category).enqueue(wrapCallback("getProducts", callback));
+    public void getProducts(String categoryId, Callback<List<Product>> callback) {
+        Log.d(TAG, "getProducts called with categoryId: " + categoryId);
+        apiService.getProducts(apiKey, anonOrUserAuth(), "eq." + categoryId).enqueue(wrapCallback("getProducts", callback));
     }
 
     public void searchProducts(String query, int limit, int offset, Callback<List<Product>> callback) {
@@ -131,9 +194,9 @@ public class SupabaseRepository {
         apiService.getLatestProducts(apiKey, anonOrUserAuth(), "id.desc", limit).enqueue(wrapCallback("getLatestProducts", callback));
     }
 
-    public void getProductsSorted(String category, String brand, String order, int limit, int offset, Callback<List<Product>> callback) {
-        Log.d(TAG, "getProductsSorted called - category: " + category + ", brand: " + brand + ", order: " + order + ", limit: " + limit + ", offset: " + offset);
-        getProductsSortedCall(category, brand, order, limit, offset).enqueue(wrapCallback("getProductsSorted", callback));
+    public void getProductsSorted(String categoryId, String brandId, String order, int limit, int offset, Callback<List<Product>> callback) {
+        Log.d(TAG, "getProductsSorted called - categoryId: " + categoryId + ", brandId: " + brandId + ", order: " + order + ", limit: " + limit + ", offset: " + offset);
+        getProductsSortedCall(categoryId, brandId, order, limit, offset).enqueue(wrapCallback("getProductsSorted", callback));
     }
 
     public void getAllProducts(int limit, int offset, Callback<List<Product>> callback) {
@@ -156,9 +219,9 @@ public class SupabaseRepository {
         apiService.getUserOrders(apiKey, requireUserAuth(), "eq." + userId, "created_at.desc").enqueue(wrapCallback("getUserOrders", callback));
     }
     
-    public void fetchLiveProducts(String category, int limit, int offset, Callback<List<Product>> callback) {
-        Log.d(TAG, "fetchLiveProducts called with category: " + category + ", limit: " + limit + ", offset: " + offset);
-        getProductsSorted(category, null, "sale_rate.asc", limit, offset, callback);
+    public void fetchLiveProducts(String categoryId, int limit, int offset, Callback<List<Product>> callback) {
+        Log.d(TAG, "fetchLiveProducts called with categoryId: " + categoryId + ", limit: " + limit + ", offset: " + offset);
+        getProductsSorted(categoryId, null, "sale_rate.asc", limit, offset, callback);
     }
     
     public void getAppConfig(Callback<List<AppConfig>> callback) {

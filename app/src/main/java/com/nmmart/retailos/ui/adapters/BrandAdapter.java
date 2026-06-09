@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.nmmart.retailos.R;
 import com.nmmart.retailos.models.Brand;
+import com.nmmart.retailos.utils.NMMartLogger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +35,7 @@ public class BrandAdapter extends RecyclerView.Adapter<BrandAdapter.BrandViewHol
 
     // Update brands data
     public void setBrands(List<Brand> brands) {
-        this.brands = brands;
+        this.brands = brands != null ? brands : new ArrayList<>();
         notifyDataSetChanged();
     }
 
@@ -47,7 +48,13 @@ public class BrandAdapter extends RecyclerView.Adapter<BrandAdapter.BrandViewHol
 
     @Override
     public void onBindViewHolder(@NonNull BrandViewHolder holder, int position) {
-        holder.bind(brands.get(position));
+        try {
+            if (position >= 0 && position < brands.size()) {
+                holder.bind(brands.get(position));
+            }
+        } catch (Exception e) {
+            NMMartLogger.logError("BrandAdapter.java", "onBindViewHolder", e.getMessage());
+        }
     }
 
     @Override
@@ -67,24 +74,34 @@ public class BrandAdapter extends RecyclerView.Adapter<BrandAdapter.BrandViewHol
             
             // Handle clicks in ViewHolder
             itemView.setOnClickListener(v -> {
-                int position = getAdapterPosition();
-                if (position != RecyclerView.NO_POSITION && listener != null) {
-                    listener.onBrandClick(brands.get(position));
+                try {
+                    int position = getAdapterPosition();
+                    if (position != RecyclerView.NO_POSITION && listener != null && position < brands.size()) {
+                        NMMartLogger.logClick("BrandItem");
+                        listener.onBrandClick(brands.get(position));
+                    }
+                } catch (Exception e) {
+                    NMMartLogger.logError("BrandAdapter.java", "BrandViewHolder click", e.getMessage());
                 }
             });
         }
 
         // Bind data to views
         void bind(Brand brand) {
-            tvBrandName.setText(brand.getName());
-            if (brand.getLogoUrl() != null && !brand.getLogoUrl().isEmpty()) {
-                Glide.with(itemView.getContext())
-                        .load(brand.getLogoUrl())
-                        .placeholder(R.drawable.ic_placeholder)
-                        .error(R.drawable.ic_placeholder)
-                        .into(ivBrandLogo);
-            } else {
-                ivBrandLogo.setImageResource(R.drawable.ic_placeholder);
+            try {
+                if (brand == null) return;
+                tvBrandName.setText(brand.getName() != null ? brand.getName() : "");
+                if (brand.getLogoUrl() != null && !brand.getLogoUrl().isEmpty()) {
+                    Glide.with(itemView.getContext())
+                            .load(brand.getLogoUrl())
+                            .placeholder(R.drawable.ic_placeholder)
+                            .error(R.drawable.ic_placeholder)
+                            .into(ivBrandLogo);
+                } else {
+                    ivBrandLogo.setImageResource(R.drawable.ic_placeholder);
+                }
+            } catch (Exception e) {
+                NMMartLogger.logError("BrandAdapter.java", "bind", e.getMessage());
             }
         }
     }

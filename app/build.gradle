@@ -22,15 +22,20 @@ android {
         buildConfigField "String", "SUPABASE_FUNCTIONS_URL", "\"https://cpipmysooynedtpreekt.supabase.co/functions/v1/\""
     }
 
-    aaptOptions {
-        noCompress 'bin', 'dat'
-    }
-
     buildTypes {
+        debug {
+            debuggable true
+            minifyEnabled false
+            shrinkResources false
+        }
         release {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            debuggable false
+            jniDebuggable false
+            renderscriptDebuggable false
+            pseudoLocalesEnabled false
         }
     }
 
@@ -81,6 +86,10 @@ dependencies {
 
     // Material Icons Extended
     implementation 'androidx.compose.material:material-icons-extended:1.6.0'
+
+    // Stetho (Android's Eruda) for on-device debugging
+    debugImplementation 'com.facebook.stetho:stetho:1.6.0'
+    debugImplementation 'com.facebook.stetho:stetho-okhttp3:1.6.0'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

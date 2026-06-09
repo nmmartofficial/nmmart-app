@@ -55,6 +55,26 @@ public class Product implements Serializable {
     public String barcode;
 
     // Null-safe getters for all fields
+    public String getId() {
+        return id != null ? id : "";
+    }
+
+    public String getName() {
+        return name != null ? name : "Product";
+    }
+
+    public String getCategoryId() {
+        return categoryId != null ? categoryId : "";
+    }
+
+    public String getCategory() {
+        return category != null ? category : "";
+    }
+
+    public String getBrandId() {
+        return brandId != null ? brandId : "";
+    }
+
     public double getMrp() {
         return mrp != null ? mrp : 0.0;
     }
@@ -67,8 +87,32 @@ public class Product implements Serializable {
         return discount != null ? discount : 0.0;
     }
 
+    public String getImageUrl() {
+        return image_url != null ? image_url : "";
+    }
+
+    public String getUnitId() {
+        return unitId != null ? unitId : "";
+    }
+
+    public String getUnit() {
+        return unit != null ? unit : "pcs";
+    }
+
     public double getStock() {
         return stock != null ? stock : 0.0;
+    }
+
+    public Boolean getIsFeatured() {
+        return is_featured != null ? is_featured : false;
+    }
+
+    public String getBadge() {
+        return badge != null ? badge : "";
+    }
+
+    public String getBarcode() {
+        return barcode != null ? barcode : "";
     }
 
     public String getBrand() {

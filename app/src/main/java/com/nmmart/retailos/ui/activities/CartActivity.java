@@ -327,7 +327,7 @@ public class CartActivity extends BaseActivity {
             holder.binding.tvCartProductUnit.setText(product.unit);
             holder.binding.tvCartProductPrice.setText(PriceUtils.formatPrice(product.getNmPrice()));
 
-            int qty = cartManager.getQuantity(product.id);
+            int qty = cartManager.getQuantity(product);
             holder.binding.tvQty.setText(String.valueOf(qty));
 
             Glide.with(holder.itemView.getContext())
@@ -394,7 +394,7 @@ public class CartActivity extends BaseActivity {
             holder.binding.tvCartProductUnit.setText(product.unit);
             holder.binding.tvCartProductPrice.setText(PriceUtils.formatPrice(product.getNmPrice()));
             
-            int qty = cartManager.getSavedQuantity(product.id);
+            int qty = cartManager.getSavedQuantity(product);
             holder.binding.tvQty.setText(String.valueOf(qty));
             
             Glide.with(holder.itemView.getContext())

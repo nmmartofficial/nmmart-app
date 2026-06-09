@@ -112,6 +112,18 @@ public class CartManager {
         if (savedQuantities == null) savedQuantities = new HashMap<>();
     }
 
+    private String getCartKey(Product product) {
+        if (product == null) return "";
+        String unit = product.getUnit() != null ? product.getUnit() : "default";
+        return product.id + "_" + unit;
+    }
+
+    private String getCartKey(String productId, String unit) {
+        if (productId == null) return "";
+        String safeUnit = unit != null ? unit : "default";
+        return productId + "_" + safeUnit;
+    }
+
     private void saveCartToPrefs() {
         sharedPreferences.edit()
                 .putString(KEY_CART_ITEMS, gson.toJson(cartItems))
@@ -123,55 +135,74 @@ public class CartManager {
     
     public void saveForLater(Product product) {
         if (product == null || product.id == null) return;
-        int qty = cartQuantities.getOrDefault(product.id, 1);
-        cartItems.remove(product.id);
-        cartQuantities.remove(product.id);
-        savedItems.put(product.id, product);
-        savedQuantities.put(product.id, qty);
+        String key = getCartKey(product);
+        int qty = cartQuantities.getOrDefault(key, 1);
+        cartItems.remove(key);
+        cartQuantities.remove(key);
+        savedItems.put(key, product);
+        savedQuantities.put(key, qty);
         saveCartToPrefs();
     }
     
     public void moveToCart(Product product) {
         if (product == null || product.id == null) return;
-        int qty = savedQuantities.getOrDefault(product.id, 1);
-        savedItems.remove(product.id);
-        savedQuantities.remove(product.id);
-        cartItems.put(product.id, product);
-        cartQuantities.put(product.id, qty);
+        String key = getCartKey(product);
+        int qty = savedQuantities.getOrDefault(key, 1);
+        savedItems.remove(key);
+        savedQuantities.remove(key);
+        cartItems.put(key, product);
+        cartQuantities.put(key, qty);
         saveCartToPrefs();
     }
     
     public List<Product> getSavedItems() { return new ArrayList<>(savedItems.values()); }
-    public int getSavedQuantity(String productId) { return savedQuantities.getOrDefault(productId, 0); }
+    public int getSavedQuantity(String key) { return savedQuantities.getOrDefault(key, 0); }
+    public int getSavedQuantity(Product product) { return getSavedQuantity(getCartKey(product)); }
+    public int getQuantity(Product product) { 
+        return cartQuantities.getOrDefault(getCartKey(product), 0); 
+    }
+    public int getQuantity(String key) { return cartQuantities.getOrDefault(key, 0); }
 
     public boolean addToCart(Product product) {
         if (product == null || product.id == null) return false;
-        int currentQty = cartQuantities.getOrDefault(product.id, 0);
+        String key = getCartKey(product);
+        int currentQty = cartQuantities.getOrDefault(key, 0);
         if (product.getStock() > 0 && currentQty >= product.getStock()) return false;
-        cartItems.put(product.id, product);
-        cartQuantities.put(product.id, currentQty + 1);
+        cartItems.put(key, product);
+        cartQuantities.put(key, currentQty + 1);
         saveCartToPrefs();
         return true;
     }
 
     public void removeFromCart(Product product) {
         if (product == null || product.id == null) return;
-        removeFromCart(product.id);
+        removeFromCart(getCartKey(product));
     }
 
-    public void removeFromCart(String productId) {
-        if (productId == null) return;
-        cartItems.remove(productId);
-        cartQuantities.remove(productId);
+    public void removeFromCart(String key) {
+        if (key == null) return;
+        cartItems.remove(key);
+        cartQuantities.remove(key);
         saveCartToPrefs();
     }
 
-    public void updateQuantity(String productId, int newQuantity) {
-        if (productId == null) return;
+    public void updateQuantity(Product product, int newQuantity) {
+        if (product == null || product.id == null) return;
+        String key = getCartKey(product);
         if (newQuantity <= 0) {
-            removeFromCart(productId);
+            removeFromCart(key);
         } else {
-            cartQuantities.put(productId, newQuantity);
+            cartQuantities.put(key, newQuantity);
+            saveCartToPrefs();
+        }
+    }
+
+    public void updateQuantity(String key, int newQuantity) {
+        if (key == null) return;
+        if (newQuantity <= 0) {
+            removeFromCart(key);
+        } else {
+            cartQuantities.put(key, newQuantity);
             saveCartToPrefs();
         }
     }
@@ -192,7 +223,6 @@ public class CartManager {
         return (subtotal == 0 || subtotal >= minFreeDeliveryAmount) ? 0 : deliveryCharge;
     }
 
-    public int getQuantity(String productId) { return cartQuantities.getOrDefault(productId, 0); }
     public List<Product> getCartItems() { return new ArrayList<>(cartItems.values()); }
     public Map<String, Integer> getCartQuantities() { return new HashMap<>(cartQuantities); }
     public void clearCart() { cartItems.clear(); cartQuantities.clear(); saveCartToPrefs(); }

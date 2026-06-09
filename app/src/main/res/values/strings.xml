@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">NM Mart</string>
+    <string name="welcome_to_nm_mart">Welcome to NM Mart</string>
+    <string name="login_to_continue">Login to continue</string>
     <string-array name="sort_options">
         <item>Newest First</item>
         <item>Price: Low to High</item>

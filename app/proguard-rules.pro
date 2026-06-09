@@ -1,3 +1,22 @@
+# --- Strong Obfuscation Configuration ---
+
+# Remove all debug logs
+-assumenosideeffects class android.util.Log {
+    public static boolean isLoggable(java.lang.String, int);
+    public static int v(...);
+    public static int d(...);
+    public static int i(...);
+    public static int w(...);
+    public static int e(...);
+}
+
+# Aggressive obfuscation
+-optimizationpasses 5
+-optimizations !code/simplification/arithmetic,!field/*,!class/merging/*
+-allowaccessmodification
+-renamesourcefileattribute SourceFile
+-keepattributes SourceFile,LineNumberTable
+
 # Retrofit rules
 -dontwarn okhttp3.**
 -dontwarn okio.**
@@ -9,6 +28,12 @@
 # Gson rules
 -keep class com.google.gson.** { *; }
 -keepattributes EnclosingMethod
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class * implements com.google.gson.TypeAdapter
+-keep class * implements com.google.gson.TypeAdapterFactory
+-keep class * implements com.google.gson.JsonSerializer
+-keep class * implements com.google.gson.JsonDeserializer
 
 # Model classes (Crucial for JSON parsing)
 -keep class com.nmmart.retailos.models.** { *; }
@@ -38,3 +63,13 @@
 # AndroidX
 -keep class androidx.appcompat.widget.** { *; }
 -keep class androidx.recyclerview.widget.** { *; }
+
+# ZXing Barcode Scanner
+-keep class com.journeyapps.** { *; }
+-keep class com.google.zxing.** { *; }
+
+# Firebase
+-keep class com.google.firebase.** { *; }
+
+# Stetho (only for debug, so keep in debug but remove in release - but let's just keep rules for safety)
+-dontwarn com.facebook.stetho.**

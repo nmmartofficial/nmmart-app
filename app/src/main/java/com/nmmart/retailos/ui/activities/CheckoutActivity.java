@@ -2,6 +2,7 @@ package com.nmmart.retailos.ui.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.material.appbar.MaterialToolbar;
@@ -306,7 +307,43 @@ public class CheckoutActivity extends BaseActivity {
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
                     float cashback = (float) (itemsTotal * (cartManager.getCashbackPercentage() / 100.0));
-                    sessionManager.setWalletBalance(sessionManager.getWalletBalance() + cashback);
+            float newWalletBalance = sessionManager.getWalletBalance() + cashback;
+            sessionManager.setWalletBalance(newWalletBalance);
+                    
+                    // Update wallet balance in Supabase
+                    repository.updateWalletBalance(sessionManager.getUserId(), newWalletBalance, new Callback<Void>() {
+                        @Override
+                        public void onResponse(Call<Void> walletCall, Response<Void> walletResponse) {
+                            Log.d("CheckoutActivity", "Wallet balance updated in DB");
+                        }
+
+                        @Override
+                        public void onFailure(Call<Void> walletCall, Throwable t) {
+                            Log.e("CheckoutActivity", "Failed to update wallet balance in DB", t);
+                        }
+                    });
+                    
+                    // Insert wallet transaction in Supabase
+                    if (cashback > 0) {
+                        Map<String, Object> transactionData = new HashMap<>();
+                        transactionData.put("user_id", sessionManager.getUserId());
+                        transactionData.put("amount", cashback);
+                        transactionData.put("type", "Credit");
+                        transactionData.put("description", "Cashback on order");
+                        transactionData.put("status", "Completed");
+                        
+                        repository.insertWalletTransaction(transactionData, new Callback<Void>() {
+                            @Override
+                            public void onResponse(Call<Void> txnCall, Response<Void> txnResponse) {
+                                Log.d("CheckoutActivity", "Wallet transaction inserted in DB");
+                            }
+
+                            @Override
+                            public void onFailure(Call<Void> txnCall, Throwable t) {
+                                Log.e("CheckoutActivity", "Failed to insert wallet transaction in DB", t);
+                            }
+                        });
+                    }
 
                     cartManager.clearCart();
 

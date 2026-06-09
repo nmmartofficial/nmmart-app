@@ -3,34 +3,51 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white">
+    android:background="@drawable/bg_gradient_orange">
 
-    <!-- NM Mart Text Logo -->
-    <TextView
-        android:id="@+id/tvSplashTitle"
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="NM Mart"
-        android:textSize="48sp"
-        android:textStyle="bold"
-        android:textColor="#D32F2F"
-        app:layout_constraintBottom_toTopOf="@+id/tvSplashTagline"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="packed" />
-
-    <TextView
-        android:id="@+id/tvSplashTagline"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Shop More. Save More."
-        android:layout_marginTop="12dp"
-        android:textSize="18sp"
-        android:textColor="#616161"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="8dp"
+        app:cardBackgroundColor="@color/white"
+        android:padding="24dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvSplashTitle" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/tvSplashTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="NM Mart"
+                android:textSize="48sp"
+                android:textStyle="bold"
+                android:textColor="@color/orange_primary"/>
+
+            <TextView
+                android:id="@+id/tvSplashTagline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Shop More. Save More."
+                android:layout_marginTop="12dp"
+                android:textSize="18sp"
+                android:textColor="@color/grey_700" />
+
+            <ProgressBar
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:indeterminateTint="@color/orange_primary"
+                android:layout_marginTop="24dp"/>
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

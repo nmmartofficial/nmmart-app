@@ -71,6 +71,7 @@ public class SubCategoryActivity extends AppCompatActivity {
                     // If no subcategories found, let's open ProductListActivity directly
                     Intent intent = new Intent(SubCategoryActivity.this, ProductListActivity.class);
                     intent.putExtra("CATEGORY_NAME", parentCategoryName);
+                    intent.putExtra("CATEGORY_ID", parentCategoryId);
                     startActivity(intent);
                     finish();
                 }
@@ -81,6 +82,7 @@ public class SubCategoryActivity extends AppCompatActivity {
                 // On failure, open ProductListActivity directly
                 Intent intent = new Intent(SubCategoryActivity.this, ProductListActivity.class);
                 intent.putExtra("CATEGORY_NAME", parentCategoryName);
+                intent.putExtra("CATEGORY_ID", parentCategoryId);
                 startActivity(intent);
                 finish();
             }

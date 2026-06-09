@@ -11,9 +11,11 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.nmmart.retailos.R;
 import com.nmmart.retailos.data.SessionManager;
 import com.nmmart.retailos.databinding.ActivityProductListBinding;
+import com.nmmart.retailos.models.Category;
 import com.nmmart.retailos.models.Product;
 import com.nmmart.retailos.ui.adapters.ProductListAdapter;
 import com.nmmart.retailos.ui.adapters.ShimmerAdapter;
+import com.nmmart.retailos.ui.adapters.SubcategorySidebarAdapter;
 import com.nmmart.retailos.ui.viewmodels.ProductListViewModel;
 
 import androidx.lifecycle.ViewModelProvider;
@@ -28,30 +30,41 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
     private ProductListViewModel viewModel;
     private ProductListAdapter adapter;
     private ShimmerAdapter shimmerAdapter;
+    private SubcategorySidebarAdapter subcategoryAdapter;
     private List<Product> productList = new ArrayList<>();
-    private String categoryName, searchQuery, brandName;
+    private List<Category> subcategoryList = new ArrayList<>();
+    private String categoryName, categoryId, searchQuery, brandId;
     private SessionManager sessionManager;
     private int selectedSortPosition = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityProductListBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+        try {
+            binding = ActivityProductListBinding.inflate(getLayoutInflater());
+            setContentView(binding.getRoot());
 
-        viewModel = new ViewModelProvider(this).get(ProductListViewModel.class);
-        sessionManager = new SessionManager(this);
-        
-        categoryName = getIntent().getStringExtra("CATEGORY_NAME");
-        searchQuery = getIntent().getStringExtra("SEARCH_QUERY");
-        brandName = getIntent().getStringExtra("BRAND_NAME");
+            viewModel = new ViewModelProvider(this).get(ProductListViewModel.class);
+            sessionManager = new SessionManager(this);
+            
+            categoryName = getIntent().getStringExtra("CATEGORY_NAME");
+            categoryId = getIntent().getStringExtra("CATEGORY_ID");
+            searchQuery = getIntent().getStringExtra("SEARCH_QUERY");
+            brandId = getIntent().getStringExtra("BRAND_ID");
 
-        setupToolbar();
-        setupRecyclerView();
-        setupObservers();
-        setupListeners();
-        
-        fetchData();
+            setupToolbar();
+            setupRecyclerView();
+            setupObservers();
+            setupListeners();
+            
+            fetchData();
+            if (categoryId != null) {
+                viewModel.fetchSubcategories(categoryId);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            finish();
+        }
     }
     
     private boolean isNetworkAvailable() {
@@ -63,11 +76,12 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
 
     private void setupToolbar() {
         setSupportActionBar(binding.toolbar);
+        String brandNameFromIntent = getIntent().getStringExtra("BRAND_NAME");
         if (getSupportActionBar() != null) {
             if (categoryName != null) {
                 getSupportActionBar().setTitle(categoryName);
-            } else if (brandName != null) {
-                getSupportActionBar().setTitle(brandName);
+            } else if (brandNameFromIntent != null) {
+                getSupportActionBar().setTitle(brandNameFromIntent);
             } else {
                 getSupportActionBar().setTitle("Search: " + searchQuery);
             }
@@ -85,6 +99,14 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
         binding.rvShimmer.setLayoutManager(new LinearLayoutManager(this));
         shimmerAdapter = new ShimmerAdapter(5, R.layout.item_shimmer_product);
         binding.rvShimmer.setAdapter(shimmerAdapter);
+
+        // Subcategories RecyclerView (sidebar)
+        LinearLayoutManager subcategoryLayoutManager = new LinearLayoutManager(this);
+        binding.rvSubcategories.setLayoutManager(subcategoryLayoutManager);
+        subcategoryAdapter = new SubcategorySidebarAdapter(subcategoryList, (subcategory, position) -> {
+            viewModel.fetchProductsBySubcategory(subcategory.getId());
+        });
+        binding.rvSubcategories.setAdapter(subcategoryAdapter);
         
         // Setup scroll listener for load more
         binding.rvProducts.addOnScrollListener(new androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
@@ -116,6 +138,9 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
             if (isNetworkAvailable()) {
                 binding.errorLayout.setVisibility(android.view.View.GONE);
                 fetchData();
+                if (categoryId != null) {
+                    viewModel.fetchSubcategories(categoryId);
+                }
             } else {
                 binding.swipeRefreshLayout.setRefreshing(false);
                 showErrorState();
@@ -161,6 +186,19 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
             binding.swipeRefreshLayout.setRefreshing(false);
         });
 
+        viewModel.getSubcategories().observe(this, categories -> {
+            if (categories != null && !categories.isEmpty()) {
+                subcategoryList.clear();
+                subcategoryList.addAll(categories);
+                subcategoryAdapter.updateSubcategories(subcategoryList);
+                // Show the sidebar if we have subcategories
+                binding.rvSubcategories.setVisibility(View.VISIBLE);
+            } else {
+                // Hide sidebar if no subcategories
+                binding.rvSubcategories.setVisibility(View.GONE);
+            }
+        });
+
         viewModel.getIsLoading().observe(this, isLoading -> {
             if (isLoading) {
                 binding.rvProducts.setVisibility(View.GONE);
@@ -178,8 +216,10 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
 
         viewModel.getErrorMessage().observe(this, msg -> {
             if (msg != null) {
-                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-                showErrorState();
+                Toast.makeText(this, "Error: " + msg, Toast.LENGTH_LONG).show();
+                binding.errorLayout.setVisibility(View.VISIBLE);
+                binding.tvError.setText("Error: " + msg);
+                binding.btnRetry.setVisibility(View.VISIBLE);
             }
         });
     }
@@ -227,10 +267,10 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
         hideErrorState();
         if (searchQuery != null && !searchQuery.isEmpty()) {
             viewModel.searchProducts(searchQuery);
-        } else if (brandName != null) {
-            viewModel.fetchProductsByBrand(brandName);
+        } else if (brandId != null) {
+            viewModel.fetchProductsByBrand(brandId);
         } else {
-            viewModel.fetchProducts(categoryName);
+            viewModel.fetchProducts(categoryId);
         }
     }
 

@@ -8,16 +8,14 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.speech.RecognizerIntent;
-import android.view.Menu;
+import android.text.Editable;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -27,9 +25,7 @@ import androidx.core.view.GravityCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
 import com.google.android.material.navigation.NavigationView;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
@@ -42,31 +38,26 @@ import com.nmmart.retailos.models.AppConfig;
 import com.nmmart.retailos.models.Banner;
 import com.nmmart.retailos.models.Brand;
 import com.nmmart.retailos.models.Category;
-import com.nmmart.retailos.models.Offer;
 import com.nmmart.retailos.models.Product;
 import com.nmmart.retailos.models.WalletMaster;
-import com.nmmart.retailos.ui.adapters.OfferAdapter;
 import com.nmmart.retailos.ui.adapters.BannerAdapter;
 import com.nmmart.retailos.ui.adapters.BrandAdapter;
 import com.nmmart.retailos.ui.adapters.CategoryAdapter;
 import com.nmmart.retailos.ui.adapters.ProductListAdapter;
 import com.nmmart.retailos.ui.adapters.SearchHistoryAdapter;
 import com.nmmart.retailos.data.SearchHistoryManager;
-import com.nmmart.retailos.ui.viewmodels.MainViewModel;
 import com.nmmart.retailos.ui.viewmodels.ProductListViewModel;
 import com.nmmart.retailos.utils.PriceUtils;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
-import android.text.Editable;
-import android.text.TextWatcher;
-import java.util.Timer;
-import java.util.TimerTask;
+import okhttp3.ResponseBody;
 
 public class MainActivity extends BaseActivity implements NavigationView.OnNavigationItemSelectedListener {
 
-    private static final int REQUEST_CODE_SPEECH_INPUT = 1000;
     private ActivityResultLauncher<String> notificationPermissionLauncher;
     private ActivityResultLauncher<Intent> speechInputLauncher;
     private ActivityMainBinding binding;
@@ -78,14 +69,14 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private ProductListAdapter productListAdapter;
     private SearchHistoryAdapter searchHistoryAdapter;
     
-    private List<Category> categories = new ArrayList<>();
-    private List<Brand> brands = new ArrayList<>();
-    private List<Product> everydayEssentials = new ArrayList<>();
-    private List<Product> bestSelling = new ArrayList<>();
-    private List<Product> discountItems = new ArrayList<>();
-    private List<Product> newArrivals = new ArrayList<>();
-    private List<Product> buyAgain = new ArrayList<>();
-    private List<Product> featuredItems = new ArrayList<>();
+    private final List<Category> categories = new ArrayList<>();
+    private final List<Brand> brands = new ArrayList<>();
+    private final List<Product> everydayEssentials = new ArrayList<>();
+    private final List<Product> bestSelling = new ArrayList<>();
+    private final List<Product> discountItems = new ArrayList<>();
+    private final List<Product> newArrivals = new ArrayList<>();
+    private final List<Product> buyAgain = new ArrayList<>();
+    private final List<Product> featuredItems = new ArrayList<>();
     
     private ProductListAdapter everydayAdapter;
     private ProductListAdapter bestSellingAdapter;
@@ -102,6 +93,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private Handler timerHandler;
     private Runnable timerRunnable;
     private long timeLeftMillis = 86400000; // 24 hours in ms
+    private boolean isTimerRunning = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -189,27 +181,25 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
 
     private void setupHeader() {
         binding.tvLocation.setText(sessionManager.getDeliveryLocation());
-        binding.tvUserName.setText("Hello, " + sessionManager.getUserName() + "! 👋");
+        binding.tvUserName.setText(String.format(Locale.getDefault(), "Hello, %s! 👋", sessionManager.getUserName()));
         binding.tvWalletBalance.setText(PriceUtils.formatPrice(sessionManager.getWalletBalance()));
         
         updateNavHeader();
     }
 
     private void updateNavHeader() {
-        if (binding.navView != null) {
-            View headerView = binding.navView.getHeaderView(0);
-            if (headerView != null) {
-                TextView navUserName = headerView.findViewById(R.id.nav_user_name);
-                TextView navUserMobile = headerView.findViewById(R.id.nav_user_mobile);
-                
-                if (sessionManager.isLoggedIn()) {
-                    navUserName.setText(sessionManager.getUserName());
-                    String mobile = sessionManager.getMobile();
-                    navUserMobile.setText(mobile != null ? "+91 " + mobile : sessionManager.getEmail());
-                } else {
-                    navUserName.setText("Welcome to NM Mart");
-                    navUserMobile.setText("Login to continue");
-                }
+        View headerView = binding.navView.getHeaderView(0);
+        if (headerView != null) {
+            TextView navUserName = headerView.findViewById(R.id.nav_user_name);
+            TextView navUserMobile = headerView.findViewById(R.id.nav_user_mobile);
+            
+            if (sessionManager.isLoggedIn()) {
+                navUserName.setText(sessionManager.getUserName());
+                String mobile = sessionManager.getMobile();
+                navUserMobile.setText(mobile != null ? "+91 " + mobile : sessionManager.getEmail());
+            } else {
+                navUserName.setText(R.string.welcome_to_nm_mart);
+                navUserMobile.setText(R.string.login_to_continue);
             }
         }
     }
@@ -217,20 +207,18 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private void updateCartBadge() {
         com.nmmart.retailos.data.CartManager cartManager = com.nmmart.retailos.data.CartManager.getInstance(this);
         int cartCount = cartManager.getCartCount();
-        if (binding.bottomNavigation != null) {
-            MenuItem cartItem = binding.bottomNavigation.getMenu().findItem(R.id.nav_cart);
-            if (cartItem != null) {
-                if (cartCount > 0) {
-                    cartItem.setActionView(R.layout.badge_layout);
-                    View badgeView = cartItem.getActionView();
-                    if (badgeView != null) {
-                        TextView badgeText = badgeView.findViewById(android.R.id.text1);
-                        if (badgeText != null) badgeText.setText(String.valueOf(cartCount));
-                        badgeView.setOnClickListener(v -> onNavigationItemSelected(cartItem));
-                    }
-                } else {
-                    cartItem.setActionView(null);
+        MenuItem cartItem = binding.bottomNavigation.getMenu().findItem(R.id.nav_cart);
+        if (cartItem != null) {
+            if (cartCount > 0) {
+                cartItem.setActionView(R.layout.badge_layout);
+                View badgeView = cartItem.getActionView();
+                if (badgeView != null) {
+                    TextView badgeText = badgeView.findViewById(android.R.id.text1);
+                    if (badgeText != null) badgeText.setText(String.valueOf(cartCount));
+                    badgeView.setOnClickListener(v -> onNavigationItemSelected(cartItem));
                 }
+            } else {
+                cartItem.setActionView(null);
             }
         }
     }
@@ -322,10 +310,15 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     }
 
     private void startTimer() {
+        if (isTimerRunning) return;
+        
+        isTimerRunning = true;
         timerHandler = new Handler(Looper.getMainLooper());
         timerRunnable = new Runnable() {
             @Override
             public void run() {
+                if (!isTimerRunning || timerHandler == null || timerRunnable == null) return;
+                
                 if (timeLeftMillis <= 0) {
                     timeLeftMillis = 86400000; // Reset to 24h
                 }
@@ -334,27 +327,31 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 int minutes = (int) ((timeLeftMillis % 3600000) / 60000);
                 int seconds = (int) ((timeLeftMillis % 60000) / 1000);
 
-                String timeString = String.format("%02d:%02d:%02d", hours, minutes, seconds);
+                String timeString = String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds);
                 binding.tvTimer.setText(timeString);
 
                 timeLeftMillis -= 1000;
-                timerHandler.postDelayed(this, 1000);
+                if (isTimerRunning && timerHandler != null) {
+                    timerHandler.postDelayed(this, 1000);
+                }
             }
         };
         timerHandler.post(timerRunnable);
     }
 
     private void stopTimer() {
+        isTimerRunning = false;
         if (timerHandler != null && timerRunnable != null) {
             timerHandler.removeCallbacks(timerRunnable);
-            timerHandler = null;
-            timerRunnable = null;
         }
+        timerHandler = null;
+        timerRunnable = null;
     }
 
     private void setupBrands() {
         brandAdapter = new BrandAdapter(brand -> {
             Intent intent = new Intent(this, ProductListActivity.class);
+            intent.putExtra("BRAND_ID", brand.getId());
             intent.putExtra("BRAND_NAME", brand.getName());
             startActivity(intent);
         });
@@ -381,7 +378,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     }
 
     private void setupBottomNavigation() {
-        binding.bottomNavigation.setOnNavigationItemSelectedListener(item -> {
+        binding.bottomNavigation.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
             if (id == R.id.nav_home) return true;
             if (id == R.id.nav_categories) {
@@ -461,15 +458,18 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         // Search action listener
         binding.etSearch.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
-                String query = binding.etSearch.getText().toString().trim();
-                if (!query.isEmpty()) {
-                    logButtonClick("Search");
-                    logInfo("Search query: " + query);
-                    SearchHistoryManager.getInstance(this).addToHistory(query);
-                    logNavigation("ProductListActivity (search: " + query + ")");
-                    Intent intent = new Intent(this, ProductListActivity.class);
-                    intent.putExtra("SEARCH_QUERY", query);
-                    startActivity(intent);
+                Editable text = binding.etSearch.getText();
+                if (text != null) {
+                    String query = text.toString().trim();
+                    if (!query.isEmpty()) {
+                        logButtonClick("Search");
+                        logInfo("Search query: " + query);
+                        SearchHistoryManager.getInstance(this).addToHistory(query);
+                        logNavigation("ProductListActivity (search: " + query + ")");
+                        Intent intent = new Intent(this, ProductListActivity.class);
+                        intent.putExtra("SEARCH_QUERY", query);
+                        startActivity(intent);
+                    }
                 }
                 return true;
             }
@@ -523,7 +523,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private void fetchProductByBarcode(String barcode) {
         supabaseRepository.getProductByBarcode(barcode, new retrofit2.Callback<List<Product>>() {
             @Override
-            public void onResponse(retrofit2.Call<List<Product>> call, retrofit2.Response<List<Product>> response) {
+            public void onResponse(@NonNull retrofit2.Call<List<Product>> call, @NonNull retrofit2.Response<List<Product>> response) {
                 if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
                     Product product = response.body().get(0);
                     SelfCheckoutCartManager cartManager = SelfCheckoutCartManager.getInstance(MainActivity.this);
@@ -539,7 +539,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             }
 
             @Override
-            public void onFailure(retrofit2.Call<List<Product>> call, Throwable t) {
+            public void onFailure(@NonNull retrofit2.Call<List<Product>> call, @NonNull Throwable t) {
                 Toast.makeText(MainActivity.this, "Failed to fetch product: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
@@ -550,9 +550,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             if (products != null) productListAdapter.setProducts(products);
             binding.swipeRefreshLayout.setRefreshing(false);
         });
-        productListViewModel.getIsLoadingMore().observe(this, isLoadingMore -> {
-            productListAdapter.setLoading(isLoadingMore != null && isLoadingMore);
-        });
+        productListViewModel.getIsLoadingMore().observe(this, isLoadingMore -> productListAdapter.setLoading(isLoadingMore != null && isLoadingMore));
     }
 
     private void loadInitialData() {
@@ -571,7 +569,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         logDebug("fetchWallet called");
         supabaseRepository.getWallets(new retrofit2.Callback<List<WalletMaster>>() {
             @Override
-            public void onResponse(retrofit2.Call<List<WalletMaster>> call, retrofit2.Response<List<WalletMaster>> response) {
+            public void onResponse(@NonNull retrofit2.Call<List<WalletMaster>> call, @NonNull retrofit2.Response<List<WalletMaster>> response) {
                 if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
                     WalletMaster wallet = response.body().get(0);
                     sessionManager.setWalletBalance((float)wallet.currentBalance);
@@ -580,7 +578,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 }
             }
             @Override
-            public void onFailure(retrofit2.Call<List<WalletMaster>> call, Throwable t) {
+            public void onFailure(@NonNull retrofit2.Call<List<WalletMaster>> call, @NonNull Throwable t) {
                 logError("Failed to fetch wallet", t);
             }
         });
@@ -592,9 +590,18 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         binding.shimmerView.startShimmer();
         binding.nestedScrollView.setVisibility(View.GONE);
         
+        // Auto-hide shimmer after 5 seconds to avoid black screen
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            if (binding != null && binding.shimmerView.getVisibility() == View.VISIBLE) {
+                binding.shimmerView.stopShimmer();
+                binding.shimmerView.setVisibility(View.GONE);
+                binding.nestedScrollView.setVisibility(View.VISIBLE);
+            }
+        }, 5000);
+        
         supabaseRepository.getAppConfig(new retrofit2.Callback<List<AppConfig>>() {
             @Override
-            public void onResponse(retrofit2.Call<List<AppConfig>> call, retrofit2.Response<List<AppConfig>> response) {
+            public void onResponse(@NonNull retrofit2.Call<List<AppConfig>> call, @NonNull retrofit2.Response<List<AppConfig>> response) {
                 if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
                     AppConfig config = response.body().get(0);
                     binding.tvDeliveryTime.setText(config.deliveryTimeMsg);
@@ -611,14 +618,14 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 }
             }
             @Override
-            public void onFailure(retrofit2.Call<List<AppConfig>> call, Throwable t) {
+            public void onFailure(@NonNull retrofit2.Call<List<AppConfig>> call, @NonNull Throwable t) {
                 logError("Failed to fetch app config", t);
             }
         });
 
         supabaseRepository.getLiveBanners(new retrofit2.Callback<List<Banner>>() {
             @Override
-            public void onResponse(retrofit2.Call<List<Banner>> call, retrofit2.Response<List<Banner>> response) {
+            public void onResponse(@NonNull retrofit2.Call<List<Banner>> call, @NonNull retrofit2.Response<List<Banner>> response) {
                 logDebug("Banners API Response Code: " + response.code());
                 logDebug("Banners API Response Successful: " + response.isSuccessful());
                 logDebug("Banners API Body: " + (response.body() != null ? response.body().size() : "null"));
@@ -627,25 +634,28 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                         Banner b = response.body().get(i);
                         logDebug("Banner " + i + ": imageUrl=" + b.imageUrl + ", isActive=" + b.isActive + ", title=" + b.title);
                     }
-                    binding.rvBanners.setLayoutManager(new LinearLayoutManager(MainActivity.this, LinearLayoutManager.HORIZONTAL, false));
+                    LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this, LinearLayoutManager.HORIZONTAL, false);
+                    binding.rvBanners.setLayoutManager(layoutManager);
                     binding.rvBanners.setAdapter(new BannerAdapter(MainActivity.this, response.body()));
+                    androidx.recyclerview.widget.PagerSnapHelper pagerSnapHelper = new androidx.recyclerview.widget.PagerSnapHelper();
+                    pagerSnapHelper.attachToRecyclerView(binding.rvBanners);
                     startBannerAutoScroll(response.body().size());
                     logDebug("Banners loaded: " + response.body().size());
                 } else {
-                    try {
-                        logError("Banners API Error Body: " + (response.errorBody() != null ? response.errorBody().string() : "no error body"));
-                    } catch (Exception e) { e.printStackTrace(); }
+                    try (ResponseBody errorBody = response.errorBody()) {
+                        logError("Banners API Error Body: " + (errorBody != null ? errorBody.string() : "no error body"));
+                    } catch (IOException e) { logError("Error reading error body", e); }
                 }
             }
             @Override
-            public void onFailure(retrofit2.Call<List<Banner>> call, Throwable t) {
+            public void onFailure(@NonNull retrofit2.Call<List<Banner>> call, @NonNull Throwable t) {
                 logError("Failed to fetch banners", t);
             }
         });
         
         supabaseRepository.getCategories(new retrofit2.Callback<List<Category>>() {
             @Override
-            public void onResponse(retrofit2.Call<List<Category>> call, retrofit2.Response<List<Category>> response) {
+            public void onResponse(@NonNull retrofit2.Call<List<Category>> call, @NonNull retrofit2.Response<List<Category>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     categories.clear();
                     categories.addAll(response.body());
@@ -654,14 +664,14 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 }
             }
             @Override
-            public void onFailure(retrofit2.Call<List<Category>> call, Throwable t) {
+            public void onFailure(@NonNull retrofit2.Call<List<Category>> call, @NonNull Throwable t) {
                 logError("Failed to fetch categories", t);
             }
         });
         
         supabaseRepository.getBrands(new retrofit2.Callback<List<Brand>>() {
             @Override
-            public void onResponse(retrofit2.Call<List<Brand>> call, retrofit2.Response<List<Brand>> response) {
+            public void onResponse(@NonNull retrofit2.Call<List<Brand>> call, @NonNull retrofit2.Response<List<Brand>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     brands.clear();
                     brands.addAll(response.body());
@@ -670,14 +680,14 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 }
             }
             @Override
-            public void onFailure(retrofit2.Call<List<Brand>> call, Throwable t) {
+            public void onFailure(@NonNull retrofit2.Call<List<Brand>> call, @NonNull Throwable t) {
                 logError("Failed to fetch brands", t);
             }
         });
 
-        supabaseRepository.fetchLiveProducts("Everyday Essentials", 10, 0, new retrofit2.Callback<List<Product>>() {
+        supabaseRepository.fetchLiveProducts(null, 10, 0, new retrofit2.Callback<List<Product>>() {
             @Override
-            public void onResponse(retrofit2.Call<List<Product>> call, retrofit2.Response<List<Product>> response) {
+            public void onResponse(@NonNull retrofit2.Call<List<Product>> call, @NonNull retrofit2.Response<List<Product>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     everydayEssentials.clear();
                     everydayEssentials.addAll(response.body());
@@ -686,14 +696,14 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 }
             }
             @Override
-            public void onFailure(retrofit2.Call<List<Product>> call, Throwable t) {
+            public void onFailure(@NonNull retrofit2.Call<List<Product>> call, @NonNull Throwable t) {
                 logError("Failed to fetch everyday essentials", t);
             }
         });
 
         supabaseRepository.getDiscountProducts(10, new retrofit2.Callback<List<Product>>() {
             @Override
-            public void onResponse(retrofit2.Call<List<Product>> call, retrofit2.Response<List<Product>> response) {
+            public void onResponse(@NonNull retrofit2.Call<List<Product>> call, @NonNull retrofit2.Response<List<Product>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     discountItems.clear();
                     discountItems.addAll(response.body());
@@ -702,14 +712,14 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 }
             }
             @Override
-            public void onFailure(retrofit2.Call<List<Product>> call, Throwable t) {
+            public void onFailure(@NonNull retrofit2.Call<List<Product>> call, @NonNull Throwable t) {
                 logError("Failed to fetch discount items", t);
             }
         });
 
         supabaseRepository.getNewArrivalProducts(10, new retrofit2.Callback<List<Product>>() {
             @Override
-            public void onResponse(retrofit2.Call<List<Product>> call, retrofit2.Response<List<Product>> response) {
+            public void onResponse(@NonNull retrofit2.Call<List<Product>> call, @NonNull retrofit2.Response<List<Product>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     newArrivals.clear();
                     newArrivals.addAll(response.body());
@@ -718,7 +728,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 }
             }
             @Override
-            public void onFailure(retrofit2.Call<List<Product>> call, Throwable t) {
+            public void onFailure(@NonNull retrofit2.Call<List<Product>> call, @NonNull Throwable t) {
                 logError("Failed to fetch new arrivals", t);
             }
         });
@@ -726,7 +736,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         // For Buy Again, use best selling products for now (we'll fetch order history later if needed)
         supabaseRepository.getTrendingProducts(10, new retrofit2.Callback<List<Product>>() {
             @Override
-            public void onResponse(retrofit2.Call<List<Product>> call, retrofit2.Response<List<Product>> response) {
+            public void onResponse(@NonNull retrofit2.Call<List<Product>> call, @NonNull retrofit2.Response<List<Product>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     buyAgain.clear();
                     buyAgain.addAll(response.body());
@@ -735,14 +745,14 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 }
             }
             @Override
-            public void onFailure(retrofit2.Call<List<Product>> call, Throwable t) {
+            public void onFailure(@NonNull retrofit2.Call<List<Product>> call, @NonNull Throwable t) {
                 logError("Failed to fetch buy again items", t);
             }
         });
 
         supabaseRepository.getFeaturedProducts(10, new retrofit2.Callback<List<Product>>() {
             @Override
-            public void onResponse(retrofit2.Call<List<Product>> call, retrofit2.Response<List<Product>> response) {
+            public void onResponse(@NonNull retrofit2.Call<List<Product>> call, @NonNull retrofit2.Response<List<Product>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     featuredItems.clear();
                     featuredItems.addAll(response.body());
@@ -751,14 +761,14 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 }
             }
             @Override
-            public void onFailure(retrofit2.Call<List<Product>> call, Throwable t) {
+            public void onFailure(@NonNull retrofit2.Call<List<Product>> call, @NonNull Throwable t) {
                 logError("Failed to fetch featured items", t);
             }
         });
 
         supabaseRepository.getTrendingProducts(10, new retrofit2.Callback<List<Product>>() {
             @Override
-            public void onResponse(retrofit2.Call<List<Product>> call, retrofit2.Response<List<Product>> response) {
+            public void onResponse(@NonNull retrofit2.Call<List<Product>> call, @NonNull retrofit2.Response<List<Product>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     bestSelling.clear();
                     bestSelling.addAll(response.body());
@@ -768,16 +778,20 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     flashSaleAdapter.setProducts(new ArrayList<>(bestSelling));
                     logDebug("Best selling products loaded: " + bestSelling.size());
                 }
-                binding.shimmerView.stopShimmer();
-                binding.shimmerView.setVisibility(View.GONE);
-                binding.nestedScrollView.setVisibility(View.VISIBLE);
+                if (binding.shimmerView.getVisibility() == View.VISIBLE) {
+                    binding.shimmerView.stopShimmer();
+                    binding.shimmerView.setVisibility(View.GONE);
+                    binding.nestedScrollView.setVisibility(View.VISIBLE);
+                }
             }
             @Override
-            public void onFailure(retrofit2.Call<List<Product>> call, Throwable t) {
+            public void onFailure(@NonNull retrofit2.Call<List<Product>> call, @NonNull Throwable t) {
                 logError("Failed to fetch best selling products", t);
-                binding.shimmerView.stopShimmer();
-                binding.shimmerView.setVisibility(View.GONE);
-                binding.nestedScrollView.setVisibility(View.VISIBLE);
+                if (binding.shimmerView.getVisibility() == View.VISIBLE) {
+                    binding.shimmerView.stopShimmer();
+                    binding.shimmerView.setVisibility(View.GONE);
+                    binding.nestedScrollView.setVisibility(View.VISIBLE);
+                }
             }
         });
     }
@@ -788,7 +802,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         bannerHandler = new Handler(Looper.getMainLooper());
         bannerRunnable = () -> {
             if (currentBannerPosition == totalItems) currentBannerPosition = 0;
-            if (binding.rvBanners != null) binding.rvBanners.smoothScrollToPosition(currentBannerPosition++);
+            binding.rvBanners.smoothScrollToPosition(currentBannerPosition++);
         };
         bannerTimer = new java.util.Timer();
         bannerTimer.schedule(new java.util.TimerTask() {
@@ -803,9 +817,8 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
 
     private void openProductList(Category category) {
         if (category == null || category.getName() == null) return;
-        Intent intent = new Intent(this, SubCategoryActivity.class);
-        intent.putExtra("CATEGORY_NAME", category.getName());
-        intent.putExtra("CATEGORY_ID", category.getId());
+        Intent intent = new Intent(this, CategoriesActivity.class);
+        intent.putExtra("selected_category_id", category.getId());
         startActivity(intent);
     }
 
