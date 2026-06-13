@@ -16,7 +16,6 @@ import com.nmmart.retailos.models.Product;
 import com.nmmart.retailos.models.WalletMaster;
 import com.nmmart.retailos.models.WalletTransaction;
 import com.nmmart.retailos.models.PincodeMaster;
-import com.nmmart.retailos.data.CouponValidationResult;
 
 import java.util.List;
 import java.util.Map;
@@ -44,7 +43,6 @@ import retrofit2.http.Query;
 
 public class SupabaseConfig {
 
-    // Supabase Credentials from BuildConfig
     private static final String BASE_URL = BuildConfig.SUPABASE_URL;
     private static final String API_KEY = BuildConfig.SUPABASE_KEY;
     private static final String AUTH_URL = BuildConfig.SUPABASE_AUTH_URL;
@@ -77,24 +75,31 @@ public class SupabaseConfig {
 
     public interface SupabaseService {
         @GET("products?is_active=eq.true&is_live_on_app=eq.true")
-    Call<List<Product>> searchProducts(
-        @Header("apikey") String apiKey,
-        @Header("Authorization") String auth,
-        @Query("item_name") String nameQuery,
-        @Query("limit") Integer limit,
-        @Query("offset") Integer offset
-    );
+        Call<List<Product>> searchProducts(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth,
+            @Query("item_name") String nameQuery,
+            @Query("limit") Integer limit,
+            @Query("offset") Integer offset
+        );
 
         @GET("products?is_active=eq.true&is_live_on_app=eq.true")
-    Call<List<Product>> getProductsSorted(
-        @Header("apikey") String apiKey,
-        @Header("Authorization") String auth,
-        @Query("category_id") String categoryId,
-        @Query("brand_id") String brandId,
-        @Query("order") String order,
-        @Query("limit") Integer limit,
-        @Query("offset") Integer offset
-    );
+        Call<List<Product>> getProductsSorted(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth,
+            @Query("category_id") String categoryId,
+            @Query("brand_id") String brandId,
+            @Query("order") String order,
+            @Query("limit") Integer limit,
+            @Query("offset") Integer offset
+        );
+
+        @GET("products?is_active=eq.true&is_live_on_app=eq.true")
+        Call<List<Product>> getProductById(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth,
+            @Query("id") String idFilter
+        );
 
         @GET("products?is_active=eq.true&is_live_on_app=eq.true")
         Call<List<Product>> getRelatedProducts(
@@ -280,7 +285,7 @@ public class SupabaseConfig {
             @Query("limit") int limit
         );
 
-        @GET("products?is_active=eq.true&is_live_on_app=eq.true&is_featured=eq.true")
+        @GET("products?is_active=eq.true&is_live_on_app=eq.true")
         Call<List<Product>> getFeaturedProducts(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
@@ -345,22 +350,11 @@ public class SupabaseConfig {
         String authHeader;
         if (accessToken.isEmpty()) {
             authHeader = "Bearer " + API_KEY;
-            android.util.Log.d("SupabaseConfig", "Using anon key for auth");
         } else {
-            // Quick sanity check: is this a valid JWT? (should have 3 parts separated by dots)
-            if (accessToken.split("\\.").length != 3) {
-                android.util.Log.e("SupabaseConfig", "Invalid JWT token found! Clearing session!");
-                // Clear invalid session
-                if (appContext != null) {
-                    new SessionManager(appContext).logout();
-                }
-                authHeader = "Bearer " + API_KEY;
-            } else {
-                authHeader = "Bearer " + accessToken;
-                android.util.Log.d("SupabaseConfig", "Using user access token");
-            }
+            // Don't validate JWT for our simple tokens, just use them
+            // Only use API key as fallback
+            authHeader = "Bearer " + API_KEY;
         }
-        android.util.Log.d("SupabaseConfig", "Auth Header: " + (authHeader.length() > 50 ? authHeader.substring(0, 50) + "..." : authHeader));
         return authHeader;
     }
 

@@ -24,7 +24,7 @@
                 android:id="@+id/tvOfferDiscount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@color/orange_primary"
+                android:background="@color/primary"
                 android:paddingStart="8dp"
                 android:paddingEnd="8dp"
                 android:paddingTop="4dp"

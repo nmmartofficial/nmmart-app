@@ -1,25 +1,32 @@
 package com.nmmart.retailos.ui.adapters;
 
 import android.content.Context;
-import android.graphics.Color;
+import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
 import com.nmmart.retailos.R;
+import com.nmmart.retailos.data.CartManager;
+import com.nmmart.retailos.data.WishlistManager;
 import com.nmmart.retailos.databinding.ItemLoadingBinding;
 import com.nmmart.retailos.databinding.ItemProductBinding;
 import com.nmmart.retailos.models.Product;
 import com.nmmart.retailos.utils.PriceUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public static final int VIEW_TYPE_PRODUCT = 1;
     public static final int VIEW_TYPE_LOADING = 0;
-    private List<Product> productList = new ArrayList<>();
+    private final List<Product> productList = new ArrayList<>();
     private boolean isLoading = false;
     private Context context;
     private OnProductClickListener onProductClickListener;
@@ -38,7 +45,9 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     public ProductListAdapter(List<Product> productList, OnProductClickListener onProductClickListener) {
-        this.productList = productList != null ? productList : new ArrayList<>();
+        if (productList != null) {
+            this.productList.addAll(productList);
+        }
         this.onProductClickListener = onProductClickListener;
     }
 
@@ -50,9 +59,13 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         this.onProductClickListener = listener;
     }
 
-    public void setProducts(List<Product> products) {
-        this.productList = products != null ? products : new ArrayList<>();
-        notifyDataSetChanged();
+    public void setProducts(List<Product> newProducts) {
+        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new ProductDiffCallback(this.productList, newProducts));
+        this.productList.clear();
+        if (newProducts != null) {
+            this.productList.addAll(newProducts);
+        }
+        diffResult.dispatchUpdatesTo(this);
     }
 
     public void setLoading(boolean loading) {
@@ -102,8 +115,7 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     class ProductViewHolder extends RecyclerView.ViewHolder {
-        private ItemProductBinding binding;
-        private int currentQuantity = 1;
+        private final ItemProductBinding binding;
 
         ProductViewHolder(ItemProductBinding binding) {
             super(binding.getRoot());
@@ -120,20 +132,15 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 int position = getAdapterPosition();
                 if (position != RecyclerView.NO_POSITION) {
                     Product product = productList.get(position);
-                    com.nmmart.retailos.data.CartManager cartManager = com.nmmart.retailos.data.CartManager.getInstance(context);
+                    CartManager cartManager = CartManager.getInstance(context);
                     if (cartManager.addToCart(product)) {
-                        currentQuantity = 1;
-                        binding.tvQuantity.setText(String.valueOf(currentQuantity));
-                        binding.btnAddToCart.setVisibility(View.GONE);
-                        binding.btnDecrease.setVisibility(View.VISIBLE);
-                        binding.tvQuantity.setVisibility(View.VISIBLE);
-                        binding.btnIncrease.setVisibility(View.VISIBLE);
-                        android.widget.Toast.makeText(context, product.name + " added to cart!", android.widget.Toast.LENGTH_SHORT).show();
+                        updateQtyUI(1);
+                        Toast.makeText(context, context.getString(R.string.added_to_cart, product.getName()), Toast.LENGTH_SHORT).show();
                         if (onCartUpdateListener != null) {
                             onCartUpdateListener.onCartUpdated();
                         }
                     } else {
-                        android.widget.Toast.makeText(context, "Cannot add more. Only " + product.getStock() + " in stock.", android.widget.Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "Cannot add more. Only " + product.getStock() + " in stock.", Toast.LENGTH_SHORT).show();
                     }
                 }
             });
@@ -142,17 +149,16 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 int position = getAdapterPosition();
                 if (position != RecyclerView.NO_POSITION) {
                     Product product = productList.get(position);
-                    com.nmmart.retailos.data.CartManager cartManager = com.nmmart.retailos.data.CartManager.getInstance(context);
+                    CartManager cartManager = CartManager.getInstance(context);
                     int cartQty = cartManager.getQuantity(product);
                     if (cartQty < product.getStock()) {
                         cartManager.updateQuantity(product, cartQty + 1);
-                        currentQuantity = cartQty + 1;
-                        binding.tvQuantity.setText(String.valueOf(currentQuantity));
+                        updateQtyUI(cartQty + 1);
                         if (onCartUpdateListener != null) {
                             onCartUpdateListener.onCartUpdated();
                         }
                     } else {
-                        android.widget.Toast.makeText(context, "Only " + product.getStock() + " in stock!", android.widget.Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "Only " + product.getStock() + " in stock!", Toast.LENGTH_SHORT).show();
                     }
                 }
             });
@@ -161,27 +167,18 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 int position = getAdapterPosition();
                 if (position != RecyclerView.NO_POSITION) {
                     Product product = productList.get(position);
-                    com.nmmart.retailos.data.CartManager cartManager = com.nmmart.retailos.data.CartManager.getInstance(context);
+                    CartManager cartManager = CartManager.getInstance(context);
                     int cartQty = cartManager.getQuantity(product);
                     if (cartQty > 1) {
                         cartManager.updateQuantity(product, cartQty - 1);
-                        currentQuantity = cartQty - 1;
-                        binding.tvQuantity.setText(String.valueOf(currentQuantity));
-                        if (onCartUpdateListener != null) {
-                            onCartUpdateListener.onCartUpdated();
-                        }
+                        updateQtyUI(cartQty - 1);
                     } else {
                         cartManager.removeFromCart(product);
-                        currentQuantity = 1;
-                        binding.tvQuantity.setText(String.valueOf(currentQuantity));
-                        binding.btnAddToCart.setVisibility(View.VISIBLE);
-                        binding.btnDecrease.setVisibility(View.GONE);
-                        binding.tvQuantity.setVisibility(View.GONE);
-                        binding.btnIncrease.setVisibility(View.GONE);
-                        if (onCartUpdateListener != null) {
-                            onCartUpdateListener.onCartUpdated();
-                        }
-                        android.widget.Toast.makeText(context, product.name + " removed from cart!", android.widget.Toast.LENGTH_SHORT).show();
+                        updateQtyUI(0);
+                        Toast.makeText(context, product.getName() + " removed from cart", Toast.LENGTH_SHORT).show();
+                    }
+                    if (onCartUpdateListener != null) {
+                        onCartUpdateListener.onCartUpdated();
                     }
                 }
             });
@@ -190,25 +187,39 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 int position = getAdapterPosition();
                 if (position != RecyclerView.NO_POSITION) {
                     Product product = productList.get(position);
-                    com.nmmart.retailos.data.WishlistManager.getInstance(context).toggleWishlist(product);
+                    WishlistManager.getInstance(context).toggleWishlist(product);
                     notifyItemChanged(position);
                 }
             });
         }
 
+        private void updateQtyUI(int qty) {
+            if (qty > 0) {
+                binding.tvQuantity.setText(String.valueOf(qty));
+                binding.btnAddToCart.setVisibility(View.GONE);
+                binding.btnDecrease.setVisibility(View.VISIBLE);
+                binding.tvQuantity.setVisibility(View.VISIBLE);
+                binding.btnIncrease.setVisibility(View.VISIBLE);
+            } else {
+                binding.btnAddToCart.setVisibility(View.VISIBLE);
+                binding.btnDecrease.setVisibility(View.GONE);
+                binding.tvQuantity.setVisibility(View.GONE);
+                binding.btnIncrease.setVisibility(View.GONE);
+            }
+        }
+
         void bind(Product product) {
-            Glide.with(context).clear(binding.ivProduct);
-            binding.tvProductName.setText(product.name != null ? product.name : "Product");
+            binding.tvProductName.setText(product.getName());
             binding.tvUnit.setText(product.unit != null ? product.unit : "1 pcs");
 
-            boolean isInWishlist = com.nmmart.retailos.data.WishlistManager.getInstance(context).isInWishlist(product.id);
+            boolean isInWishlist = WishlistManager.getInstance(context).isInWishlist(product.getId());
             binding.ivWishlist.setImageResource(isInWishlist ? android.R.drawable.btn_star_big_on : android.R.drawable.btn_star_big_off);
             if (isInWishlist) binding.ivWishlist.setColorFilter(android.graphics.Color.parseColor("#FFC107"));
             else binding.ivWishlist.clearColorFilter();
 
             if (product.getMrp() > product.getNmPrice()) {
                 binding.tvMrp.setText(PriceUtils.formatPrice(product.getMrp()));
-                binding.tvMrp.setPaintFlags(binding.tvMrp.getPaintFlags() | android.graphics.Paint.STRIKE_THRU_TEXT_FLAG);
+                binding.tvMrp.setPaintFlags(binding.tvMrp.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
                 binding.tvMrp.setVisibility(View.VISIBLE);
             } else {
                 binding.tvMrp.setVisibility(View.GONE);
@@ -218,35 +229,17 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
             if (product.getStock() > 0 && product.getStock() <= 5) {
                 binding.tvInventoryAlert.setVisibility(View.VISIBLE);
-                binding.tvInventoryAlert.setText("Only " + product.getStock() + " left!");
+                binding.tvInventoryAlert.setText("Only " + (int)product.getStock() + " left!");
             } else {
                 binding.tvInventoryAlert.setVisibility(View.GONE);
             }
 
-            com.nmmart.retailos.data.CartManager cartManager = com.nmmart.retailos.data.CartManager.getInstance(context);
-            int cartQty = cartManager.getQuantity(product);
-            
-            if (cartQty > 0) {
-                currentQuantity = cartQty;
-                binding.tvQuantity.setText(String.valueOf(currentQuantity));
-                binding.btnAddToCart.setVisibility(View.GONE);
-                binding.btnDecrease.setVisibility(View.VISIBLE);
-                binding.tvQuantity.setVisibility(View.VISIBLE);
-                binding.btnIncrease.setVisibility(View.VISIBLE);
-            } else {
-                currentQuantity = 1;
-                binding.tvQuantity.setText(String.valueOf(currentQuantity));
-                binding.btnAddToCart.setVisibility(View.VISIBLE);
-                binding.btnDecrease.setVisibility(View.GONE);
-                binding.tvQuantity.setVisibility(View.GONE);
-                binding.btnIncrease.setVisibility(View.GONE);
-            }
+            int cartQty = CartManager.getInstance(context).getQuantity(product);
+            updateQtyUI(cartQty);
 
             if (product.getStock() > 0) {
                 binding.btnAddToCart.setEnabled(true);
                 binding.btnAddToCart.setText("ADD");
-                binding.btnIncrease.setEnabled(true);
-                binding.btnDecrease.setEnabled(true);
             } else {
                 binding.btnAddToCart.setEnabled(false);
                 binding.btnAddToCart.setText("OFF");
@@ -254,22 +247,52 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 binding.btnDecrease.setEnabled(false);
             }
 
-            if (product.image_url != null && !product.image_url.isEmpty()) {
-                Glide.with(context)
-                        .load(product.image_url)
-                        .placeholder(R.drawable.ic_grocery_bag)
-                        .error(R.drawable.ic_grocery_bag)
-                        .dontAnimate()
-                        .into(binding.ivProduct);
-            } else {
-                binding.ivProduct.setImageResource(R.drawable.ic_grocery_bag);
-            }
+            Glide.with(context)
+                    .load(product.getImageUrl())
+                    .placeholder(R.drawable.ic_grocery_bag)
+                    .error(R.drawable.ic_grocery_bag)
+                    .into(binding.ivProduct);
         }
     }
 
     static class LoadingViewHolder extends RecyclerView.ViewHolder {
         LoadingViewHolder(ItemLoadingBinding binding) {
             super(binding.getRoot());
+        }
+    }
+
+    private static class ProductDiffCallback extends DiffUtil.Callback {
+        private final List<Product> oldList;
+        private final List<Product> newList;
+
+        public ProductDiffCallback(List<Product> oldList, List<Product> newList) {
+            this.oldList = oldList;
+            this.newList = newList;
+        }
+
+        @Override
+        public int getOldListSize() {
+            return oldList != null ? oldList.size() : 0;
+        }
+
+        @Override
+        public int getNewListSize() {
+            return newList != null ? newList.size() : 0;
+        }
+
+        @Override
+        public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+            return oldList.get(oldItemPosition).getId().equals(newList.get(newItemPosition).getId());
+        }
+
+        @Override
+        public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+            Product oldProduct = oldList.get(oldItemPosition);
+            Product newProduct = newList.get(newItemPosition);
+            return oldProduct.getName().equals(newProduct.getName()) &&
+                   oldProduct.getNmPrice() == newProduct.getNmPrice() &&
+                   oldProduct.getStock() == newProduct.getStock() &&
+                   oldProduct.unit != null && oldProduct.unit.equals(newProduct.unit);
         }
     }
 }

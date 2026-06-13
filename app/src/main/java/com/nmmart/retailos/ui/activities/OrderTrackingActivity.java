@@ -46,7 +46,7 @@ public class OrderTrackingActivity extends AppCompatActivity {
 
             if (i < completedSteps) {
                 iv.setImageResource(android.R.drawable.checkbox_on_background);
-                iv.setColorFilter(getResources().getColor(R.color.orange_primary));
+                iv.setColorFilter(getResources().getColor(R.color.primary));
                 tv.setTextColor(getResources().getColor(R.color.black));
             } else {
                 iv.setImageResource(android.R.drawable.checkbox_off_background);

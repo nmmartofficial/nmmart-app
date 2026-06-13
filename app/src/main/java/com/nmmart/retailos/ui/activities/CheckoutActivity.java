@@ -35,19 +35,20 @@ public class CheckoutActivity extends BaseActivity {
     private List<PincodeMaster> pincodes;
     private List<com.nmmart.retailos.models.Address> userAddresses;
     private com.nmmart.retailos.models.Address selectedAddress;
-    private android.widget.TextView tvToPay, tvSelectedName, tvSelectedDetails;
+    private android.widget.TextView tvToPay, tvSelectedName, tvSelectedDetails, tvCouponApplied;
     private android.view.View layoutSelectedAddress;
-    private MaterialButton btnAddAddress;
+    private MaterialButton btnAddAddress, btnPlaceOrder;
     private String appliedCouponCode = "";
     private double appliedDiscount = 0.0;
     private double itemsTotal = 0.0;
     private double toPay = 0.0;
     private CartManager cartManager;
-    private Gson gson = new Gson();
+    private Gson gson;
     
     private String selectedDate = "";
     private String selectedTimeSlot = "";
     private String selectedPaymentMethod = "Cash on Delivery";
+    private boolean isPlacingOrder = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +57,7 @@ public class CheckoutActivity extends BaseActivity {
 
         repository = new SupabaseRepository();
         cartManager = CartManager.getInstance(this);
+        gson = new Gson();
 
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -70,7 +72,8 @@ public class CheckoutActivity extends BaseActivity {
         btnAddAddress = findViewById(R.id.btnAddAddress);
         
         tvToPay = findViewById(R.id.tvToPay);
-        MaterialButton btnPlaceOrder = findViewById(R.id.btnPlaceOrder);
+        tvCouponApplied = findViewById(R.id.tvCouponApplied);
+        btnPlaceOrder = findViewById(R.id.btnPlaceOrder);
 
         itemsTotal = cartManager.getTotalPrice();
         appliedCouponCode = getIntent().getStringExtra("COUPON_CODE");
@@ -97,13 +100,37 @@ public class CheckoutActivity extends BaseActivity {
                 return;
             }
 
-            if (selectedAddress == null) {
-                Toast.makeText(this, "Please add a delivery address!", Toast.LENGTH_SHORT).show();
+            if (isPlacingOrder) {
+                Toast.makeText(this, "Please wait, placing your order...", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (!isOrderValid()) {
                 return;
             }
 
             placeOrder(selectedAddress.fullName, selectedAddress.houseNo, selectedAddress.landmark != null ? selectedAddress.landmark : "", selectedAddress.pincode, toPay);
         });
+    }
+
+    private boolean isOrderValid() {
+        if (selectedAddress == null) {
+            Toast.makeText(this, "Please add a delivery address!", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        if (selectedPaymentMethod == null || selectedPaymentMethod.isEmpty()) {
+            Toast.makeText(this, "Please select a payment method!", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        if (selectedDate == null || selectedDate.isEmpty()) {
+            Toast.makeText(this, "Please select a delivery date!", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        if (selectedTimeSlot == null || selectedTimeSlot.isEmpty()) {
+            Toast.makeText(this, "Please select a delivery time slot!", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
     }
     
     private void setupPaymentMethods() {
@@ -117,10 +144,11 @@ public class CheckoutActivity extends BaseActivity {
         paymentMethods.add(new PaymentMethod("Paytm", R.drawable.ic_paytm, true));
         
         PaymentMethodAdapter adapter = new PaymentMethodAdapter(this, paymentMethods, method -> {
-            selectedPaymentMethod = method.name;
             if (method.isComingSoon) {
                 Toast.makeText(this, method.name + " integration coming soon!", Toast.LENGTH_SHORT).show();
+                return;
             }
+            selectedPaymentMethod = method.name;
         });
         rvPaymentMethods.setAdapter(adapter);
     }
@@ -131,6 +159,7 @@ public class CheckoutActivity extends BaseActivity {
         repository.getUserAddresses(sessionManager.getUserId(), new Callback<List<com.nmmart.retailos.models.Address>>() {
             @Override
             public void onResponse(Call<List<com.nmmart.retailos.models.Address>> call, Response<List<com.nmmart.retailos.models.Address>> response) {
+                if (isFinishing()) return;
                 if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
                     userAddresses = response.body();
                     selectedAddress = userAddresses.get(0);
@@ -232,6 +261,7 @@ public class CheckoutActivity extends BaseActivity {
         repository.validateAndApplyCoupon(code, itemsTotal, new Callback<List<CouponValidationResult>>() {
             @Override
             public void onResponse(Call<List<CouponValidationResult>> call, Response<List<CouponValidationResult>> response) {
+                if (isFinishing()) return;
                 if (!response.isSuccessful() || response.body() == null || response.body().isEmpty()) {
                     appliedCouponCode = "";
                     appliedDiscount = 0.0;
@@ -247,8 +277,10 @@ public class CheckoutActivity extends BaseActivity {
                     return;
                 }
 
-                appliedDiscount = Math.max(0.0, result.discountAmount);
+                appliedDiscount = result.discountAmount;
                 recalcToPay();
+                tvCouponApplied.setText("Coupon Applied! -₹" + String.format("%.2f", appliedDiscount));
+                tvCouponApplied.setVisibility(android.view.View.VISIBLE);
             }
 
             @Override
@@ -260,6 +292,7 @@ public class CheckoutActivity extends BaseActivity {
         repository.getPincodes(new Callback<List<PincodeMaster>>() {
             @Override
             public void onResponse(Call<List<PincodeMaster>> call, Response<List<PincodeMaster>> response) {
+                if (isFinishing()) return;
                 if (response.isSuccessful() && response.body() != null) {
                     pincodes = response.body();
                 }
@@ -271,6 +304,24 @@ public class CheckoutActivity extends BaseActivity {
     }
 
     private void placeOrder(String name, String house, String landmark, String pin, double toPay) {
+        // Pincode Verification
+        boolean isServiceable = true;
+        if (pincodes != null && !pincodes.isEmpty()) {
+            isServiceable = false;
+            for (PincodeMaster p : pincodes) {
+                if (p.pincode.equals(pin)) {
+                    isServiceable = true;
+                    break;
+                }
+            }
+        }
+        if (!isServiceable) {
+            Toast.makeText(this, "Sorry, we don't deliver to this pincode yet!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        isPlacingOrder = true;
+        btnPlaceOrder.setEnabled(false);
         Toast.makeText(this, "Placing your order... Please wait", Toast.LENGTH_SHORT).show();
 
         List<Map<String, Object>> orderItems = new ArrayList<>();
@@ -305,20 +356,25 @@ public class CheckoutActivity extends BaseActivity {
         repository.placeOrder(orderData, new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
+                if (isFinishing()) return;
+                isPlacingOrder = false;
+                btnPlaceOrder.setEnabled(true);
                 if (response.isSuccessful()) {
-                    float cashback = (float) (itemsTotal * (cartManager.getCashbackPercentage() / 100.0));
-            float newWalletBalance = sessionManager.getWalletBalance() + cashback;
-            sessionManager.setWalletBalance(newWalletBalance);
+                    double cashback = itemsTotal * (cartManager.getCashbackPercentage() / 100.0);
+                    double newWalletBalance = sessionManager.getWalletBalance() + cashback;
+                    sessionManager.setWalletBalance(newWalletBalance);
                     
                     // Update wallet balance in Supabase
                     repository.updateWalletBalance(sessionManager.getUserId(), newWalletBalance, new Callback<Void>() {
                         @Override
                         public void onResponse(Call<Void> walletCall, Response<Void> walletResponse) {
+                            if (isFinishing()) return;
                             Log.d("CheckoutActivity", "Wallet balance updated in DB");
                         }
 
                         @Override
                         public void onFailure(Call<Void> walletCall, Throwable t) {
+                            if (isFinishing()) return;
                             Log.e("CheckoutActivity", "Failed to update wallet balance in DB", t);
                         }
                     });
@@ -335,11 +391,13 @@ public class CheckoutActivity extends BaseActivity {
                         repository.insertWalletTransaction(transactionData, new Callback<Void>() {
                             @Override
                             public void onResponse(Call<Void> txnCall, Response<Void> txnResponse) {
+                                if (isFinishing()) return;
                                 Log.d("CheckoutActivity", "Wallet transaction inserted in DB");
                             }
 
                             @Override
                             public void onFailure(Call<Void> txnCall, Throwable t) {
+                                if (isFinishing()) return;
                                 Log.e("CheckoutActivity", "Failed to insert wallet transaction in DB", t);
                             }
                         });
@@ -360,7 +418,10 @@ public class CheckoutActivity extends BaseActivity {
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-                Toast.makeText(CheckoutActivity.this, "Network error! Check your connection.", Toast.LENGTH_SHORT).show();
+                if (isFinishing()) return;
+                isPlacingOrder = false;
+                btnPlaceOrder.setEnabled(true);
+                Toast.makeText(CheckoutActivity.this, "Network error! Check your connection and try again.", Toast.LENGTH_SHORT).show();
             }
         });
     }

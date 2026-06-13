@@ -36,7 +36,7 @@
                 app:tabIndicator="@null"
                 app:tabIndicatorHeight="0dp"
                 app:tabRippleColor="@android:color/transparent"
-                app:tabSelectedTextColor="@color/orange_primary"
+                app:tabSelectedTextColor="@color/primary"
                 app:tabTextColor="#BDBDBD"
                 app:layout_collapseMode="parallax" />
 
@@ -65,7 +65,7 @@
                 android:id="@+id/tvDetailBadge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@color/orange_primary"
+                android:background="@color/primary"
                 android:paddingStart="8dp"
                 android:paddingEnd="8dp"
                 android:text="NEW"
@@ -89,7 +89,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Brand: No Brand"
-                android:textColor="@color/orange_primary"
+                android:textColor="@color/primary"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:layout_marginTop="4dp" />
@@ -132,7 +132,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="₹99"
-                    android:textColor="@color/orange_primary"
+                    android:textColor="@color/primary"
                     android:textSize="28sp"
                     android:textStyle="bold" />
 
@@ -222,7 +222,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="View All"
-                    android:textColor="@color/orange_primary"
+                    android:textColor="@color/primary"
                     android:textSize="14sp" />
 
             </LinearLayout>
@@ -254,7 +254,7 @@
                             android:text="4.5"
                             android:textSize="32sp"
                             android:textStyle="bold"
-                            android:textColor="@color/orange_primary" />
+                            android:textColor="@color/primary" />
 
                         <LinearLayout
                             android:layout_width="wrap_content"
@@ -402,7 +402,7 @@
                     android:layout_height="32dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@android:drawable/ic_input_add"
-                    app:tint="@color/orange_primary" />
+                    app:tint="@color/primary" />
             </LinearLayout>
 
             <com.google.android.material.button.MaterialButton
@@ -411,7 +411,7 @@
                 android:layout_height="48dp"
                 android:layout_weight="1"
                 android:text="ADD TO CART"
-                android:backgroundTint="@color/orange_primary"
+                android:backgroundTint="@color/primary"
                 android:textColor="@color/white"
                 app:cornerRadius="12dp" />
 

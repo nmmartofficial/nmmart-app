@@ -2,21 +2,44 @@ package com.nmmart.retailos.data;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import androidx.security.crypto.EncryptedSharedPreferences;
+import androidx.security.crypto.MasterKeys;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class SearchHistoryManager {
-    private static final String PREF_NAME = "search_history";
-    private static final String KEY_HISTORY = "search_queries";
     private static SearchHistoryManager instance;
     private SharedPreferences prefs;
     private Gson gson;
 
+    private static final String PREF_NAME = "search_history";
+    private static final String KEY_HISTORY = "search_queries";
+
     private SearchHistoryManager(Context context) {
-        prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        gson = new Gson();
+        this.prefs = getEncryptedSharedPreferences(context);
+        this.gson = new Gson();
+    }
+
+    private SharedPreferences getEncryptedSharedPreferences(Context context) {
+        try {
+            String masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC);
+
+            return EncryptedSharedPreferences.create(
+                    PREF_NAME,
+                    masterKeyAlias,
+                    context,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            );
+        } catch (GeneralSecurityException | IOException e) {
+            // Fallback to regular SharedPreferences if encryption fails
+            return context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        }
     }
 
     public static synchronized SearchHistoryManager getInstance(Context context) {

@@ -15,7 +15,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/orange_primary"
+            android:background="@color/primary"
             app:title="My Cart"
             app:titleTextColor="@color/white" />
     </com.google.android.material.appbar.AppBarLayout>
@@ -353,7 +353,7 @@
                 android:text="₹0.00"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="@color/orange_primary" />
+                android:textColor="@color/primary" />
         </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
@@ -361,7 +361,7 @@
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:text="PROCEED TO CHECKOUT"
-            android:backgroundTint="@color/orange_primary"
+            android:backgroundTint="@color/primary"
             android:textColor="@color/white"
             app:cornerRadius="12dp"
             android:fontFamily="sans-serif-medium" />
@@ -400,7 +400,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:text="SHOP NOW"
-            android:backgroundTint="@color/orange_primary"
+            android:backgroundTint="@color/primary"
             android:textColor="@color/white"
             app:cornerRadius="8dp" />
     </LinearLayout>

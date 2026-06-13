@@ -2,10 +2,14 @@ package com.nmmart.retailos.data;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import androidx.security.crypto.EncryptedSharedPreferences;
+import androidx.security.crypto.MasterKeys;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.nmmart.retailos.models.Product;
+import java.io.IOException;
 import java.lang.reflect.Type;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,10 +36,27 @@ public class CartManager {
     private double cashbackPercentage = 2.0;
 
     private CartManager(Context context) {
-        sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        gson = new Gson();
+        this.sharedPreferences = getEncryptedSharedPreferences(context);
+        this.gson = new Gson();
         loadCartFromPrefs();
         loadConfigFromPrefs();
+    }
+
+    private SharedPreferences getEncryptedSharedPreferences(Context context) {
+        try {
+            String masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC);
+
+            return EncryptedSharedPreferences.create(
+                    PREF_NAME,
+                    masterKeyAlias,
+                    context,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            );
+        } catch (GeneralSecurityException | IOException e) {
+            // Fallback to regular SharedPreferences if encryption fails
+            return context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        }
     }
 
     private void loadConfigFromPrefs() {

@@ -1,5 +1,7 @@
 package com.nmmart.retailos.ui.adapters;
 
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -7,54 +9,57 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.nmmart.retailos.R;
 import com.nmmart.retailos.models.Category;
-import com.nmmart.retailos.utils.NMMartLogger;
+import com.nmmart.retailos.utils.ThemeManager;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.CategoryViewHolder> {
 
-    // Data & Listener
-    private List<Category> categories = new ArrayList<>();
-    private OnCategoryClickListener listener;
+    private final List<Category> categories = new ArrayList<>();
+    private final OnCategoryClickListener listener;
+    private ThemeManager themeManager;
 
-    // Click listener interface
     public interface OnCategoryClickListener {
         void onCategoryClick(Category category);
     }
 
-    // Constructor
     public CategoryAdapter(List<Category> categories, OnCategoryClickListener listener) {
-        this.categories = categories != null ? categories : new ArrayList<>();
+        if (categories != null) {
+            this.categories.addAll(categories);
+        }
         this.listener = listener;
     }
 
-    // Update categories data
-    public void setCategories(List<Category> categories) {
-        this.categories = categories != null ? categories : new ArrayList<>();
-        notifyDataSetChanged();
+    public void setCategories(List<Category> newCategories) {
+        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new CategoryDiffCallback(this.categories, newCategories));
+        this.categories.clear();
+        if (newCategories != null) {
+            this.categories.addAll(newCategories);
+        }
+        diffResult.dispatchUpdatesTo(this);
     }
 
     @NonNull
     @Override
     public CategoryViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_category, parent, false);
+        if (themeManager == null) {
+            themeManager = ThemeManager.getInstance(parent.getContext());
+        }
         return new CategoryViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull CategoryViewHolder holder, int position) {
-        try {
-            if (position >= 0 && position < categories.size()) {
-                holder.bind(categories.get(position));
-            }
-        } catch (Exception e) {
-            NMMartLogger.logError("CategoryAdapter.java", "onBindViewHolder", e.getMessage());
+        if (position >= 0 && position < categories.size()) {
+            holder.bind(categories.get(position));
         }
     }
 
@@ -63,47 +68,80 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
         return categories.size();
     }
 
-    // ViewHolder class
     class CategoryViewHolder extends RecyclerView.ViewHolder {
-        ImageView ivCategoryIcon;
-        TextView tvCategoryName;
+        final ImageView ivCategoryIcon;
+        final TextView tvCategoryName;
 
         public CategoryViewHolder(@NonNull View itemView) {
             super(itemView);
             ivCategoryIcon = itemView.findViewById(R.id.ivCategoryIcon);
             tvCategoryName = itemView.findViewById(R.id.tvCategoryName);
-            
-            // Handle clicks in ViewHolder (best practice)
+
+            // Apply theme shape to category icon
+            applyThemeToIcon();
+
             itemView.setOnClickListener(v -> {
-                try {
-                    int position = getAdapterPosition();
-                    if (position != RecyclerView.NO_POSITION && listener != null && position < categories.size()) {
-                        NMMartLogger.logClick("CategoryItem");
-                        listener.onCategoryClick(categories.get(position));
-                    }
-                } catch (Exception e) {
-                    NMMartLogger.logError("CategoryAdapter.java", "CategoryViewHolder click", e.getMessage());
+                int position = getAdapterPosition();
+                if (position != RecyclerView.NO_POSITION && listener != null) {
+                    listener.onCategoryClick(categories.get(position));
                 }
             });
         }
 
-        // Bind data to views
-        void bind(Category category) {
-            try {
-                if (category == null) return;
-                tvCategoryName.setText(category.getName() != null ? category.getName() : "");
-                if (category.getImageUrl() != null && !category.getImageUrl().isEmpty()) {
-                    Glide.with(itemView.getContext())
-                            .load(category.getImageUrl())
-                            .placeholder(R.drawable.ic_launcher_foreground)
-                            .error(R.drawable.ic_launcher_foreground)
-                            .into(ivCategoryIcon);
-                } else {
-                    ivCategoryIcon.setImageResource(R.drawable.ic_launcher_foreground);
-                }
-            } catch (Exception e) {
-                NMMartLogger.logError("CategoryAdapter.java", "bind", e.getMessage());
+        private void applyThemeToIcon() {
+            if (themeManager != null) {
+                GradientDrawable shapeDrawable = themeManager.getShapeDrawable(
+                        themeManager.getCategoryShape(),
+                        Color.parseColor("#F5F5F5"),
+                        16
+                );
+                ivCategoryIcon.setBackground(shapeDrawable);
             }
+        }
+
+        void bind(Category category) {
+            tvCategoryName.setText(category.getName());
+            if (themeManager != null) {
+                tvCategoryName.setTextColor(themeManager.getTextColorPrimary());
+            }
+            Glide.with(itemView.getContext())
+                    .load(category.getImageUrl())
+                    .placeholder(R.drawable.ic_launcher_foreground)
+                    .error(R.drawable.ic_launcher_foreground)
+                    .into(ivCategoryIcon);
+        }
+    }
+
+    private static class CategoryDiffCallback extends DiffUtil.Callback {
+        private final List<Category> oldList;
+        private final List<Category> newList;
+
+        public CategoryDiffCallback(List<Category> oldList, List<Category> newList) {
+            this.oldList = oldList;
+            this.newList = newList;
+        }
+
+        @Override
+        public int getOldListSize() {
+            return oldList.size();
+        }
+
+        @Override
+        public int getNewListSize() {
+            return newList != null ? newList.size() : 0;
+        }
+
+        @Override
+        public boolean areItemsTheSame(int oldPos, int newPos) {
+            return oldList.get(oldPos).getId().equals(newList.get(newPos).getId());
+        }
+
+        @Override
+        public boolean areContentsTheSame(int oldPos, int newPos) {
+            Category oldItem = oldList.get(oldPos);
+            Category newItem = newList.get(newPos);
+            return oldItem.getName().equals(newItem.getName()) &&
+                   String.valueOf(oldItem.getImageUrl()).equals(String.valueOf(newItem.getImageUrl()));
         }
     }
 }

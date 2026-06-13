@@ -11,7 +11,6 @@ import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.facebook.stetho.Stetho;
 import com.nmmart.retailos.data.SupabaseConfig;
 import com.nmmart.retailos.utils.NMMartLogger;
 import com.nmmart.retailos.ui.activities.MainActivity;
@@ -25,9 +24,14 @@ public class NMMartApplication extends Application {
     public void onCreate() {
         super.onCreate();
         
-        // Initialize Stetho (Android's Eruda)
+        // Initialize Stetho (Android's Eruda) only if available
         if (BuildConfig.DEBUG) {
-            Stetho.initializeWithDefaults(this);
+            try {
+                Class<?> stethoClass = Class.forName("com.facebook.stetho.Stetho");
+                stethoClass.getMethod("initializeWithDefaults", Context.class).invoke(null, this);
+            } catch (Exception e) {
+                Log.w(TAG, "Stetho not available", e);
+            }
         }
         
         // Initialize dependencies first before using them

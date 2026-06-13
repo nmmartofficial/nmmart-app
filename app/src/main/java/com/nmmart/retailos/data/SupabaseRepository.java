@@ -65,7 +65,7 @@ public class SupabaseRepository {
         try {
             Map<String, Object> walletData = new HashMap<>();
             walletData.put("current_balance", newBalance);
-            apiService.updateWalletBalance(apiKey, anonOrUserAuth(), userId, walletData)
+            apiService.updateWalletBalance(apiKey, anonOrUserAuth(), "eq." + userId, walletData)
                 .enqueue(wrapCallback(FUNCTION_NAME, callback));
         } catch (Exception e) {
             NMMartLogger.logError(FILE_NAME, FUNCTION_NAME, e.getMessage());
@@ -168,7 +168,7 @@ public class SupabaseRepository {
         return apiService.getBanners(apiKey, anonOrUserAuth());
     }
 
-    // --- Legacy enqueue methods (keep for backward compatibility) ---
+    // --- Legacy enqueue methods ---
     public void getProducts(String categoryId, Callback<List<Product>> callback) {
         Log.d(TAG, "getProducts called with categoryId: " + categoryId);
         apiService.getProducts(apiKey, anonOrUserAuth(), "eq." + categoryId).enqueue(wrapCallback("getProducts", callback));
@@ -299,7 +299,7 @@ public class SupabaseRepository {
 
     public void getProductByBarcode(String barcode, Callback<List<Product>> callback) {
         Log.d(TAG, "getProductByBarcode called with barcode: " + barcode);
-        apiService.getProductByBarcode(apiKey, anonOrUserAuth(), barcode).enqueue(wrapCallback("getProductByBarcode", callback));
+        apiService.getProductByBarcode(apiKey, anonOrUserAuth(), "eq." + barcode).enqueue(wrapCallback("getProductByBarcode", callback));
     }
 
     public Call<List<Product>> getDiscountProductsCall(int limit) {

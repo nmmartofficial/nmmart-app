@@ -41,7 +41,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:src="@android:drawable/checkbox_on_background"
-                    app:tint="@color/orange_primary"
+                    app:tint="@color/primary"
                     android:visibility="gone" />
 
             </LinearLayout>

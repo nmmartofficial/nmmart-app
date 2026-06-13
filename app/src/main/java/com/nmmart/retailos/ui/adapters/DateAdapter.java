@@ -46,7 +46,7 @@ public class DateAdapter extends RecyclerView.Adapter<DateAdapter.ViewHolder> {
         com.google.android.material.card.MaterialCardView cardView = (com.google.android.material.card.MaterialCardView) holder.itemView;
 
         if (selectedPosition == position) {
-            cardView.setCardBackgroundColor(context.getResources().getColor(R.color.orange_primary));
+            cardView.setCardBackgroundColor(context.getResources().getColor(R.color.primary));
             holder.tvDate.setTextColor(context.getResources().getColor(android.R.color.white));
             holder.tvDay.setTextColor(context.getResources().getColor(android.R.color.white));
         } else {
@@ -56,10 +56,15 @@ public class DateAdapter extends RecyclerView.Adapter<DateAdapter.ViewHolder> {
         }
 
         holder.itemView.setOnClickListener(v -> {
-            selectedPosition = position;
-            notifyDataSetChanged();
-            if (listener != null) {
-                listener.onDateSelected(date);
+            int currentPos = holder.getAdapterPosition();
+            if (currentPos != RecyclerView.NO_POSITION) {
+                int previousPos = selectedPosition;
+                selectedPosition = currentPos;
+                notifyItemChanged(previousPos);
+                notifyItemChanged(selectedPosition);
+                if (listener != null) {
+                    listener.onDateSelected(dates.get(currentPos));
+                }
             }
         });
     }

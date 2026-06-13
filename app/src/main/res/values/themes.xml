@@ -2,13 +2,13 @@
     <!-- Base application theme with Material 3 styling. -->
     <style name="Theme.NMMart" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/orange_primary</item>
-        <item name="colorPrimaryVariant">@color/orange_dark</item>
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryVariant">@color/primary_dark</item>
         <item name="colorOnPrimary">@color/white</item>
         <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/orange_light</item>
-        <item name="colorSecondaryVariant">@color/orange_50</item>
-        <item name="colorOnSecondary">@color/orange_dark</item>
+        <item name="colorSecondary">@color/primary_light</item>
+        <item name="colorSecondaryVariant">@color/primary_light</item>
+        <item name="colorOnSecondary">@color/primary_dark</item>
         <!-- Surface colors. -->
         <item name="colorSurface">@color/white</item>
         <item name="colorOnSurface">@color/black_soft</item>
@@ -17,7 +17,7 @@
         <!-- Background colors. -->
         <item name="android:windowBackground">@color/grey_background</item>
         <!-- Status bar color. -->
-        <item name="android:statusBarColor">@color/orange_primary</item>
+        <item name="android:statusBarColor">@color/primary</item>
         <!-- Material 3 components styling. -->
         <item name="materialButtonStyle">@style/Widget.NMMart.Button</item>
         <item name="cardViewStyle">@style/Widget.NMMart.CardView</item>
@@ -49,6 +49,6 @@
     <!-- Splash Screen Theme -->
     <style name="Theme.Splash" parent="Theme.MaterialComponents.NoActionBar">
         <item name="android:windowBackground">@drawable/splash_screen</item>
-        <item name="android:statusBarColor">@color/orange_primary</item>
+        <item name="android:statusBarColor">@color/primary</item>
     </style>
 </resources>

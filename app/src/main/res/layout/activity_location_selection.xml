@@ -13,7 +13,7 @@
         android:layout_marginTop="40dp"
         android:src="@android:drawable/ic_menu_mylocation"
         app:layout_constraintTop_toTopOf="parent"
-        app:tint="@color/orange_primary" />
+        app:tint="@color/primary" />
 
     <TextView
         android:id="@+id/tvLocationTitle"
@@ -45,10 +45,10 @@
         android:layout_marginTop="24dp"
         android:backgroundTint="#F5F5F5"
         android:text="Use Current Location"
-        android:textColor="@color/orange_primary"
+        android:textColor="@color/primary"
         app:cornerRadius="12dp"
         app:icon="@android:drawable/ic_menu_mylocation"
-        app:iconTint="@color/orange_primary"
+        app:iconTint="@color/primary"
         app:layout_constraintTop_toBottomOf="@id/tvLocationSubtitle"
         style="@style/Widget.MaterialComponents.Button.TextButton" />
 
@@ -101,7 +101,7 @@
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:layout_marginTop="40dp"
-        android:backgroundTint="@color/orange_primary"
+        android:backgroundTint="@color/primary"
         android:text="Submit"
         android:textColor="@color/white"
         app:cornerRadius="12dp"

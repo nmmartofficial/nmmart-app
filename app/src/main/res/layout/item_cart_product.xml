@@ -51,7 +51,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:text="₹99"
-                android:textColor="@color/orange_primary"
+                android:textColor="@color/primary"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -61,7 +61,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:text="Save for later"
-                android:textColor="@color/orange_primary"
+                android:textColor="@color/primary"
                 android:textSize="12sp" />
 
         </LinearLayout>
@@ -105,7 +105,7 @@
                     android:layout_height="32dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@android:drawable/ic_input_add"
-                    app:tint="@color/orange_primary" />
+                    app:tint="@color/primary" />
 
             </LinearLayout>
 

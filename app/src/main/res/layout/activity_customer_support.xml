@@ -14,7 +14,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/orange_primary"
+            android:background="@color/primary"
             app:title="Customer Support"
             app:titleTextColor="@color/white" />
     </com.google.android.material.appbar.AppBarLayout>
@@ -36,7 +36,7 @@
                 android:layout_height="120dp"
                 android:layout_gravity="center"
                 android:src="@android:drawable/ic_menu_call"
-                app:tint="@color/orange_primary" />
+                app:tint="@color/primary" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -73,7 +73,7 @@
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:src="@android:drawable/ic_menu_call"
-                        app:tint="@color/orange_primary" />
+                        app:tint="@color/primary" />
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"

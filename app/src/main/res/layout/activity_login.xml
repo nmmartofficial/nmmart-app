@@ -98,7 +98,7 @@
         android:layout_marginTop="32dp"
         android:text="Send OTP"
         android:textColor="@color/white"
-        android:backgroundTint="@color/orange_primary"
+        android:backgroundTint="@color/primary"
         app:cornerRadius="12dp"
         android:textStyle="bold"
         app:layout_constraintTop_toBottomOf="@id/tilOtp" />
@@ -111,7 +111,7 @@
         android:layout_marginTop="32dp"
         android:text="Verify &amp; Login"
         android:textColor="@color/white"
-        android:backgroundTint="@color/orange_primary"
+        android:backgroundTint="@color/primary"
         android:visibility="gone"
         app:cornerRadius="12dp"
         android:textStyle="bold"

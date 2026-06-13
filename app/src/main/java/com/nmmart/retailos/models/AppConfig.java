@@ -30,4 +30,34 @@ public class AppConfig implements Serializable {
 
     @SerializedName("store_logo_url")
     public String storeLogoUrl;
+
+    // THEME & COLORS
+    @SerializedName("primary_color")
+    public String primaryColor; // e.g., "#FF5722" (deep orange)
+    
+    @SerializedName("secondary_color")
+    public String secondaryColor; // e.g., "#FF9800" (orange)
+    
+    @SerializedName("accent_color")
+    public String accentColor; // e.g., "#4CAF50" (green)
+    
+    @SerializedName("background_color")
+    public String backgroundColor; // e.g., "#FFFFFF" (white)
+    
+    @SerializedName("text_color_primary")
+    public String textColorPrimary; // e.g., "#212121" (dark gray)
+    
+    @SerializedName("text_color_secondary")
+    public String textColorSecondary; // e.g., "#757575" (light gray)
+
+    // SHAPES
+    @SerializedName("category_shape")
+    public String categoryShape; // "circle", "square", "rounded_square"
+    
+    @SerializedName("brand_shape")
+    public String brandShape; // "circle", "square", "rounded_square"
+
+    // BANNER
+    @SerializedName("banner_style")
+    public String bannerStyle; // "default", "card", "minimal"
 }

@@ -15,7 +15,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/orange_primary"
+            android:background="@color/primary"
             app:title="Order Tracking"
             app:titleTextColor="@color/white" />
     </com.google.android.material.appbar.AppBarLayout>
@@ -66,7 +66,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@android:drawable/checkbox_off_background"
-                    app:tint="@color/orange_primary" />
+                    app:tint="@color/primary" />
 
                 <TextView
                     android:id="@+id/tvStatus1"
@@ -95,7 +95,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@android:drawable/checkbox_off_background"
-                    app:tint="@color/orange_primary" />
+                    app:tint="@color/primary" />
 
                 <TextView
                     android:id="@+id/tvStatus2"
@@ -124,7 +124,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@android:drawable/checkbox_off_background"
-                    app:tint="@color/orange_primary" />
+                    app:tint="@color/primary" />
 
                 <TextView
                     android:id="@+id/tvStatus3"
@@ -153,7 +153,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@android:drawable/checkbox_off_background"
-                    app:tint="@color/orange_primary" />
+                    app:tint="@color/primary" />
 
                 <TextView
                     android:id="@+id/tvStatus4"
@@ -182,7 +182,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@android:drawable/checkbox_off_background"
-                    app:tint="@color/orange_primary" />
+                    app:tint="@color/primary" />
 
                 <TextView
                     android:id="@+id/tvStatus5"

@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Professional Brand Colors: Modern Orange Theme -->
-    <color name="orange_primary">#FF7043</color>
-    <color name="orange_dark">#E64A19</color>
-    <color name="orange_light">#FFCCBC</color>
-    <color name="orange_50">#FFF3E0</color>
+    <!-- Modern Brand Colors: Clean Blue Theme (Night Mode) -->
+    <color name="primary">#3B82F6</color>
+    <color name="primary_dark">#1E40AF</color>
+    <color name="primary_light">#1E3A8A</color>
     
     <!-- Accent Colors -->
-    <color name="green_success">#4CAF50</color>
-    <color name="green_50">#E8F5E9</color>
-    <color name="red_error">#F44336</color>
-    <color name="blue_info">#2196F3</color>
+    <color name="green_success">#10B981</color>
+    <color name="red_error">#EF4444</color>
+    <color name="blue_info">#3B82F6</color>
     
     <!-- Neutral Colors -->
     <color name="black_soft">#E0E0E0</color>
@@ -25,9 +23,4 @@
     <!-- Standard Colors -->
     <color name="black">#FFFFFF</color>
     <color name="background">#121212</color>
-    
-    <!-- Missing Colors -->
-    <color name="burgundy">#800020</color>
-    <color name="slate">#708090</color>
-    <color name="grey_light">#424242</color>
 </resources>

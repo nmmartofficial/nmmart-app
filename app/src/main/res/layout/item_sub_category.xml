@@ -23,7 +23,7 @@
             android:src="@drawable/ic_grocery_bag"
             android:background="#FFF3E0"
             android:padding="16dp"
-            app:tint="@color/orange_primary" />
+            app:tint="@color/primary" />
 
         <TextView
             android:id="@+id/tvSubCategoryName"

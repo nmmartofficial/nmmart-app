@@ -57,7 +57,7 @@ public class PaymentMethodAdapter extends RecyclerView.Adapter<PaymentMethodAdap
         holder.rbPayment.setChecked(position == selectedPosition);
 
         if (position == selectedPosition) {
-            holder.card.setStrokeColor(context.getResources().getColor(R.color.orange_primary));
+            holder.card.setStrokeColor(context.getResources().getColor(R.color.primary));
         } else {
             holder.card.setStrokeColor(0x00000000);
         }

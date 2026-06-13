@@ -14,7 +14,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/orange_primary"
+            android:background="@color/primary"
             app:title="Refer &amp; Earn"
             app:titleTextColor="@color/white" />
     </com.google.android.material.appbar.AppBarLayout>
@@ -32,7 +32,7 @@
             android:layout_width="200dp"
             android:layout_height="200dp"
             android:src="@android:drawable/ic_menu_share"
-            app:tint="@color/orange_primary" />
+            app:tint="@color/primary" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -93,7 +93,7 @@
             android:layout_marginTop="40dp"
             android:text="Invite Friends"
             android:textColor="@color/white"
-            android:backgroundTint="@color/orange_primary"
+            android:backgroundTint="@color/primary"
             app:cornerRadius="12dp"
             android:textStyle="bold"
             app:icon="@drawable/ic_whatsapp"

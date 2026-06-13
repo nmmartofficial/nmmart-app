@@ -14,7 +14,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/orange_primary"
+            android:background="@color/primary"
             app:title="Delivery Address"
             app:titleTextColor="@color/white" />
     </com.google.android.material.appbar.AppBarLayout>
@@ -98,7 +98,7 @@
         android:layout_height="60dp"
         android:layout_margin="20dp"
         android:text="SAVE ADDRESS"
-        android:backgroundTint="@color/orange_primary"
+        android:backgroundTint="@color/primary"
         android:textColor="@color/white"
         app:cornerRadius="12dp"
         app:layout_constraintBottom_toBottomOf="parent" />

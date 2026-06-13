@@ -17,6 +17,7 @@ import com.nmmart.retailos.ui.adapters.ProductListAdapter;
 import com.nmmart.retailos.ui.adapters.ShimmerAdapter;
 import com.nmmart.retailos.ui.adapters.SubcategorySidebarAdapter;
 import com.nmmart.retailos.ui.viewmodels.ProductListViewModel;
+import com.nmmart.retailos.utils.NetworkUtils;
 
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -31,10 +32,9 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
     private ProductListAdapter adapter;
     private ShimmerAdapter shimmerAdapter;
     private SubcategorySidebarAdapter subcategoryAdapter;
-    private List<Product> productList = new ArrayList<>();
-    private List<Category> subcategoryList = new ArrayList<>();
+    private final List<Product> productList = new ArrayList<>();
+    private final List<Category> subcategoryList = new ArrayList<>();
     private String categoryName, categoryId, searchQuery, brandId;
-    private SessionManager sessionManager;
     private int selectedSortPosition = 0;
 
     @Override
@@ -45,7 +45,6 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
             setContentView(binding.getRoot());
 
             viewModel = new ViewModelProvider(this).get(ProductListViewModel.class);
-            sessionManager = new SessionManager(this);
             
             categoryName = getIntent().getStringExtra("CATEGORY_NAME");
             categoryId = getIntent().getStringExtra("CATEGORY_ID");
@@ -62,16 +61,9 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
                 viewModel.fetchSubcategories(categoryId);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logError("Error in onCreate", e);
             finish();
         }
-    }
-    
-    private boolean isNetworkAvailable() {
-        android.net.ConnectivityManager cm = (android.net.ConnectivityManager) getSystemService(android.content.Context.CONNECTIVITY_SERVICE);
-        if (cm == null) return false;
-        android.net.NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
 
     private void setupToolbar() {
@@ -82,11 +74,12 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
                 getSupportActionBar().setTitle(categoryName);
             } else if (brandNameFromIntent != null) {
                 getSupportActionBar().setTitle(brandNameFromIntent);
-            } else {
+            } else if (searchQuery != null) {
                 getSupportActionBar().setTitle("Search: " + searchQuery);
             }
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
+        binding.toolbar.setNavigationOnClickListener(v -> onBackPressed());
     }
 
     private void setupRecyclerView() {
@@ -100,20 +93,16 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
         shimmerAdapter = new ShimmerAdapter(5, R.layout.item_shimmer_product);
         binding.rvShimmer.setAdapter(shimmerAdapter);
 
-        // Subcategories RecyclerView (sidebar)
-        LinearLayoutManager subcategoryLayoutManager = new LinearLayoutManager(this);
-        binding.rvSubcategories.setLayoutManager(subcategoryLayoutManager);
+        binding.rvSubcategories.setLayoutManager(new LinearLayoutManager(this));
         subcategoryAdapter = new SubcategorySidebarAdapter(subcategoryList, (subcategory, position) -> {
             viewModel.fetchProductsBySubcategory(subcategory.getId());
         });
         binding.rvSubcategories.setAdapter(subcategoryAdapter);
         
-        // Setup scroll listener for load more
         binding.rvProducts.addOnScrollListener(new androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@androidx.annotation.NonNull androidx.recyclerview.widget.RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-                if (dy > 0) { // Only when scrolling down
+                if (dy > 0) {
                     int visibleItemCount = layoutManager.getChildCount();
                     int totalItemCount = layoutManager.getItemCount();
                     int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
@@ -121,9 +110,7 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
                     Boolean isLoading = viewModel.getIsLoading().getValue();
                     Boolean isLoadingMore = viewModel.getIsLoadingMore().getValue();
                     
-                    if ((isLoading == null || !isLoading) && 
-                        (isLoadingMore == null || !isLoadingMore) && 
-                        !viewModel.isLastPage()) {
+                    if ((isLoading == null || !isLoading) && (isLoadingMore == null || !isLoadingMore) && !viewModel.isLastPage()) {
                         if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount && firstVisibleItemPosition >= 0) {
                             viewModel.loadMoreProducts();
                         }
@@ -132,55 +119,32 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
             }
         });
         
-        // Setup SwipeRefreshLayout
-        binding.swipeRefreshLayout.setColorSchemeResources(com.google.android.material.R.color.design_default_color_primary);
-        binding.swipeRefreshLayout.setOnRefreshListener(() -> {
-            if (isNetworkAvailable()) {
-                binding.errorLayout.setVisibility(android.view.View.GONE);
-                fetchData();
-                if (categoryId != null) {
-                    viewModel.fetchSubcategories(categoryId);
-                }
-            } else {
-                binding.swipeRefreshLayout.setRefreshing(false);
-                showErrorState();
-            }
-        });
-        
-        // Retry button
-        binding.btnRetry.setOnClickListener(v -> {
-            if (isNetworkAvailable()) {
-                binding.errorLayout.setVisibility(android.view.View.GONE);
-                fetchData();
-            }
-        });
+        binding.swipeRefreshLayout.setOnRefreshListener(this::fetchData);
+        binding.btnRetry.setOnClickListener(v -> fetchData());
     }
     
-    private void showErrorState() {
+    private void showErrorState(String message) {
         binding.swipeRefreshLayout.setRefreshing(false);
-        binding.errorLayout.setVisibility(android.view.View.VISIBLE);
+        binding.errorLayout.setVisibility(View.VISIBLE);
+        binding.tvError.setText(message);
+        binding.btnRetry.setVisibility(View.VISIBLE);
+        binding.rvProducts.setVisibility(View.GONE);
     }
     
     private void hideErrorState() {
-        binding.errorLayout.setVisibility(android.view.View.GONE);
+        binding.errorLayout.setVisibility(View.GONE);
+        binding.rvProducts.setVisibility(View.VISIBLE);
     }
 
     private void setupObservers() {
         viewModel.getProducts().observe(this, products -> {
             if (products != null) {
-                hideErrorState();
-                productList.clear();
-                productList.addAll(products);
-                adapter.setProducts(products);
-                
-                // Check if empty
                 if (products.isEmpty()) {
-                    binding.errorLayout.setVisibility(View.VISIBLE);
-                    binding.tvError.setText("No products available!");
+                    showErrorState(getString(R.string.no_products_found));
                     binding.btnRetry.setVisibility(View.GONE);
                 } else {
-                    binding.errorLayout.setVisibility(View.GONE);
-                    binding.btnRetry.setVisibility(View.VISIBLE);
+                    hideErrorState();
+                    adapter.setProducts(products);
                 }
             }
             binding.swipeRefreshLayout.setRefreshing(false);
@@ -191,16 +155,14 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
                 subcategoryList.clear();
                 subcategoryList.addAll(categories);
                 subcategoryAdapter.updateSubcategories(subcategoryList);
-                // Show the sidebar if we have subcategories
                 binding.rvSubcategories.setVisibility(View.VISIBLE);
             } else {
-                // Hide sidebar if no subcategories
                 binding.rvSubcategories.setVisibility(View.GONE);
             }
         });
 
         viewModel.getIsLoading().observe(this, isLoading -> {
-            if (isLoading) {
+            if (isLoading != null && isLoading) {
                 binding.rvProducts.setVisibility(View.GONE);
                 binding.rvShimmer.setVisibility(View.VISIBLE);
             } else {
@@ -216,10 +178,7 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
 
         viewModel.getErrorMessage().observe(this, msg -> {
             if (msg != null) {
-                Toast.makeText(this, "Error: " + msg, Toast.LENGTH_LONG).show();
-                binding.errorLayout.setVisibility(View.VISIBLE);
-                binding.tvError.setText("Error: " + msg);
-                binding.btnRetry.setVisibility(View.VISIBLE);
+                showErrorState(msg);
             }
         });
     }
@@ -235,7 +194,6 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
         
         RadioGroup radioGroupSort = bottomSheetView.findViewById(R.id.radioGroupSort);
         
-        // Set current selection
         switch (selectedSortPosition) {
             case 0: radioGroupSort.check(R.id.radioRelevance); break;
             case 1: radioGroupSort.check(R.id.radioPriceLowHigh); break;
@@ -259,8 +217,8 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
     }
 
     private void fetchData() {
-        if (!isNetworkAvailable()) {
-            showErrorState();
+        if (!NetworkUtils.isNetworkAvailable(this)) {
+            showErrorState(getString(R.string.network_error));
             return;
         }
         
@@ -279,11 +237,5 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
         Intent intent = new Intent(this, ProductDetailActivity.class);
         intent.putExtra("PRODUCT", product);
         startActivity(intent);
-    }
-
-    @Override
-    public boolean onSupportNavigateUp() {
-        onBackPressed();
-        return true;
     }
 }

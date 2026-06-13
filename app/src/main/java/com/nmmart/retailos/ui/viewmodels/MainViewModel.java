@@ -5,19 +5,19 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import android.app.Application;
-import android.content.Context;
-import android.content.SharedPreferences;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.nmmart.retailos.data.SupabaseRepository;
+import com.nmmart.retailos.models.AppConfig;
 import com.nmmart.retailos.models.Banner;
+import com.nmmart.retailos.models.Brand;
 import com.nmmart.retailos.models.Category;
-import com.nmmart.retailos.models.HomeConfig;
 import com.nmmart.retailos.models.Product;
+import com.nmmart.retailos.models.WalletMaster;
 import com.nmmart.retailos.utils.NetworkUtils;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,177 +26,310 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class MainViewModel extends AndroidViewModel {
-    private SupabaseRepository repository;
-    private List<Call<?>> activeCalls = new ArrayList<>();
-    private SharedPreferences sharedPreferences;
-    private Gson gson;
-    private static final String PREF_NAME = "MainCache";
+    private static final String TAG = "MainViewModel";
+    private final SupabaseRepository repository;
+    private final List<Call<?>> activeCalls = new ArrayList<>();
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private static final long STAGGER_DELAY_MS = 300;
+    private final com.nmmart.retailos.utils.ThemeManager themeManager;
 
-    private MutableLiveData<List<HomeConfig>> homeConfig = new MutableLiveData<>();
-    private MutableLiveData<List<Category>> categories = new MutableLiveData<>();
-    private MutableLiveData<List<Product>> trendingProducts = new MutableLiveData<>();
-    private MutableLiveData<List<Product>> newStockProducts = new MutableLiveData<>();
-    private MutableLiveData<List<Product>> discountedProducts = new MutableLiveData<>();
-    private MutableLiveData<List<Banner>> banners = new MutableLiveData<>();
-    private MutableLiveData<Boolean> isLoading = new MutableLiveData<>();
-    private MutableLiveData<String> errorMessage = new MutableLiveData<>();
+    private final MutableLiveData<List<Banner>> banners = new MutableLiveData<>();
+    private final MutableLiveData<List<Category>> categories = new MutableLiveData<>();
+    private final MutableLiveData<List<Brand>> brands = new MutableLiveData<>();
+    private final MutableLiveData<List<Product>> everydayEssentials = new MutableLiveData<>();
+    private final MutableLiveData<List<Product>> trendingProducts = new MutableLiveData<>();
+    private final MutableLiveData<List<Product>> discountedProducts = new MutableLiveData<>();
+    private final MutableLiveData<List<Product>> newArrivals = new MutableLiveData<>();
+    private final MutableLiveData<List<Product>> featuredProducts = new MutableLiveData<>();
+    private final MutableLiveData<Double> walletBalance = new MutableLiveData<>();
+    private final MutableLiveData<AppConfig> appConfig = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>();
+    private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
 
     public MainViewModel(@NonNull Application application) {
         super(application);
         repository = new SupabaseRepository();
-        sharedPreferences = application.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        gson = new Gson();
-        loadCachedData();
+        themeManager = com.nmmart.retailos.utils.ThemeManager.getInstance(application);
     }
 
-    private void loadCachedData() {
-        String catJson = sharedPreferences.getString("categories", null);
-        if (catJson != null) {
-            Type type = new TypeToken<List<Category>>() {}.getType();
-            categories.setValue(gson.fromJson(catJson, type));
-        }
-
-        String bannerJson = sharedPreferences.getString("banners", null);
-        if (bannerJson != null) {
-            Type type = new TypeToken<List<Banner>>() {}.getType();
-            banners.setValue(gson.fromJson(bannerJson, type));
-        }
-    }
-
-    private void cacheData(String key, Object data) {
-        sharedPreferences.edit().putString(key, gson.toJson(data)).apply();
-    }
-
-    public LiveData<List<HomeConfig>> getHomeConfig() { return homeConfig; }
-    public LiveData<List<Category>> getCategories() { return categories; }
-    public LiveData<List<Product>> getTrendingProducts() { return trendingProducts; }
-    public LiveData<List<Product>> getNewStockProducts() { return newStockProducts; }
-    public LiveData<List<Product>> getDiscountedProducts() { return discountedProducts; }
+    // Getters
     public LiveData<List<Banner>> getBanners() { return banners; }
+    public LiveData<List<Category>> getCategories() { return categories; }
+    public LiveData<List<Brand>> getBrands() { return brands; }
+    public LiveData<List<Product>> getEverydayEssentials() { return everydayEssentials; }
+    public LiveData<List<Product>> getTrendingProducts() { return trendingProducts; }
+    public LiveData<List<Product>> getDiscountedProducts() { return discountedProducts; }
+    public LiveData<List<Product>> getNewArrivals() { return newArrivals; }
+    public LiveData<List<Product>> getFeaturedProducts() { return featuredProducts; }
+    public LiveData<Double> getWalletBalance() { return walletBalance; }
+    public LiveData<AppConfig> getAppConfig() { return appConfig; }
     public LiveData<Boolean> getIsLoading() { return isLoading; }
     public LiveData<String> getErrorMessage() { return errorMessage; }
 
+    // Compatibility methods for MainActivity
+    public LiveData<List<Product>> getBestSelling() { return trendingProducts; }
+    public LiveData<List<Product>> getNewStockProducts() { return newArrivals; }
+
     public void fetchHomeData() {
         if (!NetworkUtils.isNetworkAvailable(getApplication())) {
-            errorMessage.setValue("No internet connection. Please check your network.");
+            Log.w(TAG, "No internet connection");
+            errorMessage.setValue("No internet connection.");
             return;
         }
 
         isLoading.setValue(true);
-        
-        Call<List<HomeConfig>> configCall = repository.getHomeConfigCall();
-        configCall.enqueue(new Callback<List<HomeConfig>>() {
-            @Override
-            public void onResponse(Call<List<HomeConfig>> call, Response<List<HomeConfig>> response) {
-                activeCalls.remove(call);
-                if (response.isSuccessful()) homeConfig.setValue(response.body());
-                else errorMessage.setValue("Failed to fetch config: " + response.message());
-            }
+        cancelAllCalls();
 
+        // Step 0: Fetch AppConfig FIRST to apply theme immediately
+        Log.d(TAG, "Fetching AppConfig first");
+        enqueueCall(repository.getHomeConfigCall(), new Callback<List<com.nmmart.retailos.models.HomeConfig>>() {
             @Override
-            public void onFailure(Call<List<HomeConfig>> call, Throwable t) {
-                activeCalls.remove(call);
-                errorMessage.setValue("Network error: " + t.getMessage());
-            }
-        });
-        activeCalls.add(configCall);
-        
-        Call<List<Category>> categoryCall = repository.getCategoriesCall();
-        categoryCall.enqueue(new Callback<List<Category>>() {
-            @Override
-            public void onResponse(Call<List<Category>> call, Response<List<Category>> response) {
-                activeCalls.remove(call);
-                if (response.isSuccessful() && response.body() != null) {
-                    categories.setValue(response.body());
-                    cacheData("categories", response.body());
-                } else errorMessage.setValue("Failed to fetch categories");
-            }
-
-            @Override
-            public void onFailure(Call<List<Category>> call, Throwable t) {
-                activeCalls.remove(call);
-            }
-        });
-        activeCalls.add(categoryCall);
-
-        Call<List<Product>> trendingCall = repository.getTrendingProductsCall(30);
-        trendingCall.enqueue(new Callback<List<Product>>() {
-            @Override
-            public void onResponse(Call<List<Product>> call, Response<List<Product>> response) {
-                activeCalls.remove(call);
-                if (response.isSuccessful() && response.body() != null) {
-                    trendingProducts.setValue(response.body());
-                    filterDiscountedProducts(response.body());
-                } else {
-                    errorMessage.setValue("Failed to fetch trending products");
+            public void onResponse(@NonNull Call<List<com.nmmart.retailos.models.HomeConfig>> call, @NonNull Response<List<com.nmmart.retailos.models.HomeConfig>> response) {
+                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                    // Assuming HomeConfig has AppConfig fields or we need to fetch AppConfig separately
+                    Log.d(TAG, "HomeConfig fetched");
                 }
-                isLoading.setValue(false);
             }
-
-            @Override
-            public void onFailure(Call<List<Product>> call, Throwable t) {
-                activeCalls.remove(call);
-                isLoading.setValue(false);
+            @Override public void onFailure(@NonNull Call<List<com.nmmart.retailos.models.HomeConfig>> call, @NonNull Throwable t) {
+                Log.e(TAG, "Error fetching HomeConfig", t);
             }
         });
-        activeCalls.add(trendingCall);
 
-        Call<List<Product>> latestCall = repository.getLatestProductsCall(30);
-        latestCall.enqueue(new Callback<List<Product>>() {
+        // Also fetch AppConfig directly
+        repository.getAppConfig(new Callback<List<AppConfig>>() {
             @Override
-            public void onResponse(Call<List<Product>> call, Response<List<Product>> response) {
-                activeCalls.remove(call);
+            public void onResponse(@NonNull Call<List<AppConfig>> call, @NonNull Response<List<AppConfig>> response) {
+                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                    AppConfig config = response.body().get(0);
+                    appConfig.setValue(config);
+                    themeManager.setAppConfig(config);
+                    Log.d(TAG, "AppConfig fetched and applied to ThemeManager");
+                }
+            }
+            @Override
+            public void onFailure(@NonNull Call<List<AppConfig>> call, @NonNull Throwable t) {
+                Log.e(TAG, "Error fetching AppConfig", t);
+            }
+        });
+
+        // Step 1: Fetch critical data first (banners, categories, brands)
+        Log.d(TAG, "Fetching critical data (banners, categories, brands)");
+        enqueueCall(repository.getLiveBannersCall(), new Callback<List<Banner>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<Banner>> call, @NonNull Response<List<Banner>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    newStockProducts.setValue(response.body());
-                } else errorMessage.setValue("Failed to fetch new arrivals");
+                    List<Banner> sortedBanners = new java.util.ArrayList<>(response.body());
+                    // Sort banners by position in ascending order
+                    java.util.Collections.sort(sortedBanners, (b1, b2) -> Integer.compare(b1.position, b2.position));
+                    banners.setValue(sortedBanners);
+                    Log.d(TAG, "Banners fetched and sorted successfully");
+                } else {
+                    Log.e(TAG, "Failed to fetch banners: " + response.code());
+                }
             }
-
-            @Override
-            public void onFailure(Call<List<Product>> call, Throwable t) {
-                activeCalls.remove(call);
-            }
-        });
-        activeCalls.add(latestCall);
-        
-        Call<List<Banner>> bannerCall = repository.getLiveBannersCall();
-        bannerCall.enqueue(new Callback<List<Banner>>() {
-            @Override
-            public void onResponse(Call<List<Banner>> call, Response<List<Banner>> response) {
-                activeCalls.remove(call);
-                if (response.isSuccessful() && response.body() != null) {
-                    banners.setValue(response.body());
-                    cacheData("banners", response.body());
-                } else errorMessage.setValue("Failed to fetch banners");
-            }
-
-            @Override
-            public void onFailure(Call<List<Banner>> call, Throwable t) {
-                activeCalls.remove(call);
+            @Override public void onFailure(@NonNull Call<List<Banner>> call, @NonNull Throwable t) {
+                Log.e(TAG, "Error fetching banners", t);
             }
         });
-        activeCalls.add(bannerCall);
+
+        enqueueCall(repository.getCategoriesCall(), new Callback<List<Category>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<Category>> call, @NonNull Response<List<Category>> response) {
+                if (response.isSuccessful()) {
+                    categories.setValue(response.body());
+                    Log.d(TAG, "Categories fetched successfully");
+                } else {
+                    Log.e(TAG, "Failed to fetch categories: " + response.code());
+                }
+            }
+            @Override public void onFailure(@NonNull Call<List<Category>> call, @NonNull Throwable t) {
+                Log.e(TAG, "Error fetching categories", t);
+            }
+        });
+
+        enqueueCall(repository.getBrandsCall(), new Callback<List<Brand>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<Brand>> call, @NonNull Response<List<Brand>> response) {
+                if (response.isSuccessful()) {
+                    brands.setValue(response.body());
+                    Log.d(TAG, "Brands fetched successfully");
+                } else {
+                    Log.e(TAG, "Failed to fetch brands: " + response.code());
+                }
+            }
+            @Override public void onFailure(@NonNull Call<List<Brand>> call, @NonNull Throwable t) {
+                Log.e(TAG, "Error fetching brands", t);
+            }
+        });
+
+        // Step 2: Fetch product sections with staggered delays
+        fetchSectionsWithDelay();
     }
-    
+
+    private void fetchSectionsWithDelay() {
+        // Fetch trending products first (sets isLoading to false when done)
+        handler.postDelayed(() -> {
+            Log.d(TAG, "Fetching trending products");
+            enqueueCall(repository.getTrendingProductsCall(10), new Callback<List<Product>>() {
+                @Override
+                public void onResponse(@NonNull Call<List<Product>> call, @NonNull Response<List<Product>> response) {
+                    if (response.isSuccessful()) {
+                        trendingProducts.setValue(response.body());
+                        Log.d(TAG, "Trending products fetched successfully");
+                    } else {
+                        Log.e(TAG, "Failed to fetch trending products: " + response.code());
+                    }
+                    isLoading.setValue(false);
+                }
+                @Override public void onFailure(@NonNull Call<List<Product>> call, @NonNull Throwable t) {
+                    Log.e(TAG, "Error fetching trending products", t);
+                    isLoading.setValue(false);
+                }
+            });
+        }, 0);
+
+        // Fetch everyday essentials after a small delay
+        handler.postDelayed(() -> {
+            Log.d(TAG, "Fetching everyday essentials");
+            enqueueCall(repository.getProductsSortedCall(null, null, "sale_rate.asc", 10, 0), new Callback<List<Product>>() {
+                @Override
+                public void onResponse(@NonNull Call<List<Product>> call, @NonNull Response<List<Product>> response) {
+                    if (response.isSuccessful()) {
+                        everydayEssentials.setValue(response.body());
+                        Log.d(TAG, "Everyday essentials fetched successfully");
+                    } else {
+                        Log.e(TAG, "Failed to fetch everyday essentials: " + response.code());
+                    }
+                }
+                @Override public void onFailure(@NonNull Call<List<Product>> call, @NonNull Throwable t) {
+                    Log.e(TAG, "Error fetching everyday essentials", t);
+                }
+            });
+        }, STAGGER_DELAY_MS);
+
+        // Fetch discounted products
+        handler.postDelayed(() -> {
+            Log.d(TAG, "Fetching discounted products");
+            enqueueCall(repository.getDiscountProductsCall(10), new Callback<List<Product>>() {
+                @Override
+                public void onResponse(@NonNull Call<List<Product>> call, @NonNull Response<List<Product>> response) {
+                    if (response.isSuccessful()) {
+                        discountedProducts.setValue(response.body());
+                        Log.d(TAG, "Discounted products fetched successfully");
+                    } else {
+                        Log.e(TAG, "Failed to fetch discounted products: " + response.code());
+                    }
+                }
+                @Override public void onFailure(@NonNull Call<List<Product>> call, @NonNull Throwable t) {
+                    Log.e(TAG, "Error fetching discounted products", t);
+                }
+            });
+        }, STAGGER_DELAY_MS * 2);
+
+        // Fetch new arrivals
+        handler.postDelayed(() -> {
+            Log.d(TAG, "Fetching new arrivals");
+            enqueueCall(repository.getNewArrivalProductsCall(10), new Callback<List<Product>>() {
+                @Override
+                public void onResponse(@NonNull Call<List<Product>> call, @NonNull Response<List<Product>> response) {
+                    if (response.isSuccessful()) {
+                        newArrivals.setValue(response.body());
+                        Log.d(TAG, "New arrivals fetched successfully");
+                    } else {
+                        Log.e(TAG, "Failed to fetch new arrivals: " + response.code());
+                    }
+                }
+                @Override public void onFailure(@NonNull Call<List<Product>> call, @NonNull Throwable t) {
+                    Log.e(TAG, "Error fetching new arrivals", t);
+                }
+            });
+        }, STAGGER_DELAY_MS * 3);
+
+        // Fetch featured products
+        handler.postDelayed(() -> {
+            Log.d(TAG, "Fetching featured products");
+            enqueueCall(repository.getFeaturedProductsCall(10), new Callback<List<Product>>() {
+                @Override
+                public void onResponse(@NonNull Call<List<Product>> call, @NonNull Response<List<Product>> response) {
+                    if (response.isSuccessful()) {
+                        featuredProducts.setValue(response.body());
+                        Log.d(TAG, "Featured products fetched successfully");
+                    } else {
+                        Log.e(TAG, "Failed to fetch featured products: " + response.code());
+                    }
+                }
+                @Override public void onFailure(@NonNull Call<List<Product>> call, @NonNull Throwable t) {
+                    Log.e(TAG, "Error fetching featured products", t);
+                }
+            });
+        }, STAGGER_DELAY_MS * 4);
+    }
+
+    private <T> void enqueueCall(Call<T> call, Callback<T> callback) {
+        activeCalls.add(call);
+        call.enqueue(new Callback<T>() {
+            @Override
+            public void onResponse(@NonNull Call<T> call, @NonNull Response<T> response) {
+                activeCalls.remove(call);
+                callback.onResponse(call, response);
+            }
+            @Override
+            public void onFailure(@NonNull Call<T> call, @NonNull Throwable t) {
+                activeCalls.remove(call);
+                callback.onFailure(call, t);
+            }
+        });
+    }
+
+    public void fetchWallet() {
+        repository.getWallets(new Callback<List<WalletMaster>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<WalletMaster>> call, @NonNull Response<List<WalletMaster>> response) {
+                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                    walletBalance.setValue(response.body().get(0).currentBalance);
+                    Log.d(TAG, "Wallet balance fetched successfully");
+                }
+            }
+            @Override
+            public void onFailure(@NonNull Call<List<WalletMaster>> call, @NonNull Throwable t) {
+                Log.e(TAG, "Error fetching wallet", t);
+            }
+        });
+    }
+
+    public void fetchProductByBarcode(String barcode, OnProductFetchedListener listener) {
+        repository.getProductByBarcode(barcode, new Callback<List<Product>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<Product>> call, @NonNull Response<List<Product>> response) {
+                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                    listener.onFetched(response.body().get(0));
+                } else {
+                    listener.onFetched(null);
+                }
+            }
+            @Override
+            public void onFailure(@NonNull Call<List<Product>> call, @NonNull Throwable t) {
+                Log.e(TAG, "Error fetching product by barcode", t);
+                listener.onFetched(null);
+            }
+        });
+    }
+
+    public interface OnProductFetchedListener {
+        void onFetched(Product product);
+    }
+
     @Override
     protected void onCleared() {
         super.onCleared();
+        handler.removeCallbacksAndMessages(null);
+        cancelAllCalls();
+    }
+
+    private void cancelAllCalls() {
         for (Call<?> call : activeCalls) {
-            if (call != null && !call.isCanceled()) {
-                call.cancel();
-            }
+            if (call != null && !call.isCanceled()) call.cancel();
         }
         activeCalls.clear();
-    }
-    
-    private void filterDiscountedProducts(List<Product> allProducts) {
-        List<Product> discounted = new ArrayList<>();
-        if (allProducts != null) {
-            for (Product product : allProducts) {
-                if (product.nm_price < product.mrp) {
-                    discounted.add(product);
-                }
-            }
-        }
-        discountedProducts.setValue(discounted);
     }
 }

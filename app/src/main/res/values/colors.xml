@@ -1,33 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Professional Brand Colors: Modern Orange Theme -->
-    <color name="orange_primary">#FF7043</color>
-    <color name="orange_dark">#E64A19</color>
-    <color name="orange_light">#FFCCBC</color>
-    <color name="orange_50">#FFF3E0</color>
+    <!-- Modern Brand Colors: Clean Blue Theme -->
+    <color name="primary">#2563EB</color>
+    <color name="primary_dark">#1E40AF</color>
+    <color name="primary_light">#DBEAFE</color>
     
     <!-- Accent Colors -->
-    <color name="green_success">#4CAF50</color>
-    <color name="green_50">#E8F5E9</color>
-    <color name="red_error">#F44336</color>
-    <color name="blue_info">#2196F3</color>
+    <color name="green_success">#10B981</color>
+    <color name="red_error">#EF4444</color>
+    <color name="blue_info">#3B82F6</color>
     
     <!-- Neutral Colors -->
-    <color name="black_soft">#212121</color>
-    <color name="grey_900">#424242</color>
-    <color name="grey_700">#616161</color>
-    <color name="grey_500">#9E9E9E</color>
-    <color name="grey_300">#E0E0E0</color>
-    <color name="grey_100">#F5F5F5</color>
+    <color name="black_soft">#1F2937</color>
+    <color name="grey_900">#374151</color>
+    <color name="grey_700">#6B7280</color>
+    <color name="grey_500">#9CA3AF</color>
+    <color name="grey_300">#D1D5DB</color>
+    <color name="grey_100">#F3F4F6</color>
     <color name="white">#FFFFFF</color>
-    <color name="grey_background">#F5F7FA</color>
+    <color name="grey_background">#F9FAFB</color>
     
     <!-- Standard Colors -->
     <color name="black">#FF000000</color>
-    <color name="background">#F5F7FA</color>
+    <color name="background">#F9FAFB</color>
     
-    <!-- Missing Colors -->
-    <color name="burgundy">#800020</color>
+    <!-- Compatibility Colors -->
     <color name="slate">#708090</color>
-    <color name="grey_light">#E0E0E0</color>
+    <color name="grey_light">#D1D5DB</color>
 </resources>

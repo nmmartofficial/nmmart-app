@@ -12,6 +12,6 @@
     android:textAllCaps="false"
     android:checkable="true"
     app:cornerRadius="12dp"
-    app:strokeColor="@color/orange_primary"
+    app:strokeColor="@color/primary"
     app:strokeWidth="1dp" />
 

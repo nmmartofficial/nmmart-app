@@ -18,6 +18,15 @@ public class Banner implements Serializable {
     @SerializedName("is_active")
     public boolean isActive;
     
+    @SerializedName("position")
+    public int position; // For ordering (upar/niche)
+    
+    @SerializedName("banner_type")
+    public String bannerType; // e.g., "top", "middle", "bottom"
+    
     @SerializedName("created_at")
     public String createdAt;
+    
+    @SerializedName("updated_at")
+    public String updatedAt;
 }

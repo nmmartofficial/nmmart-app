@@ -3,6 +3,15 @@ plugins {
     id 'com.google.gms.google-services'
 }
 
+// Load properties from local.properties first (for secrets)
+def localPropertiesFile = rootProject.file("local.properties")
+def localProperties = new Properties()
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withInputStream { stream ->
+        localProperties.load(stream)
+    }
+}
+
 android {
     namespace 'com.nmmart.retailos'
     compileSdk 34
@@ -16,10 +25,20 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         
-        buildConfigField "String", "SUPABASE_URL", "\"https://cpipmysooynedtpreekt.supabase.co/rest/v1/\""
-        buildConfigField "String", "SUPABASE_KEY", "\"sb_publishable_bmVp0-jv3JLAZaIQpvhYwQ_E6JzdERh\""
-        buildConfigField "String", "SUPABASE_AUTH_URL", "\"https://cpipmysooynedtpreekt.supabase.co/auth/v1/\""
-        buildConfigField "String", "SUPABASE_FUNCTIONS_URL", "\"https://cpipmysooynedtpreekt.supabase.co/functions/v1/\""
+        // Get secrets from local.properties if available, else from gradle.properties
+        def getSecret = { key ->
+            if (localProperties.containsKey(key)) {
+                return localProperties.getProperty(key)
+            } else if (project.hasProperty(key)) {
+                return project.property(key)
+            }
+            return ""
+        }
+        
+        buildConfigField "String", "SUPABASE_URL", "\"${getSecret('SUPABASE_URL')}\""
+        buildConfigField "String", "SUPABASE_KEY", "\"${getSecret('SUPABASE_KEY')}\""
+        buildConfigField "String", "SUPABASE_AUTH_URL", "\"${getSecret('SUPABASE_AUTH_URL')}\""
+        buildConfigField "String", "SUPABASE_FUNCTIONS_URL", "\"${getSecret('SUPABASE_FUNCTIONS_URL')}\""
     }
 
     buildTypes {

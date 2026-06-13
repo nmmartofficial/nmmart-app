@@ -330,7 +330,7 @@ public class CategoriesActivity extends AppCompatActivity {
             // Highlight selected category
             if (position == selectedPosition) {
                 holder.itemView.setBackgroundResource(android.R.color.white);
-                holder.tvName.setTextColor(getResources().getColor(R.color.orange_primary));
+                holder.tvName.setTextColor(getResources().getColor(R.color.primary));
             } else {
                 holder.itemView.setBackgroundResource(android.R.color.transparent);
                 holder.tvName.setTextColor(getResources().getColor(R.color.black_soft));

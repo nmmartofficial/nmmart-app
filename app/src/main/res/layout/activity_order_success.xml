@@ -48,7 +48,7 @@
             android:layout_height="60dp"
             android:layout_marginTop="40dp"
             android:text="BACK TO HOME"
-            android:backgroundTint="@color/orange_primary"
+            android:backgroundTint="@color/primary"
             android:textColor="@color/white"
             app:cornerRadius="12dp" />
     </LinearLayout>

@@ -1,9 +1,13 @@
 package com.nmmart.retailos.ui.activities;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -28,6 +32,8 @@ public class SelfCheckoutCartActivity extends AppCompatActivity {
     private android.widget.TextView tvTotal;
     private SupabaseRepository supabaseRepository;
     private SessionManager sessionManager;
+    private ActivityResultLauncher<Intent> paymentLauncher;
+    private double orderTotal;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,8 +61,23 @@ public class SelfCheckoutCartActivity extends AppCompatActivity {
 
         btnProceedToPay.setOnClickListener(v -> proceedToPayment());
         fabAddMore.setOnClickListener(v -> {
-            // Go back to MainActivity to scan more items
             finish();
+        });
+
+        paymentLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            if (result.getResultCode() == Activity.RESULT_OK) {
+                Intent data = result.getData();
+                if (data != null) {
+                    String response = data.getStringExtra("response");
+                    if (response != null && response.toLowerCase().contains("success")) {
+                        placeOrder();
+                    } else {
+                        Toast.makeText(this, "Payment failed or cancelled", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            } else {
+                Toast.makeText(this, "Payment cancelled", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 
@@ -73,8 +94,8 @@ public class SelfCheckoutCartActivity extends AppCompatActivity {
     }
 
     private void updateTotal() {
-        double total = cartManager.getTotalPrice();
-        tvTotal.setText(String.format("₹%.2f", total));
+        orderTotal = cartManager.getTotalPrice();
+        tvTotal.setText(String.format("₹%.2f", orderTotal));
     }
 
     private void proceedToPayment() {
@@ -83,35 +104,52 @@ public class SelfCheckoutCartActivity extends AppCompatActivity {
             return;
         }
 
-        // For demo purposes, we'll assume payment is successful
-        // In real app, integrate UPI/Payment gateway here
-        placeOrder();
+        // Enter your store's UPI ID here!
+        String upiId = "paytmqr5fwdiq@ptys";
+        String name = "NM Mart";
+        String transactionNote = "Self Checkout Payment";
+        String transactionRef = "TXN" + System.currentTimeMillis();
+
+        Uri uri = Uri.parse("upi://pay").buildUpon()
+                .appendQueryParameter("pa", upiId)
+                .appendQueryParameter("pn", name)
+                .appendQueryParameter("tn", transactionNote)
+                .appendQueryParameter("am", String.format("%.2f", orderTotal))
+                .appendQueryParameter("cu", "INR")
+                .appendQueryParameter("tr", transactionRef)
+                .build();
+
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(uri);
+        Intent chooser = Intent.createChooser(intent, "Pay with");
+
+        if (chooser.resolveActivity(getPackageManager()) != null) {
+            paymentLauncher.launch(chooser);
+        } else {
+            Toast.makeText(this, "No UPI app found on your device", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void placeOrder() {
         List<Product> items = cartManager.getCartItems();
         Map<String, Integer> quantities = cartManager.getCartQuantities();
-        double total = cartManager.getTotalPrice();
 
-        // Create order data
         Map<String, Object> orderData = new HashMap<>();
         orderData.put("user_id", sessionManager.getUserId());
         orderData.put("user_mobile", sessionManager.getMobile());
         orderData.put("customer_name", sessionManager.getUserName());
-        orderData.put("subtotal", total);
+        orderData.put("subtotal", orderTotal);
         orderData.put("delivery_charge", 0.0);
         orderData.put("discount", 0.0);
-        orderData.put("total_amount", total);
-        orderData.put("payment_mode", "Self-Checkout (App)");
+        orderData.put("total_amount", orderTotal);
+        orderData.put("payment_mode", "UPI");
         orderData.put("payment_status", "paid");
         orderData.put("order_status", "completed");
 
-        // First, place the order
         supabaseRepository.placeOrder(orderData, new retrofit2.Callback<Void>() {
             @Override
             public void onResponse(retrofit2.Call<Void> call, retrofit2.Response<Void> response) {
                 if (response.isSuccessful()) {
-                    // Now decrement stock for each product
                     decrementStockForItems(items, quantities);
                 } else {
                     Toast.makeText(SelfCheckoutCartActivity.this, "Failed to place order", Toast.LENGTH_SHORT).show();
@@ -136,7 +174,7 @@ public class SelfCheckoutCartActivity extends AppCompatActivity {
                 public void onResponse(retrofit2.Call<Void> call, retrofit2.Response<Void> response) {
                     successCount[0]++;
                     if (successCount[0] == totalItems) {
-                        // All stock decremented, show exit pass
+                        cartManager.clearCart();
                         Intent intent = new Intent(SelfCheckoutCartActivity.this, ExitPassActivity.class);
                         startActivity(intent);
                         finish();
@@ -147,7 +185,7 @@ public class SelfCheckoutCartActivity extends AppCompatActivity {
                 public void onFailure(retrofit2.Call<Void> call, Throwable t) {
                     successCount[0]++;
                     if (successCount[0] == totalItems) {
-                        // Even if some fail, proceed (stock can be updated manually)
+                        cartManager.clearCart();
                         Intent intent = new Intent(SelfCheckoutCartActivity.this, ExitPassActivity.class);
                         startActivity(intent);
                         finish();

@@ -149,7 +149,7 @@ public class OrderHistoryActivity extends BaseActivity {
             resetTimeline(holder);
             
             if (status.equals("pending")) {
-                holder.binding.dotPending.setBackgroundResource(android.R.color.holo_orange_dark);
+                holder.binding.dotPending.setBackgroundColor(getResources().getColor(R.color.primary_dark));
                 holder.binding.btnCancelOrder.setVisibility(View.VISIBLE);
                 holder.binding.btnOrderAgain.setVisibility(View.GONE);
                 holder.binding.btnCancelOrder.setOnClickListener(v -> {
@@ -163,14 +163,14 @@ public class OrderHistoryActivity extends BaseActivity {
                         .show();
                 });
             } else if (status.equals("shipped")) {
-                holder.binding.dotPending.setBackgroundResource(android.R.color.holo_orange_dark);
-                holder.binding.dotShipped.setBackgroundResource(android.R.color.holo_orange_dark);
+                holder.binding.dotPending.setBackgroundColor(getResources().getColor(R.color.primary_dark));
+                holder.binding.dotShipped.setBackgroundColor(getResources().getColor(R.color.primary_dark));
                 holder.binding.btnCancelOrder.setVisibility(View.GONE);
                 holder.binding.btnOrderAgain.setVisibility(View.GONE);
             } else if (status.equals("delivered")) {
-                holder.binding.dotPending.setBackgroundResource(android.R.color.holo_green_dark);
-                holder.binding.dotShipped.setBackgroundResource(android.R.color.holo_green_dark);
-                holder.binding.dotDelivered.setBackgroundResource(android.R.color.holo_green_dark);
+                holder.binding.dotPending.setBackgroundColor(getResources().getColor(R.color.green_success));
+                holder.binding.dotShipped.setBackgroundColor(getResources().getColor(R.color.green_success));
+                holder.binding.dotDelivered.setBackgroundColor(getResources().getColor(R.color.green_success));
                 holder.binding.cardStatus.setCardBackgroundColor(android.graphics.Color.parseColor("#E8F5E9"));
                 holder.binding.tvStatus.setTextColor(android.graphics.Color.parseColor("#2E7D32"));
                 holder.binding.btnCancelOrder.setVisibility(View.GONE);
