@@ -3,12 +3,15 @@ package com.nmmart.retailos.ui.activities;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.speech.RecognizerIntent;
 import android.text.Editable;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,10 +26,13 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.journeyapps.barcodescanner.ScanContract;
 import com.journeyapps.barcodescanner.ScanOptions;
 import com.nmmart.retailos.R;
 import com.nmmart.retailos.data.SelfCheckoutCartManager;
+import com.nmmart.retailos.data.SupabaseRepository;
+import com.bumptech.glide.Glide;
 import com.nmmart.retailos.data.SessionManager;
 import com.nmmart.retailos.databinding.ActivityMainBinding;
 import com.nmmart.retailos.models.Category;
@@ -37,6 +43,7 @@ import com.nmmart.retailos.ui.viewmodels.MainViewModel;
 import com.nmmart.retailos.utils.ThemeManager;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends BaseActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -44,6 +51,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
 
     private ActivityResultLauncher<String> notificationPermissionLauncher;
     private ActivityResultLauncher<ScanOptions> barcodeLauncher;
+    private ActivityResultLauncher<Intent> speechRecognizerLauncher;
     
     private ActivityMainBinding binding;
     private SessionManager sessionManager;
@@ -53,6 +61,8 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private CategoryAdapter categoryAdapter;
     private ProductListAdapter trendingAdapter;
     private ProductListAdapter productGridAdapter;
+    private ProductListAdapter recentlyViewedAdapter;
+    private com.nmmart.retailos.data.RecentlyViewedManager recentlyViewedManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +83,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             sessionManager = new SessionManager(this);
             viewModel = new ViewModelProvider(this).get(MainViewModel.class);
             themeManager = ThemeManager.getInstance(this);
+            recentlyViewedManager = com.nmmart.retailos.data.RecentlyViewedManager.getInstance(this);
             logDebug("onCreate: init sessionManager/viewModel end (" + (System.currentTimeMillis() - startTime) + "ms)");
 
             logDebug("onCreate: setupNavigation start");
@@ -118,6 +129,10 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             requestNotificationPermission();
             logDebug("onCreate: requestNotificationPermission end (" + (System.currentTimeMillis() - startTime) + "ms)");
 
+            logDebug("onCreate: getFcmToken start");
+            getFcmToken();
+            logDebug("onCreate: getFcmToken end (" + (System.currentTimeMillis() - startTime) + "ms)");
+
             // Apply initial theme
             applyTheme();
 
@@ -125,6 +140,26 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         } catch (Exception e) {
             logError("Error in onCreate", e);
         }
+    }
+    
+    private void getFcmToken() {
+        FirebaseMessaging.getInstance().getToken()
+            .addOnCompleteListener(task -> {
+                if (!task.isSuccessful()) {
+                    logError("Fetching FCM token failed", task.getException());
+                    return;
+                }
+                
+                String token = task.getResult();
+                logDebug("FCM token: " + token);
+                
+                sessionManager.setFcmToken(token);
+                
+                if (sessionManager.isLoggedIn() && sessionManager.getUserId() != null && !sessionManager.getUserId().isEmpty()) {
+                    SupabaseRepository repository = new SupabaseRepository();
+                    repository.updateUserFcmToken(sessionManager.getUserId(), token, null);
+                }
+            });
     }
 
     private void setupLaunchers() {
@@ -142,6 +177,23 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 fetchProductByBarcode(result.getContents());
             }
         });
+
+        speechRecognizerLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    List<String> matches = result.getData().getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                    if (matches != null && !matches.isEmpty()) {
+                        String spokenText = matches.get(0);
+                        binding.etSearch.setText(spokenText);
+                        // Automatically trigger search
+                        Intent intent = new Intent(this, ProductListActivity.class);
+                        intent.putExtra("SEARCH_QUERY", spokenText);
+                        startActivity(intent);
+                    }
+                }
+            }
+        );
     }
 
     private void setupNavigation() {
@@ -157,13 +209,23 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         if (headerView != null) {
             TextView navUserName = headerView.findViewById(R.id.nav_user_name);
             TextView navUserMobile = headerView.findViewById(R.id.nav_user_mobile);
+            ImageView ivNavProfilePic = headerView.findViewById(R.id.ivNavProfilePic);
+            
             if (sessionManager.isLoggedIn()) {
                 navUserName.setText(sessionManager.getUserName());
                 String mobile = sessionManager.getMobile();
                 navUserMobile.setText(mobile != null ? "+91 " + mobile : sessionManager.getEmail());
+                navUserMobile.setVisibility(View.VISIBLE);
+                
+                String profilePicUri = sessionManager.getProfilePicUri();
+                if (profilePicUri != null) {
+                    ivNavProfilePic.setPadding(0, 0, 0, 0);
+                    Glide.with(this).load(Uri.parse(profilePicUri)).circleCrop().into(ivNavProfilePic);
+                }
             } else {
                 navUserName.setText(R.string.welcome_to_nm_mart);
                 navUserMobile.setText(R.string.login_to_continue);
+                navUserMobile.setVisibility(View.GONE);
             }
         }
     }
@@ -173,6 +235,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
 
         trendingAdapter = createProductAdapter();
         productGridAdapter = createProductAdapter();
+        recentlyViewedAdapter = createProductAdapter();
     }
 
     private ProductListAdapter createProductAdapter() {
@@ -191,16 +254,30 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         binding.rvCategories.setAdapter(categoryAdapter);
 
         setupHorizontalRV(binding.rvBestSelling, trendingAdapter);
+        setupHorizontalRV(binding.rvRecentlyViewed, recentlyViewedAdapter);
 
         GridLayoutManager glm = new GridLayoutManager(this, 2);
         glm.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override
             public int getSpanSize(int position) {
-                return productGridAdapter.getItemViewType(position) == ProductListAdapter.VIEW_TYPE_LOADING ? 2 : 1;
+                if (productGridAdapter != null && position >= 0 && position < productGridAdapter.getItemCount()) {
+                    return productGridAdapter.getItemViewType(position) == ProductListAdapter.VIEW_TYPE_LOADING ? 2 : 1;
+                }
+                return 1;
             }
         });
         binding.rvProducts.setLayoutManager(glm);
         binding.rvProducts.setAdapter(productGridAdapter);
+    }
+
+    private void loadRecentlyViewed() {
+        List<Product> recentProducts = recentlyViewedManager.getRecentProducts();
+        if (recentProducts.isEmpty()) {
+            binding.sectionRecentlyViewed.setVisibility(View.GONE);
+        } else {
+            binding.sectionRecentlyViewed.setVisibility(View.VISIBLE);
+            recentlyViewedAdapter.setProducts(recentProducts);
+        }
     }
 
     private void setupHorizontalRV(androidx.recyclerview.widget.RecyclerView rv, ProductListAdapter adapter) {
@@ -270,6 +347,8 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private void setupClickListeners() {
         binding.btnMenu.setOnClickListener(v -> binding.drawerLayout.openDrawer(GravityCompat.START));
         binding.btnCart.setOnClickListener(v -> startActivity(new Intent(this, CartActivity.class)));
+        binding.btnScanSearch.setOnClickListener(v -> startBarcodeScanner());
+        binding.btnVoiceSearch.setOnClickListener(v -> startVoiceSearch());
         
         binding.etSearch.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
@@ -303,6 +382,19 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         options.setCameraId(0);
         options.setOrientationLocked(false);
         barcodeLauncher.launch(options);
+    }
+
+    private void startVoiceSearch() {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "hi-IN"); // Hindi as default, supports English too
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Kya kharidna chahte hain?");
+        
+        try {
+            speechRecognizerLauncher.launch(intent);
+        } catch (Exception e) {
+            Toast.makeText(this, "Voice search not available on this device", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void fetchProductByBarcode(String barcode) {
@@ -339,9 +431,11 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.nav_profile && sessionManager.isLoggedIn()) startActivity(new Intent(this, ProfileActivity.class));
+        else if (id == R.id.nav_notifications) startActivity(new Intent(this, NotificationsActivity.class));
         else if (id == R.id.nav_orders) startActivity(new Intent(this, OrderHistoryActivity.class));
         else if (id == R.id.nav_addresses && sessionManager.isLoggedIn()) startActivity(new Intent(this, AddressActivity.class));
         else if (id == R.id.nav_wallet && sessionManager.isLoggedIn()) startActivity(new Intent(this, WalletActivity.class));
+        else if (id == R.id.nav_coupons) startActivity(new Intent(this, CouponsActivity.class));
         else if (id == R.id.nav_refer) startActivity(new Intent(this, ReferEarnActivity.class));
         else if (id == R.id.nav_help) startActivity(new Intent(this, CustomerSupportActivity.class));
         else if (id == R.id.nav_about) startActivity(new Intent(this, AboutUsActivity.class));
@@ -384,6 +478,34 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             }
         }
     }
+    
+    private void updateNotificationBadge() {
+        com.nmmart.retailos.utils.NotificationStorage storage = com.nmmart.retailos.utils.NotificationStorage.getInstance(this);
+        int unreadCount = 0;
+        for (com.nmmart.retailos.models.NotificationItem item : storage.getNotifications()) {
+            if (!item.isRead()) {
+                unreadCount++;
+            }
+        }
+        // Check if we need to add badge to drawer menu
+        com.google.android.material.navigation.NavigationView navView = binding.navView;
+        if (navView != null) {
+            MenuItem notifItem = navView.getMenu().findItem(R.id.nav_notifications);
+            if (notifItem != null) {
+                if (unreadCount > 0) {
+                    notifItem.setActionView(R.layout.badge_layout);
+                    View badgeView = notifItem.getActionView();
+                    if (badgeView != null) {
+                        TextView badgeText = badgeView.findViewById(android.R.id.text1);
+                        if (badgeText != null) badgeText.setText(String.valueOf(unreadCount));
+                        badgeView.setOnClickListener(v -> onNavigationItemSelected(notifItem));
+                    }
+                } else {
+                    notifItem.setActionView(null);
+                }
+            }
+        }
+    }
 
     @Override protected void onPause() {
         logDebug("onPause: start");
@@ -401,6 +523,12 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         logDebug("onResume: updateCartBadge start");
         updateCartBadge();
         logDebug("onResume: updateCartBadge end (" + (System.currentTimeMillis() - startTime) + "ms)");
+        logDebug("onResume: updateNotificationBadge start");
+        updateNotificationBadge();
+        logDebug("onResume: updateNotificationBadge end (" + (System.currentTimeMillis() - startTime) + "ms)");
+        logDebug("onResume: loadRecentlyViewed start");
+        loadRecentlyViewed();
+        logDebug("onResume: loadRecentlyViewed end (" + (System.currentTimeMillis() - startTime) + "ms)");
         logDebug("onResume: total (" + (System.currentTimeMillis() - startTime) + "ms)");
     }
     @Override protected void onDestroy() { super.onDestroy(); }

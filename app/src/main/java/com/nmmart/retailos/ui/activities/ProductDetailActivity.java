@@ -11,8 +11,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -34,7 +36,9 @@ import com.nmmart.retailos.data.SessionManager;
 import com.nmmart.retailos.data.SupabaseConfig;
 import com.nmmart.retailos.data.SupabaseRepository;
 import com.nmmart.retailos.models.Product;
+import com.nmmart.retailos.models.ProductReview;
 import com.nmmart.retailos.ui.adapters.ProductListAdapter;
+import com.nmmart.retailos.ui.adapters.ProductReviewAdapter;
 import com.nmmart.retailos.utils.PriceUtils;
 
 import java.util.ArrayList;
@@ -53,6 +57,7 @@ public class ProductDetailActivity extends BaseActivity {
     private TextView tvQtyValue;
     private ProductListAdapter similarAdapter;
     private UnitOptionAdapter unitAdapter;
+    private ProductReviewAdapter reviewAdapter;
     private String selectedUnit;
     private Handler stockUpdateHandler;
     private Runnable stockUpdateRunnable;
@@ -98,6 +103,11 @@ public class ProductDetailActivity extends BaseActivity {
         RecyclerView rvUnitOptions = findViewById(R.id.rvUnitOptions);
         TextView tvSelectUnitTitle = findViewById(R.id.tvSelectUnitTitle);
         RecyclerView rvSimilar = findViewById(R.id.rvSimilarProducts);
+        TextView tvAvgRating = findViewById(R.id.tvAvgRating);
+        RatingBar rbAvgRating = findViewById(R.id.rbAvgRating);
+        TextView tvReviewCount = findViewById(R.id.tvReviewCount);
+        RecyclerView rvReviews = findViewById(R.id.rvProductReviews);
+        MaterialButton btnAddReview = findViewById(R.id.btnAddReview);
 
         repository = new SupabaseRepository();
         cartManager = CartManager.getInstance(this);
@@ -175,6 +185,19 @@ public class ProductDetailActivity extends BaseActivity {
             startActivity(intent);
         });
         rvSimilar.setAdapter(similarAdapter);
+        // Set up reviews UI
+        tvAvgRating.setText(String.format("%.1f", product.getAvgRating()));
+        rbAvgRating.setRating((float) product.getAvgRating());
+        tvReviewCount.setText(product.getReviewCount() + " reviews");
+
+        rvReviews.setLayoutManager(new LinearLayoutManager(this));
+        reviewAdapter = new ProductReviewAdapter(this);
+        rvReviews.setAdapter(reviewAdapter);
+        fetchProductReviews();
+
+        // Add review button
+        btnAddReview.setOnClickListener(v -> showAddReviewDialog());
+
         fetchSimilarProducts();
 
         btnQtyMinus.setOnClickListener(v -> {
@@ -335,6 +358,77 @@ public class ProductDetailActivity extends BaseActivity {
         String[] parts = unit.split("[,|/]");
         for (String p : parts) if (p != null && !p.trim().isEmpty()) out.add(p.trim());
         return out;
+    }
+
+    private void fetchProductReviews() {
+        repository.getProductReviews(product.id, new Callback<List<ProductReview>>() {
+            @Override
+            public void onResponse(Call<List<ProductReview>> call, Response<List<ProductReview>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    reviewAdapter.setReviews(response.body());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<ProductReview>> call, Throwable t) {
+                Toast.makeText(ProductDetailActivity.this, "Failed to load reviews", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void showAddReviewDialog() {
+        SessionManager sessionManager = new SessionManager(this);
+        if (!sessionManager.isLoggedIn()) {
+            Toast.makeText(this, "Please login to write a review", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, LoginActivity.class));
+            return;
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_review, null);
+        builder.setView(dialogView);
+
+        RatingBar ratingBar = dialogView.findViewById(R.id.rbReviewRating);
+        EditText etReviewText = dialogView.findViewById(R.id.etReviewText);
+
+        builder.setTitle("Write a Review");
+        builder.setPositiveButton("Submit", (dialog, which) -> {
+            int rating = (int) ratingBar.getRating();
+            String reviewText = etReviewText.getText().toString().trim();
+
+            if (rating == 0) {
+                Toast.makeText(this, "Please select a rating", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            repository.addProductReview(
+                    product.id,
+                    sessionManager.getUserId(),
+                    sessionManager.getUserName(),
+                    rating,
+                    reviewText,
+                    new Callback<Void>() {
+                        @Override
+                        public void onResponse(Call<Void> call, Response<Void> response) {
+                            if (response.isSuccessful()) {
+                                Toast.makeText(ProductDetailActivity.this, "Review added successfully!", Toast.LENGTH_SHORT).show();
+                                fetchProductReviews();
+                            } else {
+                                Toast.makeText(ProductDetailActivity.this, "Failed to add review", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<Void> call, Throwable t) {
+                            Toast.makeText(ProductDetailActivity.this, "Failed to add review", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+            );
+        });
+        builder.setNegativeButton("Cancel", null);
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
     private void shareOnWhatsApp() {

@@ -1,32 +1,37 @@
 package com.nmmart.retailos.models;
 
-import com.google.gson.annotations.SerializedName;
-
 public class WalletTransaction {
-    @SerializedName("id")
-    public String id;
+    private String id;
+    private String type; // "credit" or "debit"
+    private double amount;
+    private String description;
+    private long timestamp;
+    private boolean isRead;
 
-    @SerializedName("user_id")
-    public String userId;
-
-    @SerializedName("amount")
-    public double amount;
-
-    @SerializedName("transaction_type")
-    public String transactionType;
-
-    @SerializedName("description")
-    public String description;
-
-    @SerializedName("created_at")
-    public String createdAt;
-
-    public WalletTransaction(String id, String userId, double amount, String transactionType, String description, String createdAt) {
+    public WalletTransaction(String id, String type, double amount, String description, long timestamp, boolean isRead) {
         this.id = id;
-        this.userId = userId;
+        this.type = type;
         this.amount = amount;
-        this.transactionType = transactionType;
         this.description = description;
-        this.createdAt = createdAt;
+        this.timestamp = timestamp;
+        this.isRead = isRead;
     }
+
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
+
+    public double getAmount() { return amount; }
+    public void setAmount(double amount) { this.amount = amount; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public long getTimestamp() { return timestamp; }
+    public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
+
+    public boolean isRead() { return isRead; }
+    public void setRead(boolean read) { isRead = read; }
 }

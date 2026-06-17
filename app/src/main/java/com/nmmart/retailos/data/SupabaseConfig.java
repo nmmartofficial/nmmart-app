@@ -16,6 +16,7 @@ import com.nmmart.retailos.models.Product;
 import com.nmmart.retailos.models.WalletMaster;
 import com.nmmart.retailos.models.WalletTransaction;
 import com.nmmart.retailos.models.PincodeMaster;
+import com.nmmart.retailos.models.ProductReview;
 
 import java.util.List;
 import java.util.Map;
@@ -334,6 +335,28 @@ public class SupabaseConfig {
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
             @Body Map<String, Object> transactionData
+        );
+
+        @GET("product_reviews")
+        Call<List<ProductReview>> getProductReviews(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth,
+            @Query("product_id") String productId
+        );
+
+        @POST("product_reviews")
+        Call<Void> addProductReview(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth,
+            @Body Map<String, Object> reviewData
+        );
+        
+        @PATCH("users")
+        Call<Void> updateUserFcmToken(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth,
+            @Query("id") String userId,
+            @Body Map<String, Object> userData
         );
     }
 

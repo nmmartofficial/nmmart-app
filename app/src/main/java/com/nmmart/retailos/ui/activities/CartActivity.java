@@ -1,6 +1,10 @@
 package com.nmmart.retailos.ui.activities;
 
 import android.content.Intent;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.RectF;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -10,8 +14,10 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -78,6 +84,53 @@ public class CartActivity extends BaseActivity {
         binding.rvSavedItems.setLayoutManager(new LinearLayoutManager(this));
         savedAdapter = new SavedAdapter();
         binding.rvSavedItems.setAdapter(savedAdapter);
+        
+        setupSwipeToDelete();
+    }
+    
+    private void setupSwipeToDelete() {
+        ItemTouchHelper.SimpleCallback callback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+            
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getAdapterPosition();
+                Product product = cartAdapter.items.get(position);
+                cartManager.removeFromCart(product);
+                viewModel.refreshTotal();
+                updateUIBasedOnItems();
+                Toast.makeText(CartActivity.this, product.name + " removed from cart", Toast.LENGTH_SHORT).show();
+            }
+            
+            @Override
+            public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+                View itemView = viewHolder.itemView;
+                float itemHeight = itemView.getBottom() - itemView.getTop();
+                
+                Paint paint = new Paint();
+                paint.setColor(Color.parseColor("#F44336"));
+                
+                RectF background = new RectF(itemView.getRight() + dX, itemView.getTop(), itemView.getRight(), itemView.getBottom());
+                c.drawRect(background, paint);
+                
+                Paint textPaint = new Paint();
+                textPaint.setColor(Color.WHITE);
+                textPaint.setTextSize(48f);
+                textPaint.setTextAlign(Paint.Align.CENTER);
+                String text = "DELETE";
+                float textWidth = textPaint.measureText(text);
+                float x = itemView.getRight() - (textWidth / 2) - 48;
+                float y = itemView.getTop() + (itemHeight / 2) + (textPaint.descent() + textPaint.ascent()) / 2;
+                c.drawText(text, x, y, textPaint);
+                
+                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+            }
+        };
+        
+        new ItemTouchHelper(callback).attachToRecyclerView(binding.rvCartItems);
     }
 
     private void setupObservers() {

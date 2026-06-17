@@ -13,6 +13,7 @@ import com.nmmart.retailos.models.Product;
 import com.nmmart.retailos.models.WalletMaster;
 import com.nmmart.retailos.models.WalletTransaction;
 import com.nmmart.retailos.models.PincodeMaster;
+import com.nmmart.retailos.models.ProductReview;
 import com.nmmart.retailos.utils.NMMartLogger;
 
 import java.util.List;
@@ -56,6 +57,22 @@ public class SupabaseRepository {
             });
         } catch (Exception e) {
             NMMartLogger.logError(FILE_NAME, FUNCTION_NAME, e.getMessage());
+        }
+    }
+    
+    public void updateUserFcmToken(String userId, String token, Callback<Void> callback) {
+        final String FUNCTION_NAME = "updateUserFcmToken";
+        NMMartLogger.logFunction(FUNCTION_NAME);
+        try {
+            Map<String, Object> userData = new HashMap<>();
+            userData.put("fcm_token", token);
+            apiService.updateUserFcmToken(apiKey, anonOrUserAuth(), "eq." + userId, userData)
+                .enqueue(wrapCallback(FUNCTION_NAME, callback));
+        } catch (Exception e) {
+            NMMartLogger.logError(FILE_NAME, FUNCTION_NAME, e.getMessage());
+            if (callback != null) {
+                callback.onFailure(null, e);
+            }
         }
     }
     
@@ -335,5 +352,21 @@ public class SupabaseRepository {
         body.put("product_id", productId);
         body.put("quantity", quantity);
         apiService.decrementStock(apiKey, requireUserAuth(), body).enqueue(wrapCallback("decrementStock", callback));
+    }
+
+    public void getProductReviews(String productId, Callback<List<ProductReview>> callback) {
+        Log.d(TAG, "getProductReviews called with productId: " + productId);
+        apiService.getProductReviews(apiKey, anonOrUserAuth(), "eq." + productId).enqueue(wrapCallback("getProductReviews", callback));
+    }
+
+    public void addProductReview(String productId, String userId, String userName, int rating, String reviewText, Callback<Void> callback) {
+        Log.d(TAG, "addProductReview called");
+        Map<String, Object> reviewData = new HashMap<>();
+        reviewData.put("product_id", productId);
+        reviewData.put("user_id", userId);
+        reviewData.put("user_name", userName);
+        reviewData.put("rating", rating);
+        reviewData.put("review_text", reviewText);
+        apiService.addProductReview(apiKey, requireUserAuth(), reviewData).enqueue(wrapCallback("addProductReview", callback));
     }
 }

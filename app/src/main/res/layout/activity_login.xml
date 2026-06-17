@@ -3,19 +3,19 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="@color/grey_background"
     android:padding="24dp">
 
-    <!-- Text Logo at top -->
+    <!-- Brand Logo / Name at top -->
     <TextView
         android:id="@+id/tvLoginLogo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="NM Mart"
-        android:textSize="40sp"
+        android:textSize="48sp"
         android:textStyle="bold"
-        android:textColor="#D32F2F"
-        android:layout_marginTop="60dp"
+        android:textColor="@color/primary"
+        android:layout_marginTop="48dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -25,8 +25,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Shop More. Save More."
-        android:textSize="16sp"
-        android:textColor="#616161"
+        android:textSize="18sp"
+        android:textColor="@color/grey_700"
         android:layout_marginTop="8dp"
         app:layout_constraintTop_toBottomOf="@+id/tvLoginLogo"
         app:layout_constraintStart_toStartOf="parent"
@@ -36,14 +36,13 @@
         android:id="@+id/tvLoginTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Login"
-        android:textSize="24sp"
+        android:text="Welcome Back!"
+        android:textSize="28sp"
         android:textStyle="bold"
-        android:textColor="@color/black"
-        android:layout_marginTop="32dp"
+        android:textColor="@color/black_soft"
+        android:layout_marginTop="64dp"
         app:layout_constraintTop_toBottomOf="@id/tvLoginTagline"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <!-- Mobile Number field -->
     <com.google.android.material.textfield.TextInputLayout
@@ -52,18 +51,23 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
         android:hint="Mobile Number / Email"
-        app:startIconDrawable="@android:drawable/ic_menu_call"
+        app:startIconDrawable="@drawable/ic_person"
+        app:boxStrokeColor="@color/primary"
+        app:hintTextColor="@color/primary"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-        app:boxCornerRadiusTopStart="12dp"
-        app:boxCornerRadiusTopEnd="12dp"
-        app:boxCornerRadiusBottomStart="12dp"
-        app:boxCornerRadiusBottomEnd="12dp"
+        app:boxCornerRadiusTopStart="16dp"
+        app:boxCornerRadiusTopEnd="16dp"
+        app:boxCornerRadiusBottomStart="16dp"
+        app:boxCornerRadiusBottomEnd="16dp"
         app:layout_constraintTop_toBottomOf="@id/tvLoginTitle">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etMobile"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:textColor="@color/black_soft"
+            android:textSize="16sp"
+            android:paddingVertical="12dp" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- OTP field (Initially hidden) -->
@@ -71,15 +75,17 @@
         android:id="@+id/tilOtp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="20dp"
         android:hint="Enter 6-digit OTP"
         android:visibility="gone"
         app:startIconDrawable="@android:drawable/ic_lock_lock"
+        app:boxStrokeColor="@color/primary"
+        app:hintTextColor="@color/primary"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-        app:boxCornerRadiusTopStart="12dp"
-        app:boxCornerRadiusTopEnd="12dp"
-        app:boxCornerRadiusBottomStart="12dp"
-        app:boxCornerRadiusBottomEnd="12dp"
+        app:boxCornerRadiusTopStart="16dp"
+        app:boxCornerRadiusTopEnd="16dp"
+        app:boxCornerRadiusBottomStart="16dp"
+        app:boxCornerRadiusBottomEnd="16dp"
         app:layout_constraintTop_toBottomOf="@id/tilMobile">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -87,34 +93,41 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="number"
-            android:maxLength="6" />
+            android:maxLength="6"
+            android:textColor="@color/black_soft"
+            android:textSize="16sp"
+            android:paddingVertical="12dp" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Send OTP Button -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSendOtp"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_marginTop="32dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="36dp"
         android:text="Send OTP"
         android:textColor="@color/white"
         android:backgroundTint="@color/primary"
-        app:cornerRadius="12dp"
+        app:cornerRadius="16dp"
+        android:textSize="16sp"
         android:textStyle="bold"
+        app:elevation="4dp"
         app:layout_constraintTop_toBottomOf="@id/tilOtp" />
 
     <!-- Verify OTP Button (Initially hidden) -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnVerifyOtp"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_marginTop="32dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="36dp"
         android:text="Verify &amp; Login"
         android:textColor="@color/white"
         android:backgroundTint="@color/primary"
         android:visibility="gone"
-        app:cornerRadius="12dp"
+        app:cornerRadius="16dp"
+        android:textSize="16sp"
         android:textStyle="bold"
+        app:elevation="4dp"
         app:layout_constraintTop_toBottomOf="@id/tilOtp" />
 
     <!-- Signup link -->
@@ -122,10 +135,11 @@
         android:id="@+id/tvSignupLink"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="32dp"
         android:text="Don't have an account? Sign Up"
-        android:textColor="@color/black"
-        android:textSize="14sp"
+        android:textColor="@color/grey_900"
+        android:textSize="15sp"
+        android:padding="8dp"
         app:layout_constraintTop_toBottomOf="@id/btnSendOtp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

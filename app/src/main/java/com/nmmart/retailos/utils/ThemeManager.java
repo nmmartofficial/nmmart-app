@@ -47,11 +47,11 @@ public class ThemeManager {
     }
 
     public int getPrimaryColor() {
-        return parseColor(appConfig.primaryColor, Color.parseColor("#FF5722")); // Default deep orange
+        return parseColor(appConfig.primaryColor, Color.parseColor("#2563EB")); // Default blue
     }
 
     public int getSecondaryColor() {
-        return parseColor(appConfig.secondaryColor, Color.parseColor("#FF9800")); // Default orange
+        return parseColor(appConfig.secondaryColor, Color.parseColor("#DBEAFE")); // Default light blue
     }
 
     public int getAccentColor() {
@@ -110,12 +110,12 @@ public class ThemeManager {
 
     private AppConfig getDefaultConfig() {
         AppConfig defaultConfig = new AppConfig();
-        defaultConfig.primaryColor = "#FF5722";
-        defaultConfig.secondaryColor = "#FF9800";
-        defaultConfig.accentColor = "#4CAF50";
+        defaultConfig.primaryColor = "#2563EB";
+        defaultConfig.secondaryColor = "#DBEAFE";
+        defaultConfig.accentColor = "#10B981";
         defaultConfig.backgroundColor = "#FFFFFF";
-        defaultConfig.textColorPrimary = "#212121";
-        defaultConfig.textColorSecondary = "#757575";
+        defaultConfig.textColorPrimary = "#1F2937";
+        defaultConfig.textColorSecondary = "#6B7280";
         defaultConfig.categoryShape = "rounded_square";
         defaultConfig.brandShape = "circle";
         defaultConfig.bannerStyle = "default";

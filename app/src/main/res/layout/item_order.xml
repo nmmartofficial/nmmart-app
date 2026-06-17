@@ -190,6 +190,16 @@
                 android:text="CANCEL ORDER"
                 android:textColor="#D32F2F"
                 android:visibility="gone" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnReturnOrder"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="RETURN ORDER"
+                android:textColor="#D32F2F"
+                android:visibility="gone" />
         </LinearLayout>
 
     </LinearLayout>

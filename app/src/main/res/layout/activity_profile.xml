@@ -15,60 +15,87 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/primary"
-            app:title="My Profile"
+            app:title="@string/my_profile"
             app:titleTextColor="@color/white" />
     </com.google.android.material.appbar.AppBarLayout>
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:orientation="vertical"
-        android:padding="24dp"
-        android:gravity="center_horizontal"
         app:layout_constraintTop_toBottomOf="@id/appBar"
         app:layout_constraintBottom_toBottomOf="parent">
-
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            app:cardCornerRadius="60dp"
-            app:cardElevation="4dp">
-            <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:src="@android:drawable/ic_menu_myplaces"
-                android:padding="20dp"
-                app:tint="@color/primary" />
-        </com.google.android.material.card.MaterialCardView>
-
-        <TextView
-            android:id="@+id/tvProfileName"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="John Doe"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:textColor="@color/black_soft" />
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:gravity="center_horizontal">
 
-        <TextView
-            android:id="@+id/tvProfileMobile"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="+91 7081154604"
-            android:textColor="#757575" />
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardProfilePic"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                app:cardCornerRadius="60dp"
+                app:cardElevation="4dp"
+                android:clickable="true"
+                android:focusable="true">
+                <ImageView
+                    android:id="@+id/ivProfilePic"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@android:drawable/ic_menu_myplaces"
+                    android:padding="20dp"
+                    app:tint="@color/primary"
+                    android:scaleType="centerCrop"
+                    android:contentDescription="@null" />
+            </com.google.android.material.card.MaterialCardView>
 
-        <com.google.android.material.button.MaterialButton
+            <TextView
+                android:id="@+id/tvProfileName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="John Doe"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="@color/black_soft" />
+
+            <TextView
+                android:id="@+id/tvProfileMobile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="+91 7081154604"
+                android:textColor="#757575" />
+
+            <TextView
+                android:id="@+id/tvProfileEmail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="john@example.com"
+                android:textColor="#757575" />
+
+            <com.google.android.material.button.MaterialButton
             android:id="@+id/btnEditProfile"
             android:layout_width="match_parent"
             android:layout_height="55dp"
             android:layout_marginTop="40dp"
-            android:text="EDIT PROFILE"
+            android:text="@string/edit_profile"
             android:backgroundTint="@color/white"
             android:textColor="@color/primary"
             app:strokeColor="@color/primary"
             app:strokeWidth="1dp"
+            app:cornerRadius="12dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnWalletHistory"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_marginTop="16dp"
+            android:text="Wallet History"
+            android:backgroundTint="@color/primary"
+            android:textColor="@color/white"
             app:cornerRadius="12dp" />
 
         <LinearLayout
@@ -83,7 +110,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Dark Mode"
+                android:text="@string/dark_mode"
                 android:textColor="@color/black"
                 android:textSize="16sp" />
             <com.google.android.material.switchmaterial.SwitchMaterial
@@ -92,6 +119,7 @@
                 android:layout_height="wrap_content" />
         </LinearLayout>
 
-    </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -62,28 +62,30 @@ public class AddressListActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // Load dummy addresses for now (replace with API call)
-        loadDummyAddresses();
+        loadAddresses();
     }
 
-    private void loadDummyAddresses() {
-        Address addr1 = new Address();
-        addr1.fullName = "Raj Kumar";
-        addr1.houseNo = "123, Green Avenue";
-        addr1.pincode = "212201";
-        addr1.city = "Manjhanpur";
-        addr1.isDefault = true;
-        addressList.add(addr1);
+    private void loadAddresses() {
+        if (!sessionManager.isLoggedIn()) {
+            Toast.makeText(this, "Please login to view addresses", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        repository.getUserAddresses(sessionManager.getUserId(), new Callback<List<Address>>() {
+            @Override
+            public void onResponse(Call<List<Address>> call, Response<List<Address>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    addressList.clear();
+                    addressList.addAll(response.body());
+                    adapter.notifyDataSetChanged();
+                }
+            }
 
-        Address addr2 = new Address();
-        addr2.fullName = "Priya Sharma";
-        addr2.houseNo = "45, Main Market";
-        addr2.pincode = "212201";
-        addr2.city = "Manjhanpur";
-        addr2.isDefault = false;
-        addressList.add(addr2);
-
-        adapter.notifyDataSetChanged();
+            @Override
+            public void onFailure(Call<List<Address>> call, Throwable t) {
+                Toast.makeText(AddressListActivity.this, "Failed to load addresses", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private class AddressAdapter extends RecyclerView.Adapter<AddressAdapter.AddressViewHolder> {
@@ -144,5 +146,6 @@ public class AddressListActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         // Refresh address list when coming back
+        loadAddresses();
     }
 }

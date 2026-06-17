@@ -23,11 +23,20 @@ import java.util.Locale;
 public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdapter.ViewHolder> {
 
     private final List<NotificationItem> notifications = new ArrayList<>();
+    private OnNotificationClickListener listener;
+
+    public interface OnNotificationClickListener {
+        void onNotificationClick(NotificationItem item);
+    }
 
     public NotificationsAdapter(Context context, List<NotificationItem> notifications) {
         if (notifications != null) {
             this.notifications.addAll(notifications);
         }
+    }
+
+    public void setOnNotificationClickListener(OnNotificationClickListener listener) {
+        this.listener = listener;
     }
 
     @NonNull
@@ -40,17 +49,23 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         NotificationItem item = notifications.get(position);
-        holder.tvTitle.setText(item.title);
-        holder.tvMessage.setText(item.message);
+        holder.tvTitle.setText(item.getTitle());
+        holder.tvMessage.setText(item.getMessage());
 
         // Format timestamp
         SimpleDateFormat sdf = new SimpleDateFormat("dd MMM, hh:mm a", Locale.getDefault());
-        String timeStr = sdf.format(new Date(item.timestamp));
+        String timeStr = sdf.format(new Date(item.getTimestamp()));
         holder.tvTime.setText(timeStr);
 
         // Show unread dot and adjust alpha
-        holder.viewUnreadDot.setVisibility(item.isRead ? View.GONE : View.VISIBLE);
-        holder.itemView.setAlpha(item.isRead ? 0.6f : 1.0f);
+        holder.viewUnreadDot.setVisibility(item.isRead() ? View.GONE : View.VISIBLE);
+        holder.itemView.setAlpha(item.isRead() ? 0.6f : 1.0f);
+        
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onNotificationClick(item);
+            }
+        });
     }
 
     @Override
@@ -103,17 +118,17 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
 
         @Override
         public boolean areItemsTheSame(int oldPos, int newPos) {
-            return oldList.get(oldPos).id == newList.get(newPos).id;
+            return oldList.get(oldPos).getId().equals(newList.get(newPos).getId());
         }
 
         @Override
         public boolean areContentsTheSame(int oldPos, int newPos) {
             NotificationItem oldItem = oldList.get(oldPos);
             NotificationItem newItem = newList.get(newPos);
-            return oldItem.title.equals(newItem.title) &&
-                   oldItem.message.equals(newItem.message) &&
-                   oldItem.isRead == newItem.isRead &&
-                   oldItem.timestamp == newItem.timestamp;
+            return oldItem.getTitle().equals(newItem.getTitle()) &&
+                   oldItem.getMessage().equals(newItem.getMessage()) &&
+                   oldItem.isRead() == newItem.isRead() &&
+                   oldItem.getTimestamp() == newItem.getTimestamp();
         }
     }
 }

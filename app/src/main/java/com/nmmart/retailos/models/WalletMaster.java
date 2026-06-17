@@ -12,13 +12,17 @@ public class WalletMaster {
     @SerializedName("current_balance")
     public double currentBalance;
 
+    @SerializedName("loyalty_points")
+    public int loyaltyPoints;
+
     @SerializedName("updated_at")
     public String updatedAt;
 
-    public WalletMaster(String id, String userId, double currentBalance, String updatedAt) {
+    public WalletMaster(String id, String userId, double currentBalance, int loyaltyPoints, String updatedAt) {
         this.id = id;
         this.userId = userId;
         this.currentBalance = currentBalance;
+        this.loyaltyPoints = loyaltyPoints;
         this.updatedAt = updatedAt;
     }
 }

@@ -5,6 +5,10 @@
         android:icon="@drawable/ic_person"
         android:title="My Profile" />
     <item
+        android:id="@+id/nav_notifications"
+        android:icon="@drawable/ic_notifications"
+        android:title="Notifications" />
+    <item
         android:id="@+id/nav_orders"
         android:icon="@drawable/ic_grocery_bag"
         android:title="My Orders" />
@@ -16,6 +20,10 @@
         android:id="@+id/nav_wallet"
         android:icon="@drawable/ic_wallet"
         android:title="NM Wallet" />
+    <item
+        android:id="@+id/nav_coupons"
+        android:icon="@android:drawable/ic_menu_myplaces"
+        android:title="Offers &amp; Coupons" />
     <item
         android:id="@+id/nav_refer"
         android:icon="@android:drawable/ic_menu_share"

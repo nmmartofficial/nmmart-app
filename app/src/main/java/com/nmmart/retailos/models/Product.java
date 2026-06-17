@@ -54,6 +54,12 @@ public class Product implements Serializable {
     @SerializedName("barcode")
     public String barcode;
 
+    @SerializedName("avg_rating")
+    public Double avgRating;
+
+    @SerializedName("review_count")
+    public Integer reviewCount;
+
     // Null-safe getters for all fields
     public String getId() {
         return id != null ? id : "";
@@ -121,6 +127,14 @@ public class Product implements Serializable {
 
     public String getDescription() {
         return description != null ? description : "No description available.";
+    }
+
+    public double getAvgRating() {
+        return avgRating != null ? avgRating : 0.0;
+    }
+
+    public int getReviewCount() {
+        return reviewCount != null ? reviewCount : 0;
     }
 
     public Product() {

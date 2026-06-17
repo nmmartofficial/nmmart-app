@@ -9,7 +9,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Sort &amp; Filter"
+        android:text="@string/sort_and_filter"
         android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="@color/black_soft" />
@@ -23,7 +23,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Sort by"
+        android:text="@string/sort_by"
         android:textSize="16sp"
         android:textStyle="bold"
         android:layout_marginTop="16dp"
@@ -41,7 +41,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="8dp"
-            android:text="Relevance"
+            android:text="@string/relevance"
             android:textSize="14sp"
             android:checked="true" />
 
@@ -50,7 +50,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="8dp"
-            android:text="Price: Low to High"
+            android:text="@string/price_low_high"
             android:textSize="14sp" />
 
         <RadioButton
@@ -58,7 +58,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="8dp"
-            android:text="Price: High to Low"
+            android:text="@string/price_high_low"
             android:textSize="14sp" />
 
         <RadioButton
@@ -66,17 +66,35 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="8dp"
-            android:text="Discount: High to Low"
+            android:text="@string/discount_high_low"
             android:textSize="14sp" />
 
     </RadioGroup>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/filter_by"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginTop="20dp"
+        android:textColor="@color/black_soft" />
+
+    <CheckBox
+        android:id="@+id/checkInStock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:text="@string/in_stock_only"
+        android:textSize="14sp"
+        android:layout_marginTop="8dp" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnApplySort"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="Apply"
+        android:text="@string/apply"
         android:backgroundTint="@color/primary" />
 
 </LinearLayout>

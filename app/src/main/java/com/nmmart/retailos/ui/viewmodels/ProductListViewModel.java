@@ -7,6 +7,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.nmmart.retailos.data.SupabaseRepository;
+import com.nmmart.retailos.utils.OfflineStorage;
 import com.nmmart.retailos.models.Category;
 import com.nmmart.retailos.models.Product;
 import com.nmmart.retailos.utils.NetworkUtils;
@@ -23,6 +24,7 @@ public class ProductListViewModel extends AndroidViewModel {
     private SupabaseRepository repository;
     
     private List<Call<?>> activeCalls = new ArrayList<>();
+    private List<Product> originalProducts = new ArrayList<>();
     
     private MutableLiveData<List<Product>> products = new MutableLiveData<>();
     private MutableLiveData<Boolean> isLoading = new MutableLiveData<>();
@@ -37,6 +39,7 @@ public class ProductListViewModel extends AndroidViewModel {
     private int currentOffset = 0;
     private static final int PAGE_SIZE = 30;
     private boolean isLastPage = false;
+    private boolean filterInStockOnly = false;
 
     public ProductListViewModel(@NonNull Application application) {
         super(application);
@@ -68,8 +71,19 @@ public class ProductListViewModel extends AndroidViewModel {
     }
 
     public void fetchProducts(String categoryId, String subcategoryId, String brandId, int limit, int offset) {
+        OfflineStorage offlineStorage = OfflineStorage.getInstance(getApplication());
+        String key = "cat_" + (subcategoryId != null ? subcategoryId : (categoryId != null ? categoryId : "all")) + (brandId != null ? "_brand_" + brandId : "");
+        
+        List<Product> offlineProducts = offlineStorage.getProducts(key);
+        if (!offlineProducts.isEmpty()) {
+            originalProducts = new ArrayList<>(offlineProducts);
+            applySortAndFilter(0);
+        }
+        
         if (!NetworkUtils.isNetworkAvailable(getApplication())) {
-            errorMessage.setValue("No internet connection.");
+            if (originalProducts == null || originalProducts.isEmpty()) {
+                errorMessage.setValue("No internet connection and no offline data available.");
+            }
             isLoading.setValue(false);
             return;
         }
@@ -92,13 +106,18 @@ public class ProductListViewModel extends AndroidViewModel {
                 activeCalls.remove(call);
                 isLoading.setValue(false);
                 if (response.isSuccessful() && response.body() != null) {
-                    products.setValue(response.body());
+                    originalProducts = new ArrayList<>(response.body());
+                    applySortAndFilter(0);
+                    offlineStorage.saveProducts(key, response.body());
                     if (response.body().size() < limit) isLastPage = true;
                     currentOffset += limit;
                 } else {
                     // Fallback to show empty list if error
-                    products.setValue(new ArrayList<>());
-                    errorMessage.setValue("Failed to fetch products: " + response.message());
+                    if (originalProducts == null || originalProducts.isEmpty()) {
+                        originalProducts = new ArrayList<>();
+                        products.setValue(new ArrayList<>());
+                        errorMessage.setValue("Failed to fetch products: " + response.message());
+                    }
                 }
             }
 
@@ -106,13 +125,24 @@ public class ProductListViewModel extends AndroidViewModel {
             public void onFailure(Call<List<Product>> call, Throwable t) {
                 activeCalls.remove(call);
                 isLoading.setValue(false);
-                products.setValue(new ArrayList<>());
-                errorMessage.setValue("Network error: " + t.getMessage());
+                if (originalProducts == null || originalProducts.isEmpty()) {
+                    originalProducts = new ArrayList<>();
+                    products.setValue(new ArrayList<>());
+                    errorMessage.setValue("Network error: " + t.getMessage());
+                }
             }
         });
     }
 
     public void fetchSubcategories(String parentId) {
+        OfflineStorage offlineStorage = OfflineStorage.getInstance(getApplication());
+        
+        // First load from offline
+        List<Category> offlineSubcats = offlineStorage.getSubcategories(parentId);
+        if (!offlineSubcats.isEmpty()) {
+            subcategories.setValue(offlineSubcats);
+        }
+        
         if (!NetworkUtils.isNetworkAvailable(getApplication())) {
             return;
         }
@@ -124,22 +154,39 @@ public class ProductListViewModel extends AndroidViewModel {
                 activeCalls.remove(call);
                 if (response.isSuccessful() && response.body() != null) {
                     subcategories.setValue(response.body());
+                    offlineStorage.saveSubcategories(parentId, response.body());
                 } else {
-                    subcategories.setValue(new ArrayList<>());
+                    if (subcategories.getValue() == null || subcategories.getValue().isEmpty()) {
+                        subcategories.setValue(new ArrayList<>());
+                    }
                 }
             }
 
             @Override
             public void onFailure(Call<List<Category>> call, Throwable t) {
                 activeCalls.remove(call);
-                subcategories.setValue(new ArrayList<>());
+                if (subcategories.getValue() == null || subcategories.getValue().isEmpty()) {
+                    subcategories.setValue(new ArrayList<>());
+                }
             }
         });
     }
 
     public void searchProducts(String query) {
+        OfflineStorage offlineStorage = OfflineStorage.getInstance(getApplication());
+        String searchKey = "search_" + query.toLowerCase().replaceAll("[^a-zA-Z0-9]", "_");
+        
+        // First try offline search
+        List<Product> offlineSearchResults = offlineStorage.getProducts(searchKey);
+        if (!offlineSearchResults.isEmpty()) {
+            originalProducts = new ArrayList<>(offlineSearchResults);
+            applySortAndFilter(0);
+        }
+        
         if (!NetworkUtils.isNetworkAvailable(getApplication())) {
-            errorMessage.setValue("No internet connection.");
+            if (originalProducts == null || originalProducts.isEmpty()) {
+                errorMessage.setValue("No internet connection and no offline search results available.");
+            }
             isLoading.setValue(false);
             return;
         }
@@ -159,17 +206,23 @@ public class ProductListViewModel extends AndroidViewModel {
                 activeCalls.remove(call);
                 isLoading.setValue(false);
                 if (response.isSuccessful() && response.body() != null) {
-                    products.setValue(response.body());
+                    originalProducts = new ArrayList<>(response.body());
+                    applySortAndFilter(0);
+                    offlineStorage.saveProducts(searchKey, response.body());
                     if (response.body().size() < PAGE_SIZE) isLastPage = true;
                     currentOffset = PAGE_SIZE;
-                } else errorMessage.setValue("Search failed: " + response.message());
+                } else if (originalProducts == null || originalProducts.isEmpty()) {
+                    errorMessage.setValue("Search failed: " + response.message());
+                }
             }
 
             @Override
             public void onFailure(Call<List<Product>> call, Throwable t) {
                 activeCalls.remove(call);
                 isLoading.setValue(false);
-                errorMessage.setValue("Network error: " + t.getMessage());
+                if (originalProducts == null || originalProducts.isEmpty()) {
+                    errorMessage.setValue("Network error: " + t.getMessage());
+                }
             }
         });
     }
@@ -222,28 +275,41 @@ public class ProductListViewModel extends AndroidViewModel {
         }
     }
 
-    public void sortProducts(int position) {
-        List<Product> currentList = products.getValue();
-        if (currentList == null || currentList.isEmpty()) return;
+    public void setFilterInStockOnly(boolean inStockOnly) {
+        this.filterInStockOnly = inStockOnly;
+    }
 
-        switch (position) {
+    public void applySortAndFilter(int sortPosition) {
+        if (originalProducts == null || originalProducts.isEmpty()) {
+            products.setValue(new ArrayList<>());
+            return;
+        }
+
+        List<Product> filteredList = new ArrayList<>(originalProducts);
+
+        // Apply filters
+        if (filterInStockOnly) {
+            filteredList.removeIf(product -> product.getStock() <= 0);
+        }
+
+        // Apply sorting
+        switch (sortPosition) {
             case 1: // Price: Low to High
-                Collections.sort(currentList, (p1, p2) -> {
-                    return Double.compare(p1.getNmPrice(), p2.getNmPrice());
-                });
+                Collections.sort(filteredList, (p1, p2) -> Double.compare(p1.getNmPrice(), p2.getNmPrice()));
                 break;
             case 2: // Price: High to Low
-                Collections.sort(currentList, (p1, p2) -> {
-                    return Double.compare(p2.getNmPrice(), p1.getNmPrice());
-                });
+                Collections.sort(filteredList, (p1, p2) -> Double.compare(p2.getNmPrice(), p1.getNmPrice()));
                 break;
             case 3: // Discount: High to Low
-                Collections.sort(currentList, (p1, p2) -> {
-                    return Double.compare(p2.getDiscount(), p1.getDiscount());
-                });
+                Collections.sort(filteredList, (p1, p2) -> Double.compare(p2.getDiscount(), p1.getDiscount()));
                 break;
         }
-        products.setValue(currentList);
+
+        products.setValue(filteredList);
+    }
+
+    public void sortProducts(int position) {
+        applySortAndFilter(position);
     }
     
     @Override

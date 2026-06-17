@@ -24,6 +24,7 @@ public class AddressActivity extends AppCompatActivity {
     private SessionManager sessionManager;
     private SupabaseRepository repository;
     private List<PincodeMaster> pincodes;
+    private android.content.SharedPreferences prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +33,7 @@ public class AddressActivity extends AppCompatActivity {
 
         sessionManager = new SessionManager(this);
         repository = new SupabaseRepository();
+        prefs = getSharedPreferences("NMMartPrefs", MODE_PRIVATE);
 
         MaterialButton btnConfirm = findViewById(R.id.btnConfirmAddress);
         TextInputEditText etName = findViewById(R.id.etAddressName);
@@ -72,9 +74,24 @@ public class AddressActivity extends AppCompatActivity {
                 }
             }
 
-            // Save Address to Supabase
-            saveAddressToDatabase(name, house, pin);
+            // Save Address
+            if (sessionManager.isLoggedIn()) {
+                saveAddressToDatabase(name, house, pin);
+            } else {
+                // For guest, save to SharedPreferences temporarily
+                saveGuestAddress(name, house, pin);
+            }
         });
+    }
+
+    private void saveGuestAddress(String name, String house, String pin) {
+        prefs.edit()
+                .putString("guest_name", name)
+                .putString("guest_house", house)
+                .putString("guest_pin", pin)
+                .apply();
+        Toast.makeText(this, "Address saved!", Toast.LENGTH_SHORT).show();
+        finish();
     }
 
     private void fetchPincodes() {

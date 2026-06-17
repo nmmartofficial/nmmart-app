@@ -26,6 +26,7 @@ public class SessionManager {
     private static final String KEY_USER_NAME = "userName";
     private static final String KEY_DELIVERY_LOCATION = "deliveryLocation";
     private static final String KEY_WALLET_BALANCE = "walletBalanceLong";
+    private static final String KEY_LOYALTY_POINTS = "loyaltyPoints";
     private static final String KEY_IS_VIP = "isVip";
     private static final String KEY_CAT_SHAPE = "categoryShape";
     private static final String KEY_BANNER_TEXT = "bannerText";
@@ -38,6 +39,9 @@ public class SessionManager {
     private static final String KEY_DARK_MODE = "darkMode";
     private static final String KEY_STORE_LOGO = "storeLogoUrl";
     private static final String KEY_ONBOARDING_COMPLETED = "onboardingCompleted";
+    private static final String KEY_REFERRAL_CODE = "referralCode";
+    private static final String KEY_PROFILE_PIC_URI = "profilePicUri";
+    private static final String KEY_FCM_TOKEN = "fcmToken";
 
     private static final String DEFAULT_LOGO_URL = "https://i.postimg.cc/1XFXZgzX/logo-nm-mart-app.png";
     
@@ -124,6 +128,20 @@ public class SessionManager {
         return Double.longBitsToDouble(pref.getLong(KEY_WALLET_BALANCE, Double.doubleToRawLongBits(0.0)));
     }
 
+    public void setLoyaltyPoints(int points) {
+        editor.putInt(KEY_LOYALTY_POINTS, points);
+        editor.apply();
+    }
+
+    public int getLoyaltyPoints() {
+        return pref.getInt(KEY_LOYALTY_POINTS, 0);
+    }
+
+    public void addLoyaltyPoints(int pointsToAdd) {
+        int currentPoints = getLoyaltyPoints();
+        setLoyaltyPoints(currentPoints + pointsToAdd);
+    }
+
     public void setVipStatus(boolean isVip) { editor.putBoolean(KEY_IS_VIP, isVip).apply(); }
     public boolean isVip() { return pref.getBoolean(KEY_IS_VIP, false); }
     public void setCategoryShape(String shape) { editor.putString(KEY_CAT_SHAPE, shape).apply(); }
@@ -133,6 +151,7 @@ public class SessionManager {
 
     public void setUserName(String name) { editor.putString(KEY_USER_NAME, name).apply(); }
     public String getUserName() { return pref.getString(KEY_USER_NAME, "Customer"); }
+    public void setEmail(String email) { editor.putString(KEY_EMAIL, email).apply(); }
     public void setDeliveryLocation(String location) { editor.putString(KEY_DELIVERY_LOCATION, location).apply(); }
     public String getDeliveryLocation() { return pref.getString(KEY_DELIVERY_LOCATION, "Naya Nagar, Manjhanpur"); }
     public void setStoreLogoUrl(String url) { editor.putString(KEY_STORE_LOGO, url).apply(); }
@@ -146,6 +165,21 @@ public class SessionManager {
     public String getMobile() { return pref.getString(KEY_MOBILE, null); }
     public void setOnboardingCompleted(boolean completed) { editor.putBoolean(KEY_ONBOARDING_COMPLETED, completed).apply(); }
     public boolean isOnboardingCompleted() { return pref.getBoolean(KEY_ONBOARDING_COMPLETED, false); }
+    public void setReferralCode(String code) { editor.putString(KEY_REFERRAL_CODE, code).apply(); }
+    public String getReferralCode() {
+        String savedCode = pref.getString(KEY_REFERRAL_CODE, null);
+        if (savedCode != null) return savedCode;
+        // Generate code if not saved
+        String mobile = getMobile();
+        String newCode = "NM" + (mobile != null && mobile.length() >= 4 ? mobile.substring(mobile.length() - 4) : "MART") + "50";
+        setReferralCode(newCode);
+        return newCode;
+    }
+    public void setProfilePicUri(String uri) { editor.putString(KEY_PROFILE_PIC_URI, uri).apply(); }
+    public String getProfilePicUri() { return pref.getString(KEY_PROFILE_PIC_URI, null); }
+    
+    public void setFcmToken(String token) { editor.putString(KEY_FCM_TOKEN, token).apply(); }
+    public String getFcmToken() { return pref.getString(KEY_FCM_TOKEN, null); }
 
     public void logout() {
         editor.remove(KEY_IS_LOGGED_IN).remove(KEY_MOBILE).remove(KEY_EMAIL).remove(KEY_USER_ID)

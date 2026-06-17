@@ -27,9 +27,8 @@ public class ReferEarnActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        // Generate referral code based on mobile
-        String mobile = sessionManager.getMobile();
-        String referralCode = "NM" + (mobile != null && mobile.length() >= 4 ? mobile.substring(mobile.length() - 4) : "MART") + "50";
+        // Get referral code from SessionManager (generates if needed)
+        String referralCode = sessionManager.getReferralCode();
         binding.tvReferralCode.setText(referralCode);
 
         binding.ivCopyCode.setOnClickListener(v -> {

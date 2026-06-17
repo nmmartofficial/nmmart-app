@@ -146,6 +146,10 @@ public class SelfCheckoutCartActivity extends AppCompatActivity {
         orderData.put("payment_status", "paid");
         orderData.put("order_status", "completed");
 
+        // Award loyalty points: 1 point for every ₹10 spent
+        int pointsEarned = (int) (orderTotal / 10);
+        sessionManager.addLoyaltyPoints(pointsEarned);
+
         supabaseRepository.placeOrder(orderData, new retrofit2.Callback<Void>() {
             @Override
             public void onResponse(retrofit2.Call<Void> call, retrofit2.Response<Void> response) {

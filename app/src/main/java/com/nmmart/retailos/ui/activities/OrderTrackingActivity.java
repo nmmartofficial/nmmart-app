@@ -9,6 +9,9 @@ import com.nmmart.retailos.R;
 
 public class OrderTrackingActivity extends AppCompatActivity {
 
+    private TextView tvOrderNumber;
+    private TextView tvExpectedDelivery;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -20,8 +23,38 @@ public class OrderTrackingActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        // Update order status UI (for demo, we'll mark first 3 steps as completed)
-        updateStatusUI(3);
+        tvOrderNumber = findViewById(R.id.tvOrderNumber);
+        tvExpectedDelivery = findViewById(R.id.tvExpectedDelivery);
+
+        // Get data from intent
+        String orderId = getIntent().getStringExtra("order_id");
+        String orderStatus = getIntent().getStringExtra("order_status");
+        String expectedDelivery = getIntent().getStringExtra("expected_delivery");
+
+        // Set order number
+        if (orderId != null && !orderId.isEmpty()) {
+            tvOrderNumber.setText(getString(R.string.order_number_label) + (orderId.length() > 8 ? orderId.substring(0, 8) : orderId));
+        }
+
+        // Set expected delivery
+        if (expectedDelivery != null && !expectedDelivery.isEmpty()) {
+            tvExpectedDelivery.setText(getString(R.string.expected_delivery, expectedDelivery));
+        }
+
+        // Map order status to completed steps
+        int completedSteps = getCompletedStepsFromStatus(orderStatus);
+        updateStatusUI(completedSteps);
+    }
+
+    private int getCompletedStepsFromStatus(String status) {
+        if (status == null) return 1;
+        status = status.toLowerCase();
+        if (status.contains("pending")) return 1;
+        if (status.contains("processing")) return 2;
+        if (status.contains("packed")) return 3;
+        if (status.contains("shipped") || status.contains("out")) return 4;
+        if (status.contains("delivered")) return 5;
+        return 1;
     }
 
     private void updateStatusUI(int completedSteps) {

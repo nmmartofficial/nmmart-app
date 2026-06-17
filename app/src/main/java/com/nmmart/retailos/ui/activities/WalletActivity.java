@@ -23,6 +23,7 @@ public class WalletActivity extends AppCompatActivity {
     private SessionManager sessionManager;
     private SupabaseRepository repository;
     private TextView tvBalance;
+    private TextView tvLoyaltyPoints;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,7 +41,9 @@ public class WalletActivity extends AppCompatActivity {
         }
 
         tvBalance = findViewById(R.id.tvWalletBalance);
+        tvLoyaltyPoints = findViewById(R.id.tvLoyaltyPoints);
         updateBalanceUI();
+        updateLoyaltyPointsUI();
 
         findViewById(R.id.btnAddMoney).setOnClickListener(v -> {
             android.widget.EditText et = new android.widget.EditText(this);
@@ -70,14 +73,20 @@ public class WalletActivity extends AppCompatActivity {
         tvBalance.setText(PriceUtils.formatPrice(sessionManager.getWalletBalance()));
     }
 
+    private void updateLoyaltyPointsUI() {
+        tvLoyaltyPoints.setText(sessionManager.getLoyaltyPoints() + " Points");
+    }
+
     private void fetchWallet() {
         repository.getWallets(new Callback<List<WalletMaster>>() {
             @Override
             public void onResponse(@NonNull Call<List<WalletMaster>> call, @NonNull Response<List<WalletMaster>> response) {
                 if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
-                    double balance = response.body().get(0).currentBalance;
-                    sessionManager.setWalletBalance(balance);
+                    WalletMaster wallet = response.body().get(0);
+                    sessionManager.setWalletBalance(wallet.currentBalance);
+                    sessionManager.setLoyaltyPoints(wallet.loyaltyPoints);
                     updateBalanceUI();
+                    updateLoyaltyPointsUI();
                 }
             }
 

@@ -16,7 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/primary"
-            app:title="Order Tracking"
+            app:title="@string/order_tracking"
             app:titleTextColor="@color/white" />
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -29,6 +29,7 @@
         app:layout_constraintBottom_toBottomOf="parent">
 
         <TextView
+            android:id="@+id/tvOrderNumber"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Order #1234"
@@ -37,6 +38,7 @@
             android:textColor="@color/black" />
 
         <TextView
+            android:id="@+id/tvExpectedDelivery"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
@@ -73,7 +75,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:text="Order Placed"
+                    android:text="@string/status_order_placed"
                     android:textSize="16sp"
                     android:textColor="@color/slate" />
 
@@ -102,7 +104,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:text="Processing"
+                    android:text="@string/status_processing"
                     android:textSize="16sp"
                     android:textColor="@color/slate" />
 
@@ -131,7 +133,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:text="Packed"
+                    android:text="@string/status_packed"
                     android:textSize="16sp"
                     android:textColor="@color/slate" />
 
@@ -160,7 +162,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:text="Out for Delivery"
+                    android:text="@string/status_out_for_delivery"
                     android:textSize="16sp"
                     android:textColor="@color/slate" />
 
@@ -189,7 +191,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:text="Delivered"
+                    android:text="@string/status_delivered"
                     android:textSize="16sp"
                     android:textColor="@color/slate" />
 

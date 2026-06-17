@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.Build;
 import androidx.core.app.NotificationCompat;
 import com.nmmart.retailos.R;
+import com.nmmart.retailos.models.NotificationItem;
 import com.nmmart.retailos.ui.activities.MainActivity;
 import com.nmmart.retailos.ui.activities.OrderHistoryActivity;
 
@@ -33,6 +34,16 @@ public class NotificationHelper {
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true);
+
+        // Save to local storage
+        NotificationItem notificationItem = new NotificationItem(
+                String.valueOf(System.currentTimeMillis()),
+                title,
+                message,
+                System.currentTimeMillis(),
+                false
+        );
+        NotificationStorage.getInstance(context).saveNotification(notificationItem);
 
         notificationManager.notify((int) System.currentTimeMillis(), builder.build());
     }

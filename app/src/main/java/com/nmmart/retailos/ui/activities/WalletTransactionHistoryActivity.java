@@ -8,66 +8,55 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Toast;
-
+import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.google.android.material.appbar.MaterialToolbar;
 import com.nmmart.retailos.R;
-import com.nmmart.retailos.models.NotificationItem;
-import com.nmmart.retailos.ui.adapters.NotificationsAdapter;
-import com.nmmart.retailos.utils.NotificationStorage;
+import com.nmmart.retailos.ui.adapters.WalletTransactionAdapter;
+import com.nmmart.retailos.utils.WalletTransactionStorage;
 
-import java.util.List;
+public class WalletTransactionHistoryActivity extends AppCompatActivity {
 
-public class NotificationsActivity extends AppCompatActivity {
-
-    private RecyclerView rvNotifications;
+    private RecyclerView rvTransactions;
     private LinearLayout layoutEmptyState;
-    private NotificationsAdapter adapter;
-    private NotificationStorage notificationStorage;
+    private WalletTransactionAdapter adapter;
+    private WalletTransactionStorage storage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_notifications);
+        setContentView(R.layout.activity_wallet_transaction_history);
 
-        notificationStorage = NotificationStorage.getInstance(this);
+        storage = WalletTransactionStorage.getInstance(this);
 
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle(R.string.notifications);
         }
-        toolbar.setNavigationOnClickListener(v -> onBackPressed());
+        toolbar.setNavigationOnClickListener(v -> finish());
 
-        rvNotifications = findViewById(R.id.rvNotifications);
+        rvTransactions = findViewById(R.id.rvWalletTransactions);
         layoutEmptyState = findViewById(R.id.layoutEmptyState);
 
         setupRecyclerView();
-        loadNotifications();
+        loadTransactions();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        loadNotifications();
+        loadTransactions();
     }
 
     private void setupRecyclerView() {
-        adapter = new NotificationsAdapter(this, null);
-        adapter.setOnNotificationClickListener(item -> {
-            if (!item.isRead()) {
-                notificationStorage.markAsRead(item.getId());
-                loadNotifications();
-            }
-        });
-        rvNotifications.setLayoutManager(new LinearLayoutManager(this));
-        rvNotifications.setAdapter(adapter);
+        adapter = new WalletTransactionAdapter(this);
+        rvTransactions.setLayoutManager(new LinearLayoutManager(this));
+        rvTransactions.setAdapter(adapter);
         setupSwipeToDelete();
     }
     
@@ -81,11 +70,11 @@ public class NotificationsActivity extends AppCompatActivity {
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 int position = viewHolder.getAdapterPosition();
-                List<NotificationItem> items = notificationStorage.getNotifications();
-                NotificationItem item = items.get(position);
-                notificationStorage.deleteNotification(item.getId());
-                loadNotifications();
-                Toast.makeText(NotificationsActivity.this, "Notification deleted", Toast.LENGTH_SHORT).show();
+                List<com.nmmart.retailos.models.WalletTransaction> items = storage.getTransactions();
+                com.nmmart.retailos.models.WalletTransaction item = items.get(position);
+                storage.deleteTransaction(item.getId());
+                loadTransactions();
+                Toast.makeText(WalletTransactionHistoryActivity.this, "Transaction deleted", Toast.LENGTH_SHORT).show();
             }
             
             @Override
@@ -113,22 +102,18 @@ public class NotificationsActivity extends AppCompatActivity {
             }
         };
         
-        new ItemTouchHelper(callback).attachToRecyclerView(rvNotifications);
+        new ItemTouchHelper(callback).attachToRecyclerView(rvTransactions);
     }
 
-    private void loadNotifications() {
-        List<NotificationItem> notifications = notificationStorage.getNotifications();
-        updateUI(notifications);
-    }
-
-    private void updateUI(List<NotificationItem> notifications) {
-        if (notifications.isEmpty()) {
-            rvNotifications.setVisibility(View.GONE);
+    private void loadTransactions() {
+        List<com.nmmart.retailos.models.WalletTransaction> transactions = storage.getTransactions();
+        if (transactions.isEmpty()) {
             layoutEmptyState.setVisibility(View.VISIBLE);
+            rvTransactions.setVisibility(View.GONE);
         } else {
-            rvNotifications.setVisibility(View.VISIBLE);
             layoutEmptyState.setVisibility(View.GONE);
-            adapter.updateNotifications(notifications);
+            rvTransactions.setVisibility(View.VISIBLE);
+            adapter.updateTransactions(transactions);
         }
     }
 }

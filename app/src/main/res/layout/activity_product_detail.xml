@@ -251,7 +251,7 @@
                             android:id="@+id/tvAvgRating"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="4.5"
+                            android:text="0.0"
                             android:textSize="32sp"
                             android:textStyle="bold"
                             android:textColor="@color/primary" />
@@ -262,25 +262,21 @@
                             android:orientation="vertical"
                             android:layout_marginStart="12dp">
 
-                            <LinearLayout
+                            <RatingBar
+                                android:id="@+id/rbAvgRating"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:orientation="horizontal">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="★★★★☆"
-                                    android:textSize="20sp"
-                                    android:textColor="#FF9800" />
-
-                            </LinearLayout>
+                                style="?android:attr/ratingBarStyleSmall"
+                                android:numStars="5"
+                                android:stepSize="0.1"
+                                android:isIndicator="true" />
 
                             <TextView
+                                android:id="@+id/tvReviewCount"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
-                                android:text="128 reviews"
+                                android:text="0 reviews"
                                 android:textSize="14sp"
                                 android:textColor="@color/slate" />
 
@@ -294,39 +290,21 @@
                         android:layout_marginTop="16dp"
                         android:background="#E0E0E0" />
 
-                    <LinearLayout
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnAddReview"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:orientation="vertical">
+                        android:text="Write a Review"
+                        app:cornerRadius="12dp"
+                        android:backgroundTint="@color/primary" />
 
-                        <TextView
-                            android:id="@+id/tvReviewerName"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Amit Kumar"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/black" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="★★★★☆"
-                            android:textSize="16sp"
-                            android:textColor="#FF9800" />
-
-                        <TextView
-                            android:id="@+id/tvReviewText"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Bahut hi accha product hai! Delivery bhi time pe mil gayi!"
-                            android:textSize="14sp"
-                            android:textColor="@color/slate" />
-
-                    </LinearLayout>
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvProductReviews"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:nestedScrollingEnabled="false" />
 
                 </LinearLayout>
 

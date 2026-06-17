@@ -187,12 +187,15 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
         binding.sortingLayout.setOnClickListener(v -> showSortBottomSheet());
     }
     
+    private boolean filterInStockOnly = false;
+
     private void showSortBottomSheet() {
         BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
         View bottomSheetView = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_sort_filter, null);
         bottomSheetDialog.setContentView(bottomSheetView);
         
         RadioGroup radioGroupSort = bottomSheetView.findViewById(R.id.radioGroupSort);
+        android.widget.CheckBox checkInStock = bottomSheetView.findViewById(R.id.checkInStock);
         
         switch (selectedSortPosition) {
             case 0: radioGroupSort.check(R.id.radioRelevance); break;
@@ -200,6 +203,8 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
             case 2: radioGroupSort.check(R.id.radioPriceHighLow); break;
             case 3: radioGroupSort.check(R.id.radioDiscount); break;
         }
+
+        checkInStock.setChecked(filterInStockOnly);
         
         radioGroupSort.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.radioRelevance) selectedSortPosition = 0;
@@ -209,7 +214,9 @@ public class ProductListActivity extends BaseActivity implements ProductListAdap
         });
         
         bottomSheetView.findViewById(R.id.btnApplySort).setOnClickListener(v -> {
-            viewModel.sortProducts(selectedSortPosition);
+            filterInStockOnly = checkInStock.isChecked();
+            viewModel.setFilterInStockOnly(filterInStockOnly);
+            viewModel.applySortAndFilter(selectedSortPosition);
             bottomSheetDialog.dismiss();
         });
         

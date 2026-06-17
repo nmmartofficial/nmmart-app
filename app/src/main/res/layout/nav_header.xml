@@ -8,21 +8,40 @@
     android:padding="24dp"
     android:theme="@style/ThemeOverlay.AppCompat.Light">
 
-    <!-- Simple Text Logo -->
+    <!-- Profile Picture -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardNavProfilePic"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        app:cardCornerRadius="35dp"
+        app:cardElevation="2dp"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
+        <ImageView
+            android:id="@+id/ivNavProfilePic"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@android:drawable/ic_menu_myplaces"
+            android:padding="12dp"
+            app:tint="@color/primary"
+            android:scaleType="centerCrop"
+            android:contentDescription="@null" />
+    </com.google.android.material.card.MaterialCardView>
+
     <TextView
         android:id="@+id/ivNavLogo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="NM Mart"
-        android:textSize="36sp"
+        android:textSize="24sp"
         android:textStyle="bold"
-        android:textColor="#FFFFFF" />
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="12dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Shop More. Save More."
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="4dp"
         android:textSize="14sp"
         android:textColor="#F5F5F5" />
 

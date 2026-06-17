@@ -106,6 +106,16 @@
             android:parentActivityName=".ui.activities.MainActivity" />
 
         <activity
+            android:name=".ui.activities.WalletTransactionHistoryActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.ProfileActivity" />
+
+        <activity
+            android:name=".ui.activities.CouponsActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity" />
+
+        <activity
             android:name=".ui.activities.OrderHistoryActivity"
             android:exported="false"
             android:parentActivityName=".ui.activities.MainActivity" />

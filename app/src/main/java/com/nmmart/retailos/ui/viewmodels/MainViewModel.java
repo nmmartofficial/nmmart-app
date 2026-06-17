@@ -17,6 +17,7 @@ import com.nmmart.retailos.models.Category;
 import com.nmmart.retailos.models.Product;
 import com.nmmart.retailos.models.WalletMaster;
 import com.nmmart.retailos.utils.NetworkUtils;
+import com.nmmart.retailos.utils.OfflineStorage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,9 +72,52 @@ public class MainViewModel extends AndroidViewModel {
     public LiveData<List<Product>> getNewStockProducts() { return newArrivals; }
 
     public void fetchHomeData() {
+        OfflineStorage offlineStorage = OfflineStorage.getInstance(getApplication());
+        
+        // First try to load from offline
+        List<Banner> offlineBanners = offlineStorage.getBanners();
+        if (!offlineBanners.isEmpty()) {
+            banners.setValue(offlineBanners);
+            Log.d(TAG, "Banners loaded from offline storage");
+        }
+        
+        List<Category> offlineCategories = offlineStorage.getCategories();
+        if (!offlineCategories.isEmpty()) {
+            categories.setValue(offlineCategories);
+            Log.d(TAG, "Categories loaded from offline storage");
+        }
+        
+        List<Product> offlineTrending = offlineStorage.getProducts("trending");
+        if (!offlineTrending.isEmpty()) {
+            trendingProducts.setValue(offlineTrending);
+        }
+        
+        List<Product> offlineEveryday = offlineStorage.getProducts("everyday");
+        if (!offlineEveryday.isEmpty()) {
+            everydayEssentials.setValue(offlineEveryday);
+        }
+        
+        List<Product> offlineDiscounted = offlineStorage.getProducts("discounted");
+        if (!offlineDiscounted.isEmpty()) {
+            discountedProducts.setValue(offlineDiscounted);
+        }
+        
+        List<Product> offlineNewArrivals = offlineStorage.getProducts("new_arrivals");
+        if (!offlineNewArrivals.isEmpty()) {
+            newArrivals.setValue(offlineNewArrivals);
+        }
+        
+        List<Product> offlineFeatured = offlineStorage.getProducts("featured");
+        if (!offlineFeatured.isEmpty()) {
+            featuredProducts.setValue(offlineFeatured);
+        }
+
         if (!NetworkUtils.isNetworkAvailable(getApplication())) {
-            Log.w(TAG, "No internet connection");
-            errorMessage.setValue("No internet connection.");
+            Log.w(TAG, "No internet connection, using offline data");
+            if (categories.getValue() == null || categories.getValue().isEmpty()) {
+                errorMessage.setValue("No internet connection and no offline data available.");
+            }
+            isLoading.setValue(false);
             return;
         }
 
@@ -122,7 +166,8 @@ public class MainViewModel extends AndroidViewModel {
                     // Sort banners by position in ascending order
                     java.util.Collections.sort(sortedBanners, (b1, b2) -> Integer.compare(b1.position, b2.position));
                     banners.setValue(sortedBanners);
-                    Log.d(TAG, "Banners fetched and sorted successfully");
+                    offlineStorage.saveBanners(sortedBanners);
+                    Log.d(TAG, "Banners fetched, sorted, and saved to offline storage successfully");
                 } else {
                     Log.e(TAG, "Failed to fetch banners: " + response.code());
                 }
@@ -135,9 +180,10 @@ public class MainViewModel extends AndroidViewModel {
         enqueueCall(repository.getCategoriesCall(), new Callback<List<Category>>() {
             @Override
             public void onResponse(@NonNull Call<List<Category>> call, @NonNull Response<List<Category>> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     categories.setValue(response.body());
-                    Log.d(TAG, "Categories fetched successfully");
+                    offlineStorage.saveCategories(response.body());
+                    Log.d(TAG, "Categories fetched and saved to offline storage successfully");
                 } else {
                     Log.e(TAG, "Failed to fetch categories: " + response.code());
                 }
@@ -167,15 +213,18 @@ public class MainViewModel extends AndroidViewModel {
     }
 
     private void fetchSectionsWithDelay() {
+        OfflineStorage offlineStorage = OfflineStorage.getInstance(getApplication());
+        
         // Fetch trending products first (sets isLoading to false when done)
         handler.postDelayed(() -> {
             Log.d(TAG, "Fetching trending products");
             enqueueCall(repository.getTrendingProductsCall(10), new Callback<List<Product>>() {
                 @Override
                 public void onResponse(@NonNull Call<List<Product>> call, @NonNull Response<List<Product>> response) {
-                    if (response.isSuccessful()) {
+                    if (response.isSuccessful() && response.body() != null) {
                         trendingProducts.setValue(response.body());
-                        Log.d(TAG, "Trending products fetched successfully");
+                        offlineStorage.saveProducts("trending", response.body());
+                        Log.d(TAG, "Trending products fetched and saved to offline storage successfully");
                     } else {
                         Log.e(TAG, "Failed to fetch trending products: " + response.code());
                     }
@@ -194,9 +243,10 @@ public class MainViewModel extends AndroidViewModel {
             enqueueCall(repository.getProductsSortedCall(null, null, "sale_rate.asc", 10, 0), new Callback<List<Product>>() {
                 @Override
                 public void onResponse(@NonNull Call<List<Product>> call, @NonNull Response<List<Product>> response) {
-                    if (response.isSuccessful()) {
+                    if (response.isSuccessful() && response.body() != null) {
                         everydayEssentials.setValue(response.body());
-                        Log.d(TAG, "Everyday essentials fetched successfully");
+                        offlineStorage.saveProducts("everyday", response.body());
+                        Log.d(TAG, "Everyday essentials fetched and saved to offline storage successfully");
                     } else {
                         Log.e(TAG, "Failed to fetch everyday essentials: " + response.code());
                     }
@@ -213,9 +263,10 @@ public class MainViewModel extends AndroidViewModel {
             enqueueCall(repository.getDiscountProductsCall(10), new Callback<List<Product>>() {
                 @Override
                 public void onResponse(@NonNull Call<List<Product>> call, @NonNull Response<List<Product>> response) {
-                    if (response.isSuccessful()) {
+                    if (response.isSuccessful() && response.body() != null) {
                         discountedProducts.setValue(response.body());
-                        Log.d(TAG, "Discounted products fetched successfully");
+                        offlineStorage.saveProducts("discounted", response.body());
+                        Log.d(TAG, "Discounted products fetched and saved to offline storage successfully");
                     } else {
                         Log.e(TAG, "Failed to fetch discounted products: " + response.code());
                     }
@@ -232,9 +283,10 @@ public class MainViewModel extends AndroidViewModel {
             enqueueCall(repository.getNewArrivalProductsCall(10), new Callback<List<Product>>() {
                 @Override
                 public void onResponse(@NonNull Call<List<Product>> call, @NonNull Response<List<Product>> response) {
-                    if (response.isSuccessful()) {
+                    if (response.isSuccessful() && response.body() != null) {
                         newArrivals.setValue(response.body());
-                        Log.d(TAG, "New arrivals fetched successfully");
+                        offlineStorage.saveProducts("new_arrivals", response.body());
+                        Log.d(TAG, "New arrivals fetched and saved to offline storage successfully");
                     } else {
                         Log.e(TAG, "Failed to fetch new arrivals: " + response.code());
                     }
@@ -251,9 +303,10 @@ public class MainViewModel extends AndroidViewModel {
             enqueueCall(repository.getFeaturedProductsCall(10), new Callback<List<Product>>() {
                 @Override
                 public void onResponse(@NonNull Call<List<Product>> call, @NonNull Response<List<Product>> response) {
-                    if (response.isSuccessful()) {
+                    if (response.isSuccessful() && response.body() != null) {
                         featuredProducts.setValue(response.body());
-                        Log.d(TAG, "Featured products fetched successfully");
+                        offlineStorage.saveProducts("featured", response.body());
+                        Log.d(TAG, "Featured products fetched and saved to offline storage successfully");
                     } else {
                         Log.e(TAG, "Failed to fetch featured products: " + response.code());
                     }

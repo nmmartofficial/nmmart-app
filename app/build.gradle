@@ -39,6 +39,7 @@ android {
         buildConfigField "String", "SUPABASE_KEY", "\"${getSecret('SUPABASE_KEY')}\""
         buildConfigField "String", "SUPABASE_AUTH_URL", "\"${getSecret('SUPABASE_AUTH_URL')}\""
         buildConfigField "String", "SUPABASE_FUNCTIONS_URL", "\"${getSecret('SUPABASE_FUNCTIONS_URL')}\""
+        buildConfigField "String", "RAZORPAY_KEY_ID", "\"${getSecret('RAZORPAY_KEY_ID')}\""
     }
 
     buildTypes {
@@ -102,6 +103,9 @@ dependencies {
 
     // Barcode Scanner
     implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
+
+    // Razorpay
+    implementation 'com.razorpay:checkout:1.6.36'
 
     // Material Icons Extended
     implementation 'androidx.compose.material:material-icons-extended:1.6.0'

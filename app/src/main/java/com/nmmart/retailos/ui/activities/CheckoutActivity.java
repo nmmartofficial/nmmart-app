@@ -1,6 +1,7 @@
 package com.nmmart.retailos.ui.activities;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -17,7 +18,13 @@ import com.nmmart.retailos.ui.adapters.DateAdapter;
 import com.nmmart.retailos.ui.adapters.TimeSlotAdapter;
 import com.nmmart.retailos.ui.adapters.PaymentMethodAdapter;
 import com.nmmart.retailos.models.PaymentMethod;
+import com.nmmart.retailos.models.WalletTransaction;
+import com.nmmart.retailos.utils.WalletTransactionStorage;
 import com.google.gson.Gson;
+import com.razorpay.Checkout;
+import com.razorpay.PaymentResultListener;
+import com.nmmart.retailos.BuildConfig;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -29,7 +36,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class CheckoutActivity extends BaseActivity {
+public class CheckoutActivity extends BaseActivity implements PaymentResultListener {
 
     private SupabaseRepository repository;
     private List<PincodeMaster> pincodes;
@@ -58,6 +65,8 @@ public class CheckoutActivity extends BaseActivity {
         repository = new SupabaseRepository();
         cartManager = CartManager.getInstance(this);
         gson = new Gson();
+
+        Checkout.preload(getApplicationContext());
 
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -94,12 +103,6 @@ public class CheckoutActivity extends BaseActivity {
         });
 
         btnPlaceOrder.setOnClickListener(v -> {
-            if (!sessionManager.isLoggedIn()) {
-                Toast.makeText(this, "Please login to place your order!", Toast.LENGTH_SHORT).show();
-                startActivity(new Intent(this, LoginActivity.class));
-                return;
-            }
-
             if (isPlacingOrder) {
                 Toast.makeText(this, "Please wait, placing your order...", Toast.LENGTH_SHORT).show();
                 return;
@@ -108,8 +111,29 @@ public class CheckoutActivity extends BaseActivity {
             if (!isOrderValid()) {
                 return;
             }
+            
+            if (selectedPaymentMethod.startsWith("Wallet")) {
+                // Deduct from wallet and save transaction
+                WalletTransactionStorage txStorage = WalletTransactionStorage.getInstance(this);
+                WalletTransaction tx = new WalletTransaction(
+                    String.valueOf(System.currentTimeMillis()),
+                    "debit",
+                    toPay,
+                    "Order Payment",
+                    System.currentTimeMillis(),
+                    false
+                );
+                txStorage.saveTransaction(tx);
 
-            placeOrder(selectedAddress.fullName, selectedAddress.houseNo, selectedAddress.landmark != null ? selectedAddress.landmark : "", selectedAddress.pincode, toPay);
+                double newBalance = sessionManager.getWalletBalance() - toPay;
+                sessionManager.setWalletBalance(newBalance);
+                Toast.makeText(this, "Wallet deducted: ₹" + String.format("%.2f", toPay), Toast.LENGTH_SHORT).show();
+                placeOrder(selectedAddress.fullName, selectedAddress.houseNo, selectedAddress.landmark != null ? selectedAddress.landmark : "", selectedAddress.pincode, toPay, null);
+            } else if (selectedPaymentMethod.equals("Cash on Delivery")) {
+                placeOrder(selectedAddress.fullName, selectedAddress.houseNo, selectedAddress.landmark != null ? selectedAddress.landmark : "", selectedAddress.pincode, toPay, null);
+            } else {
+                startRazorpayPayment();
+            }
         });
     }
 
@@ -139,13 +163,19 @@ public class CheckoutActivity extends BaseActivity {
         
         List<PaymentMethod> paymentMethods = new ArrayList<>();
         paymentMethods.add(new PaymentMethod("Cash on Delivery", R.drawable.ic_cod, false));
-        paymentMethods.add(new PaymentMethod("PhonePe", R.drawable.ic_phonepe, true));
-        paymentMethods.add(new PaymentMethod("Google Pay", R.drawable.ic_gpay, true));
-        paymentMethods.add(new PaymentMethod("Paytm", R.drawable.ic_paytm, true));
+        paymentMethods.add(new PaymentMethod("Wallet (₹" + String.format("%.0f", sessionManager.getWalletBalance()) + ")", R.drawable.ic_wallet, sessionManager.getWalletBalance() < toPay));
+        paymentMethods.add(new PaymentMethod("UPI", R.drawable.ic_upi, false));
+        paymentMethods.add(new PaymentMethod("PhonePe", R.drawable.ic_phonepe, false));
+        paymentMethods.add(new PaymentMethod("Google Pay", R.drawable.ic_gpay, false));
+        paymentMethods.add(new PaymentMethod("Paytm", R.drawable.ic_paytm, false));
         
         PaymentMethodAdapter adapter = new PaymentMethodAdapter(this, paymentMethods, method -> {
             if (method.isComingSoon) {
-                Toast.makeText(this, method.name + " integration coming soon!", Toast.LENGTH_SHORT).show();
+                if (method.name.startsWith("Wallet")) {
+                    Toast.makeText(this, "Insufficient wallet balance!", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, method.name + " integration coming soon!", Toast.LENGTH_SHORT).show();
+                }
                 return;
             }
             selectedPaymentMethod = method.name;
@@ -154,7 +184,12 @@ public class CheckoutActivity extends BaseActivity {
     }
 
     private void fetchAddresses() {
-        if (!sessionManager.isLoggedIn()) return;
+        if (!sessionManager.isLoggedIn()) {
+            // For guest checkout, show add address button
+            layoutSelectedAddress.setVisibility(android.view.View.GONE);
+            btnAddAddress.setVisibility(android.view.View.VISIBLE);
+            return;
+        }
         
         repository.getUserAddresses(sessionManager.getUserId(), new Callback<List<com.nmmart.retailos.models.Address>>() {
             @Override
@@ -302,8 +337,69 @@ public class CheckoutActivity extends BaseActivity {
             public void onFailure(Call<List<PincodeMaster>> call, Throwable t) {}
         });
     }
+    
+    private void startRazorpayPayment() {
+        Checkout checkout = new Checkout();
+        checkout.setKeyID(BuildConfig.RAZORPAY_KEY_ID);
+        checkout.setImage(R.drawable.ic_launcher_foreground);
 
-    private void placeOrder(String name, String house, String landmark, String pin, double toPay) {
+        try {
+            JSONObject options = new JSONObject();
+            options.put("name", "NM Mart");
+            options.put("description", "Order Payment");
+            options.put("currency", "INR");
+            options.put("amount", (int) (toPay * 100)); // Amount in paise
+            options.put("prefill.email", sessionManager.getEmail());
+            options.put("prefill.contact", sessionManager.getMobile());
+            
+            JSONObject retryObj = new JSONObject();
+            retryObj.put("enabled", true);
+            retryObj.put("max_count", 4);
+            options.put("retry", retryObj);
+
+            checkout.open(this, options);
+        } catch (Exception e) {
+            Log.e("CheckoutActivity", "Error in starting Razorpay Checkout", e);
+            Toast.makeText(this, "Error in payment: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onPaymentSuccess(String razorpayPaymentID) {
+        Toast.makeText(this, "Payment Successful: " + razorpayPaymentID, Toast.LENGTH_SHORT).show();
+        placeOrder(selectedAddress.fullName, selectedAddress.houseNo, selectedAddress.landmark != null ? selectedAddress.landmark : "", selectedAddress.pincode, toPay, razorpayPaymentID);
+    }
+
+    @Override
+    public void onPaymentError(int code, String response) {
+        try {
+            Toast.makeText(this, "Payment failed: " + code + " " + response, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Log.e("CheckoutActivity", "Exception in onPaymentError", e);
+        }
+    }
+
+    private void startUpiPayment() {
+        String upiId = "nmmart@upi";
+        String merchantName = "NM Mart";
+        String transactionNote = "Order Payment";
+        String amount = String.format("%.2f", toPay);
+        
+        Uri upiUri = Uri.parse("upi://pay?pa=" + upiId +
+            "&pn=" + Uri.encode(merchantName) +
+            "&tn=" + Uri.encode(transactionNote) +
+            "&am=" + amount +
+            "&cu=INR");
+            
+        Intent upiIntent = new Intent(Intent.ACTION_VIEW, upiUri);
+        try {
+            startActivity(upiIntent);
+        } catch (Exception e) {
+            Toast.makeText(this, "No UPI app found on device!", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void placeOrder(String name, String house, String landmark, String pin, double toPay, String razorpayPaymentId) {
         // Pincode Verification
         boolean isServiceable = true;
         if (pincodes != null && !pincodes.isEmpty()) {
@@ -343,13 +439,19 @@ public class CheckoutActivity extends BaseActivity {
         orderData.put("delivery_date", selectedDate);
         orderData.put("delivery_time", selectedTimeSlot);
         orderData.put("payment_method", selectedPaymentMethod);
+        if (razorpayPaymentId != null) {
+            orderData.put("payment_id", razorpayPaymentId);
+            orderData.put("status", "Confirmed");
+        } else {
+            orderData.put("status", "Pending");
+        }
+        
         String userIdentifier = sessionManager.getMobile();
         if (userIdentifier == null || userIdentifier.isEmpty()) {
             userIdentifier = sessionManager.getEmail();
         }
         orderData.put("user_mobile", userIdentifier);
         orderData.put("total_amount", toPay);
-        orderData.put("status", "Pending");
         orderData.put("items", gson.toJson(orderItems));
         orderData.put("user_id", sessionManager.getUserId());
 
@@ -361,8 +463,24 @@ public class CheckoutActivity extends BaseActivity {
                 btnPlaceOrder.setEnabled(true);
                 if (response.isSuccessful()) {
                     double cashback = itemsTotal * (cartManager.getCashbackPercentage() / 100.0);
+                    if (cashback > 0) {
+                    WalletTransactionStorage txStorage = WalletTransactionStorage.getInstance(CheckoutActivity.this);
+                    WalletTransaction cashbackTx = new WalletTransaction(
+                            String.valueOf(System.currentTimeMillis()),
+                            "credit",
+                            cashback,
+                            "Cashback on Order",
+                            System.currentTimeMillis(),
+                            false
+                    );
+                    txStorage.saveTransaction(cashbackTx);
+                }
                     double newWalletBalance = sessionManager.getWalletBalance() + cashback;
                     sessionManager.setWalletBalance(newWalletBalance);
+                    
+                    // Award loyalty points: 1 point for every ₹10 spent
+                    int pointsEarned = (int) (itemsTotal / 10);
+                    sessionManager.addLoyaltyPoints(pointsEarned);
                     
                     // Update wallet balance in Supabase
                     repository.updateWalletBalance(sessionManager.getUserId(), newWalletBalance, new Callback<Void>() {
