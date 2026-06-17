@@ -1,7 +1,12 @@
 package com.nmmart.retailos.ui.activities;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -13,6 +18,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -24,10 +31,16 @@ import com.nmmart.retailos.databinding.ActivityOrderHistoryBinding;
 import com.nmmart.retailos.databinding.ItemOrderBinding;
 import com.nmmart.retailos.models.Order;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -35,6 +48,7 @@ import retrofit2.Response;
 
 public class OrderHistoryActivity extends BaseActivity {
 
+    private static final int STORAGE_PERMISSION_CODE = 101;
     private ActivityOrderHistoryBinding binding;
     private SupabaseRepository repository;
     private List<Order> originalOrdersList = new ArrayList<>();
@@ -292,6 +306,11 @@ public class OrderHistoryActivity extends BaseActivity {
                 intent.putExtra("expected_delivery", order.expectedDelivery != null ? order.expectedDelivery : "Soon");
                 startActivity(intent);
             });
+            
+            // Download invoice
+            holder.binding.btnDownloadInvoice.setOnClickListener(v -> {
+                downloadInvoice(order);
+            });
 
             // Timeline logic
             String status = orderStatusValue != null ? orderStatusValue.toLowerCase() : "pending";
@@ -406,6 +425,65 @@ public class OrderHistoryActivity extends BaseActivity {
             public ViewHolder(@NonNull ItemOrderBinding binding) {
                 super(binding.getRoot());
                 this.binding = binding;
+            }
+        }
+    }
+
+    private void downloadInvoice(Order order) {
+        // Check storage permission
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, STORAGE_PERMISSION_CODE);
+                return;
+            }
+        }
+
+        try {
+            // Generate invoice text
+            StringBuilder invoiceText = new StringBuilder();
+            invoiceText.append("=====================================\n");
+            invoiceText.append("          NM MART INVOICE          \n");
+            invoiceText.append("=====================================\n");
+            invoiceText.append("Order ID: ").append(order.id).append("\n");
+            invoiceText.append("Date: ").append(order.createdAt != null ? order.createdAt.substring(0, 10) : "").append("\n");
+            invoiceText.append("Customer: ").append(sessionManager.getUserName()).append("\n");
+            invoiceText.append("-------------------------------------\n");
+            invoiceText.append("Items: ").append(order.itemsSummary != null ? order.itemsSummary : "").append("\n");
+            invoiceText.append("-------------------------------------\n");
+            invoiceText.append("Total: ₹").append(String.format("%.0f", order.totalAmount != null ? order.totalAmount : 0.0)).append("\n");
+            invoiceText.append("Payment Method: ").append(order.paymentMode != null ? order.paymentMode : "Cash on Delivery").append("\n");
+            invoiceText.append("Status: ").append(order.orderStatus != null ? order.orderStatus : order.status).append("\n");
+            invoiceText.append("=====================================\n");
+            invoiceText.append("Thank you for shopping with NM Mart!\n");
+            invoiceText.append("=====================================\n");
+
+            // Save to Downloads
+            String fileName = "NM_Mart_Invoice_" + order.id.substring(0, Math.min(8, order.id.length())) + ".txt";
+            File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            if (!downloadsDir.exists()) {
+                downloadsDir.mkdirs();
+            }
+            File invoiceFile = new File(downloadsDir, fileName);
+
+            FileOutputStream fos = new FileOutputStream(invoiceFile);
+            OutputStreamWriter writer = new OutputStreamWriter(fos);
+            writer.write(invoiceText.toString());
+            writer.close();
+            fos.close();
+
+            Toast.makeText(this, "Invoice saved to Downloads: " + fileName, Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            Log.e("InvoiceError", "Error saving invoice", e);
+            Toast.makeText(this, "Failed to download invoice: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == STORAGE_PERMISSION_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Permission granted! Try again to download invoice.", Toast.LENGTH_SHORT).show();
             }
         }
     }

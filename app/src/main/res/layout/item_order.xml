@@ -171,6 +171,19 @@
             android:layout_marginTop="8dp">
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDownloadInvoice"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="INVOICE"
+                android:textColor="@color/primary"
+                app:strokeColor="@color/primary"
+                app:cornerRadius="12dp"
+                android:icon="@android:drawable/ic_menu_save"
+                app:iconGravity="textStart"
+                app:iconTint="@color/primary" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnOrderAgain"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="wrap_content"
@@ -179,6 +192,7 @@
                 android:textColor="@color/primary"
                 app:strokeColor="@color/primary"
                 app:cornerRadius="12dp"
+                android:layout_marginStart="8dp"
                 android:visibility="gone" />
 
             <com.google.android.material.button.MaterialButton
