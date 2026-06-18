@@ -398,18 +398,9 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     }
 
     private void fetchProductByBarcode(String barcode) {
-        viewModel.fetchProductByBarcode(barcode, product -> {
-            if (product != null) {
-                if (SelfCheckoutCartManager.getInstance(MainActivity.this).addItem(product)) {
-                    Toast.makeText(MainActivity.this, getString(R.string.added_to_cart, product.getName()), Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(MainActivity.this, SelfCheckoutCartActivity.class));
-                } else {
-                    Toast.makeText(MainActivity.this, R.string.out_of_stock, Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                Toast.makeText(MainActivity.this, R.string.product_not_found, Toast.LENGTH_SHORT).show();
-            }
-        });
+        Intent intent = new Intent(this, ProductListActivity.class);
+        intent.putExtra("SEARCH_QUERY", barcode);
+        startActivity(intent);
     }
 
     private void openProductList(Category category) {
@@ -463,6 +454,18 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private void updateCartBadge() {
         com.nmmart.retailos.data.CartManager cartManager = com.nmmart.retailos.data.CartManager.getInstance(this);
         int cartCount = cartManager.getCartCount();
+        
+        // Update the header cart badge
+        if (binding.tvCartBadge != null) {
+            if (cartCount > 0) {
+                binding.tvCartBadge.setText(String.valueOf(cartCount));
+                binding.tvCartBadge.setVisibility(View.VISIBLE);
+            } else {
+                binding.tvCartBadge.setVisibility(View.GONE);
+            }
+        }
+        
+        // Also update the bottom navigation badge (optional, but keep it for consistency)
         MenuItem cartItem = binding.bottomNavigation.getMenu().findItem(R.id.nav_cart);
         if (cartItem != null) {
             if (cartCount > 0) {
