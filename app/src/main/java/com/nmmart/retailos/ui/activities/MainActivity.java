@@ -450,53 +450,52 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             shareIntent.setType("text/plain");
             shareIntent.putExtra(Intent.EXTRA_TEXT, getString(R.string.sharing_msg));
             shareIntent.setPackage("com.whatsapp");
-            try {
-                startActivity(shareIntent);
-            } catch (Exception e) {
-                // Agar WhatsApp nahi hai toh normal share khulega
-                shareIntent.setPackage(null);
-                startActivity(Intent.createChooser(shareIntent, "Share via"));
-            }
-        } else if (id == R.id.nav_logout) {
-            new androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("Logout")
-                .setMessage("Kya aap logout karna chahte hain?")
-                .setPositiveButton("Haan", (dialog, which) -> {
-                    sessionManager.logout();
-                    Intent intent = new Intent(this, LoginActivity.class);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    startActivity(intent);
-                    finish();
-                })
-                .setNegativeButton("Nahi", null)
-                .show();
-        }
-
-        binding.drawerLayout.closeDrawer(GravityCompat.START);
-        return true;
-    }
-
-    public void updateCartBadge() {
-        int count = com.nmmart.retailos.data.CartManager.getInstance(this).getCartCount();
-        if (binding.tvCartBadge != null) {
-            if (count > 0) {
-                binding.tvCartBadge.setText(String.valueOf(count));
-                binding.tvCartBadge.setVisibility(View.VISIBLE);
-            } else {
-                binding.tvCartBadge.setVisibility(View.GONE);
-            }
-        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        updateNavHeader();
-        updateCartBadge();
-        loadRecentlyViewed();
-    }
-
-    protected void logDebug(String msg) { android.util.Log.d("NM_MART", msg); } 
-    protected void logError(String msg, Exception e) { android.util.Log.e("NM_MART", msg, e); } 
-
+            try { 
+                startActivity(shareIntent); 
+            } catch (Exception e) { 
+                // Agar WhatsApp nahi hai toh normal share khulega 
+                shareIntent.setPackage(null); 
+                startActivity(Intent.createChooser(shareIntent, "Share via")); 
+            } 
+        } else if (id == R.id.nav_logout) { 
+            sessionManager.logout(); 
+            Intent intent = new Intent(this, LoginActivity.class); 
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); 
+            startActivity(intent); 
+            finish(); 
+        } 
+ 
+        binding.drawerLayout.closeDrawer(GravityCompat.START); 
+        return true; 
+    } 
+ 
+    // --- Missing Utility Methods --- 
+ 
+    public void updateCartBadge() { 
+        int count = com.nmmart.retailos.data.CartManager.getInstance(this).getCartCount(); 
+        if (count > 0) { 
+            binding.tvCartBadge.setText(String.valueOf(count)); 
+            binding.tvCartBadge.setVisibility(View.VISIBLE); 
+        } else { 
+            binding.tvCartBadge.setVisibility(View.GONE); 
+        } 
+    } 
+ 
+    @Override 
+    protected void onResume() { 
+        super.onResume(); 
+        // Jab user dusri activity se wapas aaye toh header aur badge refresh ho 
+        updateNavHeader(); 
+        updateCartBadge(); 
+        loadRecentlyViewed(); 
+    } 
+ 
+    protected void logDebug(String msg) { 
+        android.util.Log.d("NM_MART", msg); 
+    } 
+ 
+    protected void logError(String msg, Exception e) { 
+        android.util.Log.e("NM_MART", msg, e); 
+    } 
+ 
 }
