@@ -313,16 +313,26 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     }
 
     private void setupObservers() {
+        // 1. App Configuration Observer (Theme & Style)
         viewModel.getAppConfig().observe(this, config -> {
             if (config != null) {
                 themeManager.setAppConfig(config);
                 applyTheme();
-                if (categoryAdapter != null) binding.rvCategories.setAdapter(categoryAdapter);
+                // Sirf refresh ke liye adapter notify karein
+                if (categoryAdapter != null) {
+                    categoryAdapter.notifyDataSetChanged();
+                }
             }
         });
 
-        viewModel.getCategories().observe(this, cats -> { if (cats != null) categoryAdapter.setCategories(cats); });
+        // 2. Categories Observer
+        viewModel.getCategories().observe(this, cats -> {
+            if (cats != null) {
+                categoryAdapter.setCategories(cats);
+            }
+        });
         
+        // 3. Trending Products Observer
         viewModel.getTrendingProducts().observe(this, products -> {
             if (products != null) {
                 trendingAdapter.setProducts(products);
@@ -330,6 +340,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             }
         });
 
+        // 4. Loading State Observer
         viewModel.getIsLoading().observe(this, isLoading -> {
             if (isLoading != null && isLoading) {
                 binding.nestedScrollView.setVisibility(View.GONE);
@@ -339,8 +350,11 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             }
         });
 
+        // 5. Error Message Observer
         viewModel.getErrorMessage().observe(this, msg -> {
-            if (msg != null) Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+            if (msg != null) {
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+            }
         });
     }
 
@@ -436,103 +450,53 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             shareIntent.setType("text/plain");
             shareIntent.putExtra(Intent.EXTRA_TEXT, getString(R.string.sharing_msg));
             shareIntent.setPackage("com.whatsapp");
-            try { startActivity(shareIntent); } catch (Exception e) {
+            try {
+                startActivity(shareIntent);
+            } catch (Exception e) {
+                // Agar WhatsApp nahi hai toh normal share khulega
                 shareIntent.setPackage(null);
                 startActivity(Intent.createChooser(shareIntent, "Share via"));
             }
-        } else if (id == R.id.nav_logout && sessionManager.isLoggedIn()) {
-            sessionManager.logout();
-            Intent intent = new Intent(this, LoginActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            finish();
+        } else if (id == R.id.nav_logout) {
+            new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Logout")
+                .setMessage("Kya aap logout karna chahte hain?")
+                .setPositiveButton("Haan", (dialog, which) -> {
+                    sessionManager.logout();
+                    Intent intent = new Intent(this, LoginActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                    finish();
+                })
+                .setNegativeButton("Nahi", null)
+                .show();
         }
+
         binding.drawerLayout.closeDrawer(GravityCompat.START);
         return true;
     }
 
-    private void updateCartBadge() {
-        com.nmmart.retailos.data.CartManager cartManager = com.nmmart.retailos.data.CartManager.getInstance(this);
-        int cartCount = cartManager.getCartCount();
-        
-        // Update the header cart badge
+    public void updateCartBadge() {
+        int count = com.nmmart.retailos.data.CartManager.getInstance(this).getCartCount();
         if (binding.tvCartBadge != null) {
-            if (cartCount > 0) {
-                binding.tvCartBadge.setText(String.valueOf(cartCount));
+            if (count > 0) {
+                binding.tvCartBadge.setText(String.valueOf(count));
                 binding.tvCartBadge.setVisibility(View.VISIBLE);
             } else {
                 binding.tvCartBadge.setVisibility(View.GONE);
             }
         }
-        
-        // Also update the bottom navigation badge (optional, but keep it for consistency)
-        MenuItem cartItem = binding.bottomNavigation.getMenu().findItem(R.id.nav_cart);
-        if (cartItem != null) {
-            if (cartCount > 0) {
-                cartItem.setActionView(R.layout.badge_layout);
-                View badgeView = cartItem.getActionView();
-                if (badgeView != null) {
-                    TextView badgeText = badgeView.findViewById(android.R.id.text1);
-                    if (badgeText != null) badgeText.setText(String.valueOf(cartCount));
-                    badgeView.setOnClickListener(v -> onNavigationItemSelected(cartItem));
-                }
-            } else {
-                cartItem.setActionView(null);
-            }
-        }
-    }
-    
-    private void updateNotificationBadge() {
-        com.nmmart.retailos.utils.NotificationStorage storage = com.nmmart.retailos.utils.NotificationStorage.getInstance(this);
-        int unreadCount = 0;
-        for (com.nmmart.retailos.models.NotificationItem item : storage.getNotifications()) {
-            if (!item.isRead()) {
-                unreadCount++;
-            }
-        }
-        // Check if we need to add badge to drawer menu
-        com.google.android.material.navigation.NavigationView navView = binding.navView;
-        if (navView != null) {
-            MenuItem notifItem = navView.getMenu().findItem(R.id.nav_notifications);
-            if (notifItem != null) {
-                if (unreadCount > 0) {
-                    notifItem.setActionView(R.layout.badge_layout);
-                    View badgeView = notifItem.getActionView();
-                    if (badgeView != null) {
-                        TextView badgeText = badgeView.findViewById(android.R.id.text1);
-                        if (badgeText != null) badgeText.setText(String.valueOf(unreadCount));
-                        badgeView.setOnClickListener(v -> onNavigationItemSelected(notifItem));
-                    }
-                } else {
-                    notifItem.setActionView(null);
-                }
-            }
-        }
     }
 
-    @Override protected void onPause() {
-        logDebug("onPause: start");
-        super.onPause();
-        logDebug("onPause: end");
-    }
-    @Override protected void onResume() {
-        long startTime = System.currentTimeMillis();
-        logDebug("onResume: start");
+    @Override
+    protected void onResume() {
         super.onResume();
-        logDebug("onResume: after super.onResume (" + (System.currentTimeMillis() - startTime) + "ms)");
-        logDebug("onResume: updateNavHeader start");
         updateNavHeader();
-        logDebug("onResume: updateNavHeader end (" + (System.currentTimeMillis() - startTime) + "ms)");
-        logDebug("onResume: updateCartBadge start");
         updateCartBadge();
-        logDebug("onResume: updateCartBadge end (" + (System.currentTimeMillis() - startTime) + "ms)");
-        logDebug("onResume: updateNotificationBadge start");
-        updateNotificationBadge();
-        logDebug("onResume: updateNotificationBadge end (" + (System.currentTimeMillis() - startTime) + "ms)");
-        logDebug("onResume: loadRecentlyViewed start");
         loadRecentlyViewed();
-        logDebug("onResume: loadRecentlyViewed end (" + (System.currentTimeMillis() - startTime) + "ms)");
-        logDebug("onResume: total (" + (System.currentTimeMillis() - startTime) + "ms)");
     }
-    @Override protected void onDestroy() { super.onDestroy(); }
+
+    protected void logDebug(String msg) { android.util.Log.d("NM_MART", msg); } 
+    protected void logError(String msg, Exception e) { android.util.Log.e("NM_MART", msg, e); } 
+
 }
