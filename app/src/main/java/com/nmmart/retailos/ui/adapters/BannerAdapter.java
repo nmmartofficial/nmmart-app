@@ -55,6 +55,11 @@ public class BannerAdapter extends RecyclerView.Adapter<BannerAdapter.BannerView
         return banners.size();
     }
 
+    public void setBanners(List<Banner> banners) {
+        this.banners = banners;
+        notifyDataSetChanged();
+    }
+
     public static class BannerViewHolder extends RecyclerView.ViewHolder {
         ImageView ivBannerImage;
 

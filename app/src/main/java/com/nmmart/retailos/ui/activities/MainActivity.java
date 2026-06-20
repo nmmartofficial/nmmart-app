@@ -66,7 +66,13 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private ProductListAdapter trendingAdapter;
     private ProductListAdapter productGridAdapter;
     private ProductListAdapter recentlyViewedAdapter;
+    private ProductListAdapter everydayEssentialsAdapter;
+    private ProductListAdapter discountedProductsAdapter;
+    private ProductListAdapter newArrivalsAdapter;
+    private ProductListAdapter featuredProductsAdapter;
     private com.nmmart.retailos.data.RecentlyViewedManager recentlyViewedManager;
+
+    private com.nmmart.retailos.ui.adapters.BannerAdapter bannerAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -261,10 +267,15 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
 
     private void setupAdapters() {
         categoryAdapter = new CategoryAdapter(new ArrayList<>(), this::openProductList);
+        bannerAdapter = new com.nmmart.retailos.ui.adapters.BannerAdapter(this, new ArrayList<>());
 
         trendingAdapter = createProductAdapter();
         productGridAdapter = createProductAdapter();
         recentlyViewedAdapter = createProductAdapter();
+        everydayEssentialsAdapter = createProductAdapter();
+        discountedProductsAdapter = createProductAdapter();
+        newArrivalsAdapter = createProductAdapter();
+        featuredProductsAdapter = createProductAdapter();
     }
 
     private ProductListAdapter createProductAdapter() {
@@ -282,7 +293,14 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         binding.rvCategories.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         binding.rvCategories.setAdapter(categoryAdapter);
 
+        binding.rvBanners.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        binding.rvBanners.setAdapter(bannerAdapter);
+
         setupHorizontalRV(binding.rvBestSelling, trendingAdapter);
+        setupHorizontalRV(binding.rvEverydayEssentials, everydayEssentialsAdapter);
+        setupHorizontalRV(binding.rvDiscountedProducts, discountedProductsAdapter);
+        setupHorizontalRV(binding.rvNewArrivals, newArrivalsAdapter);
+        setupHorizontalRV(binding.rvFeaturedProducts, featuredProductsAdapter);
         setupHorizontalRV(binding.rvRecentlyViewed, recentlyViewedAdapter);
 
         GridLayoutManager glm = new GridLayoutManager(this, 2);
@@ -354,14 +372,21 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             }
         });
 
-        // 2. Categories Observer
+        // 2. Banners Observer
+        viewModel.getBanners().observe(this, banners -> {
+            if (banners != null && bannerAdapter != null) {
+                bannerAdapter.setBanners(banners);
+            }
+        });
+
+        // 3. Categories Observer
         viewModel.getCategories().observe(this, cats -> {
             if (cats != null) {
                 categoryAdapter.setCategories(cats);
             }
         });
-        
-        // 3. Trending Products Observer
+
+        // 4. Trending Products Observer
         viewModel.getTrendingProducts().observe(this, products -> {
             if (products != null) {
                 trendingAdapter.setProducts(products);
@@ -369,7 +394,35 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             }
         });
 
-        // 4. Loading State Observer
+        // 5. Everyday Essentials Observer
+        viewModel.getEverydayEssentials().observe(this, products -> {
+            if (products != null) {
+                everydayEssentialsAdapter.setProducts(products);
+            }
+        });
+
+        // 6. Discounted Products Observer
+        viewModel.getDiscountedProducts().observe(this, products -> {
+            if (products != null) {
+                discountedProductsAdapter.setProducts(products);
+            }
+        });
+
+        // 7. New Arrivals Observer
+        viewModel.getNewArrivals().observe(this, products -> {
+            if (products != null) {
+                newArrivalsAdapter.setProducts(products);
+            }
+        });
+
+        // 8. Featured Products Observer
+        viewModel.getFeaturedProducts().observe(this, products -> {
+            if (products != null) {
+                featuredProductsAdapter.setProducts(products);
+            }
+        });
+
+        // 9. Loading State Observer
         viewModel.getIsLoading().observe(this, isLoading -> {
             if (isLoading != null && isLoading) {
                 binding.shimmerView.setVisibility(View.VISIBLE);
@@ -383,7 +436,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             }
         });
 
-        // 5. Error Message Observer
+        // 10. Error Message Observer
         viewModel.getErrorMessage().observe(this, msg -> {
             if (msg != null) {
                 Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
@@ -466,60 +519,59 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 }
             }
 
-            @Override
-            public void onFailure(@NonNull Call<List<Product>> call, @NonNull Throwable t) {
-                binding.swipeRefreshLayout.setRefreshing(false);
-                Toast.makeText(MainActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
+            @Override 
+            public void onFailure(@NonNull Call<List<Product>> call, @NonNull Throwable t) { 
+                binding.swipeRefreshLayout.setRefreshing(false); 
+                Toast.makeText(MainActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show(); 
+            } 
+        }); 
+    } 
 
-    private void openProductList(Category category) {
+    private void openProductList(Category category) { 
         if (category == null || category.getId() == null) return;
-        Intent intent = new Intent(this, ProductListActivity.class);
-        intent.putExtra("CATEGORY_ID", category.getId());
-        intent.putExtra("CATEGORY_NAME", category.getName());
-        startActivity(intent);
-    }
+        Intent intent = new Intent(this, ProductListActivity.class); 
+        intent.putExtra("CATEGORY_ID", category.getId()); 
+        intent.putExtra("CATEGORY_NAME", category.getName()); 
+        startActivity(intent); 
+    } 
 
-    public void updateCartBadge() {
-        int count = com.nmmart.retailos.data.CartManager.getInstance(this).getCartCount();
-        if (binding.tvCartBadge != null) {
-            if (count > 0) {
-                binding.tvCartBadge.setText(String.valueOf(count));
-                binding.tvCartBadge.setVisibility(View.VISIBLE);
-            } else {
-                binding.tvCartBadge.setVisibility(View.GONE);
-            }
-        }
-    }
+    public void updateCartBadge() { 
+        int count = com.nmmart.retailos.data.CartManager.getInstance(this).getCartCount(); 
+        if (count > 0) { 
+            binding.tvCartBadge.setText(String.valueOf(count)); 
+            binding.tvCartBadge.setVisibility(View.VISIBLE); 
+        } else { 
+            binding.tvCartBadge.setVisibility(View.GONE); 
+        } 
+    } 
 
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        int id = item.getItemId();
-        
-        if (id == R.id.nav_orders) {
-            startActivity(new Intent(this, OrderHistoryActivity.class));
-        } else if (id == R.id.nav_profile) {
-            startActivity(new Intent(this, ProfileActivity.class));
-        } else if (id == R.id.nav_logout) {
-            sessionManager.logout();
-            Intent intent = new Intent(this, LoginActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            finish();
-        }
-        
-        binding.drawerLayout.closeDrawer(GravityCompat.START);
-        return true;
-    }
+    @Override 
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) { 
+        int id = item.getItemId(); 
+        if (id == R.id.nav_logout) { 
+            sessionManager.logout(); 
+            Intent intent = new Intent(this, LoginActivity.class); 
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); 
+            startActivity(intent); 
+            finish(); 
+        } else if (id == R.id.nav_orders) { 
+            startActivity(new Intent(this, OrderHistoryActivity.class)); 
+        } else if (id == R.id.nav_share) { 
+            String shareBody = "Download NM Mart app for best deals!"; 
+            Intent shareIntent = new Intent(Intent.ACTION_SEND); 
+            shareIntent.setType("text/plain"); 
+            shareIntent.putExtra(Intent.EXTRA_TEXT, shareBody); 
+            startActivity(Intent.createChooser(shareIntent, "Share via")); 
+        } 
+        binding.drawerLayout.closeDrawer(GravityCompat.START); 
+        return true; 
+    } 
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        updateNavHeader();
-        updateCartBadge();
-        loadRecentlyViewed();
-    }
-
+    @Override 
+    protected void onResume() { 
+        super.onResume(); 
+        updateNavHeader(); 
+        updateCartBadge(); 
+        loadRecentlyViewed(); 
+    } 
 }

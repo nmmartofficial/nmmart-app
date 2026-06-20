@@ -194,31 +194,142 @@
                                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
                         </LinearLayout>
 
-                        <!-- Best Selling Products -->
-        <LinearLayout
-            android:id="@+id/sectionBestSelling"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginBottom="16dp">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/best_selling_label"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="@color/black"
-                android:fontFamily="sans-serif" />
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvBestSelling"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:orientation="horizontal"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-        </LinearLayout>
+                        <!-- Banners -->
+                        <LinearLayout
+                            android:id="@+id/sectionBanners"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:layout_marginBottom="16dp">
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/rvBanners"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                        </LinearLayout>
 
-        <!-- Recently Viewed Products -->
+                        <!-- Best Selling Products -->
+                        <LinearLayout
+                            android:id="@+id/sectionBestSelling"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:layout_marginBottom="16dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/best_selling_label"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/black"
+                                android:fontFamily="sans-serif" />
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/rvBestSelling"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:orientation="horizontal"
+                                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                        </LinearLayout>
+
+                        <!-- Everyday Essentials -->
+                        <LinearLayout
+                            android:id="@+id/sectionEverydayEssentials"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:layout_marginBottom="16dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Everyday Essentials"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/black"
+                                android:fontFamily="sans-serif" />
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/rvEverydayEssentials"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:orientation="horizontal"
+                                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                        </LinearLayout>
+
+                        <!-- Discounted Products -->
+                        <LinearLayout
+                            android:id="@+id/sectionDiscountedProducts"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:layout_marginBottom="16dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Discounted Products"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/black"
+                                android:fontFamily="sans-serif" />
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/rvDiscountedProducts"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:orientation="horizontal"
+                                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                        </LinearLayout>
+
+                        <!-- New Arrivals -->
+                        <LinearLayout
+                            android:id="@+id/sectionNewArrivals"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:layout_marginBottom="16dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="New Arrivals"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/black"
+                                android:fontFamily="sans-serif" />
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/rvNewArrivals"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:orientation="horizontal"
+                                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                        </LinearLayout>
+
+                        <!-- Featured Products -->
+                        <LinearLayout
+                            android:id="@+id/sectionFeaturedProducts"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:layout_marginBottom="16dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Featured Products"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/black"
+                                android:fontFamily="sans-serif" />
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/rvFeaturedProducts"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:orientation="horizontal"
+                                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                        </LinearLayout>
+
+                        <!-- Recently Viewed Products -->
         <LinearLayout
             android:id="@+id/sectionRecentlyViewed"
             android:layout_width="match_parent"
