@@ -148,6 +148,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
+                <com.facebook.shimmer.ShimmerFrameLayout
+                    android:id="@+id/shimmerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:visibility="gone">
+                    <include layout="@layout/shimmer_home_content" />
+                </com.facebook.shimmer.ShimmerFrameLayout>
+
                 <androidx.core.widget.NestedScrollView
                     android:id="@+id/nestedScrollView"
                     android:layout_width="match_parent"
@@ -260,16 +268,6 @@
                 </androidx.core.widget.NestedScrollView>
             </FrameLayout>
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
-        <ProgressBar
-            android:id="@+id/progressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fabScan"

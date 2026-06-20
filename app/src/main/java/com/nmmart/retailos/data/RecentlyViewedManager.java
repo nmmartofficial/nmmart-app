@@ -31,9 +31,12 @@ public class RecentlyViewedManager {
     }
 
     public void addProduct(Product product) {
+        if (product == null || product.id == null) return;
+
         // Remove if already exists to move to top
         for (int i = 0; i < recentList.size(); i++) {
-            if (recentList.get(i).id.equals(product.id)) {
+            Product existingProduct = recentList.get(i);
+            if (existingProduct != null && product.id.equals(existingProduct.id)) {
                 recentList.remove(i);
                 break;
             }

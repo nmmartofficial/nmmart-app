@@ -45,6 +45,10 @@ import com.nmmart.retailos.utils.ThemeManager;
 import java.util.ArrayList;
 import java.util.List;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class MainActivity extends BaseActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "MainActivity";
@@ -124,10 +128,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             logDebug("onCreate: updateCartBadge start");
             updateCartBadge();
             logDebug("onCreate: updateCartBadge end (" + (System.currentTimeMillis() - startTime) + "ms)");
-
-            logDebug("onCreate: requestNotificationPermission start");
-            requestNotificationPermission();
-            logDebug("onCreate: requestNotificationPermission end (" + (System.currentTimeMillis() - startTime) + "ms)");
 
             logDebug("onCreate: getFcmToken start");
             getFcmToken();
@@ -209,23 +209,52 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         if (headerView != null) {
             TextView navUserName = headerView.findViewById(R.id.nav_user_name);
             TextView navUserMobile = headerView.findViewById(R.id.nav_user_mobile);
+            View cardNavProfilePic = headerView.findViewById(R.id.cardNavProfilePic);
             ImageView ivNavProfilePic = headerView.findViewById(R.id.ivNavProfilePic);
             
             if (sessionManager.isLoggedIn()) {
-                navUserName.setText(sessionManager.getUserName());
+                if (navUserName != null) {
+                    navUserName.setText(sessionManager.getUserName());
+                }
                 String mobile = sessionManager.getMobile();
-                navUserMobile.setText(mobile != null ? "+91 " + mobile : sessionManager.getEmail());
-                navUserMobile.setVisibility(View.VISIBLE);
+                if (navUserMobile != null) {
+                    navUserMobile.setText(mobile != null && !mobile.isEmpty() ? "+91 " + mobile : sessionManager.getEmail());
+                    navUserMobile.setVisibility(View.VISIBLE);
+                }
+                
+                if (cardNavProfilePic != null) {
+                    cardNavProfilePic.setVisibility(View.VISIBLE);
+                }
                 
                 String profilePicUri = sessionManager.getProfilePicUri();
-                if (profilePicUri != null) {
-                    ivNavProfilePic.setPadding(0, 0, 0, 0);
-                    Glide.with(this).load(Uri.parse(profilePicUri)).circleCrop().into(ivNavProfilePic);
+                if (ivNavProfilePic != null) {
+                    if (profilePicUri != null && !profilePicUri.isEmpty()) {
+                        ivNavProfilePic.setPadding(0, 0, 0, 0);
+                        Glide.with(this)
+                             .load(Uri.parse(profilePicUri))
+                             .placeholder(android.R.drawable.ic_menu_myplaces)
+                             .error(android.R.drawable.ic_menu_myplaces)
+                             .circleCrop()
+                             .into(ivNavProfilePic);
+                    } else {
+                        // Reset to default icon when no profile pic
+                        ivNavProfilePic.setPadding(12, 12, 12, 12);
+                        ivNavProfilePic.setImageResource(android.R.drawable.ic_menu_myplaces);
+                    }
                 }
             } else {
-                navUserName.setText(R.string.welcome_to_nm_mart);
-                navUserMobile.setText(R.string.login_to_continue);
-                navUserMobile.setVisibility(View.GONE);
+                if (navUserName != null) {
+                    navUserName.setText(R.string.welcome_to_nm_mart);
+                }
+                if (navUserMobile != null) {
+                    navUserMobile.setText(R.string.login_to_continue);
+                    navUserMobile.setVisibility(View.VISIBLE);
+                }
+                
+                // Hide profile pic when logged out to avoid showing old data
+                if (cardNavProfilePic != null) {
+                    cardNavProfilePic.setVisibility(View.GONE);
+                }
             }
         }
     }
@@ -343,8 +372,12 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         // 4. Loading State Observer
         viewModel.getIsLoading().observe(this, isLoading -> {
             if (isLoading != null && isLoading) {
+                binding.shimmerView.setVisibility(View.VISIBLE);
+                binding.shimmerView.startShimmer();
                 binding.nestedScrollView.setVisibility(View.GONE);
             } else {
+                binding.shimmerView.stopShimmer();
+                binding.shimmerView.setVisibility(View.GONE);
                 binding.nestedScrollView.setVisibility(View.VISIBLE);
                 binding.swipeRefreshLayout.setRefreshing(false);
             }
@@ -412,22 +445,51 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     }
 
     private void fetchProductByBarcode(String barcode) {
-        Intent intent = new Intent(this, ProductListActivity.class);
-        intent.putExtra("SEARCH_QUERY", barcode);
-        startActivity(intent);
+        if (barcode == null || barcode.isEmpty()) return;
+        
+        // Show loading
+        binding.swipeRefreshLayout.setRefreshing(true);
+        
+        SupabaseRepository repository = new SupabaseRepository();
+        repository.getProductByBarcode(barcode, new Callback<List<Product>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<Product>> call, @NonNull Response<List<Product>> response) {
+                binding.swipeRefreshLayout.setRefreshing(false);
+                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                    // Product found, open detail activity directly
+                    Product product = response.body().get(0);
+                    Intent intent = new Intent(MainActivity.this, ProductDetailActivity.class);
+                    intent.putExtra("PRODUCT", product);
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(MainActivity.this, "Product not found!", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<List<Product>> call, @NonNull Throwable t) {
+                binding.swipeRefreshLayout.setRefreshing(false);
+                Toast.makeText(MainActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void openProductList(Category category) {
         if (category == null || category.getId() == null) return;
-        Intent intent = new Intent(this, CategoriesActivity.class);
-        intent.putExtra("selected_category_id", category.getId());
+        Intent intent = new Intent(this, ProductListActivity.class);
+        intent.putExtra("CATEGORY_ID", category.getId());
+        intent.putExtra("CATEGORY_NAME", category.getName());
         startActivity(intent);
     }
 
-    private void requestNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+    public void updateCartBadge() {
+        int count = com.nmmart.retailos.data.CartManager.getInstance(this).getCartCount();
+        if (binding.tvCartBadge != null) {
+            if (count > 0) {
+                binding.tvCartBadge.setText(String.valueOf(count));
+                binding.tvCartBadge.setVisibility(View.VISIBLE);
+            } else {
+                binding.tvCartBadge.setVisibility(View.GONE);
             }
         }
     }
@@ -435,67 +497,29 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.nav_profile && sessionManager.isLoggedIn()) startActivity(new Intent(this, ProfileActivity.class));
-        else if (id == R.id.nav_notifications) startActivity(new Intent(this, NotificationsActivity.class));
-        else if (id == R.id.nav_orders) startActivity(new Intent(this, OrderHistoryActivity.class));
-        else if (id == R.id.nav_addresses && sessionManager.isLoggedIn()) startActivity(new Intent(this, AddressActivity.class));
-        else if (id == R.id.nav_wallet && sessionManager.isLoggedIn()) startActivity(new Intent(this, WalletActivity.class));
-        else if (id == R.id.nav_coupons) startActivity(new Intent(this, CouponsActivity.class));
-        else if (id == R.id.nav_refer) startActivity(new Intent(this, ReferEarnActivity.class));
-        else if (id == R.id.nav_help) startActivity(new Intent(this, CustomerSupportActivity.class));
-        else if (id == R.id.nav_about) startActivity(new Intent(this, AboutUsActivity.class));
-        else if (id == R.id.nav_settings) startActivity(new Intent(this, SettingsActivity.class));
-        else if (id == R.id.nav_share) {
-            Intent shareIntent = new Intent(Intent.ACTION_SEND);
-            shareIntent.setType("text/plain");
-            shareIntent.putExtra(Intent.EXTRA_TEXT, getString(R.string.sharing_msg));
-            shareIntent.setPackage("com.whatsapp");
-            try { 
-                startActivity(shareIntent); 
-            } catch (Exception e) { 
-                // Agar WhatsApp nahi hai toh normal share khulega 
-                shareIntent.setPackage(null); 
-                startActivity(Intent.createChooser(shareIntent, "Share via")); 
-            } 
-        } else if (id == R.id.nav_logout) { 
-            sessionManager.logout(); 
-            Intent intent = new Intent(this, LoginActivity.class); 
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); 
-            startActivity(intent); 
-            finish(); 
-        } 
- 
-        binding.drawerLayout.closeDrawer(GravityCompat.START); 
-        return true; 
-    } 
- 
-    // --- Missing Utility Methods --- 
- 
-    public void updateCartBadge() { 
-        int count = com.nmmart.retailos.data.CartManager.getInstance(this).getCartCount(); 
-        if (count > 0) { 
-            binding.tvCartBadge.setText(String.valueOf(count)); 
-            binding.tvCartBadge.setVisibility(View.VISIBLE); 
-        } else { 
-            binding.tvCartBadge.setVisibility(View.GONE); 
-        } 
-    } 
- 
-    @Override 
-    protected void onResume() { 
-        super.onResume(); 
-        // Jab user dusri activity se wapas aaye toh header aur badge refresh ho 
-        updateNavHeader(); 
-        updateCartBadge(); 
-        loadRecentlyViewed(); 
-    } 
- 
-    protected void logDebug(String msg) { 
-        android.util.Log.d("NM_MART", msg); 
-    } 
- 
-    protected void logError(String msg, Exception e) { 
-        android.util.Log.e("NM_MART", msg, e); 
-    } 
- 
+        
+        if (id == R.id.nav_orders) {
+            startActivity(new Intent(this, OrderHistoryActivity.class));
+        } else if (id == R.id.nav_profile) {
+            startActivity(new Intent(this, ProfileActivity.class));
+        } else if (id == R.id.nav_logout) {
+            sessionManager.logout();
+            Intent intent = new Intent(this, LoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+        }
+        
+        binding.drawerLayout.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateNavHeader();
+        updateCartBadge();
+        loadRecentlyViewed();
+    }
+
 }

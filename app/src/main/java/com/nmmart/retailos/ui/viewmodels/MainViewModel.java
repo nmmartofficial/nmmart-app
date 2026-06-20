@@ -44,6 +44,7 @@ public class MainViewModel extends AndroidViewModel {
     private final MutableLiveData<List<Product>> featuredProducts = new MutableLiveData<>();
     private final MutableLiveData<Double> walletBalance = new MutableLiveData<>();
     private final MutableLiveData<AppConfig> appConfig = new MutableLiveData<>();
+    private final MutableLiveData<Integer> unreadNotificationsCount = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>();
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
 
@@ -64,12 +65,28 @@ public class MainViewModel extends AndroidViewModel {
     public LiveData<List<Product>> getFeaturedProducts() { return featuredProducts; }
     public LiveData<Double> getWalletBalance() { return walletBalance; }
     public LiveData<AppConfig> getAppConfig() { return appConfig; }
+    public LiveData<Integer> getUnreadNotificationsCount() { return unreadNotificationsCount; }
     public LiveData<Boolean> getIsLoading() { return isLoading; }
     public LiveData<String> getErrorMessage() { return errorMessage; }
 
     // Compatibility methods for MainActivity
     public LiveData<List<Product>> getBestSelling() { return trendingProducts; }
     public LiveData<List<Product>> getNewStockProducts() { return newArrivals; }
+
+    public void fetchUnreadNotificationsCount() {
+        new Thread(() -> {
+            List<com.nmmart.retailos.models.NotificationItem> notifications = 
+                com.nmmart.retailos.utils.NotificationStorage.getInstance(getApplication()).getNotifications();
+            int count = 0;
+            for (com.nmmart.retailos.models.NotificationItem item : notifications) {
+                if (!item.isRead()) {
+                    count++;
+                }
+            }
+            final int finalCount = count;
+            handler.post(() -> unreadNotificationsCount.setValue(finalCount));
+        }).start();
+    }
 
     public void fetchHomeData() {
         OfflineStorage offlineStorage = OfflineStorage.getInstance(getApplication());
@@ -124,22 +141,7 @@ public class MainViewModel extends AndroidViewModel {
         isLoading.setValue(true);
         cancelAllCalls();
 
-        // Step 0: Fetch AppConfig FIRST to apply theme immediately
-        Log.d(TAG, "Fetching AppConfig first");
-        enqueueCall(repository.getHomeConfigCall(), new Callback<List<com.nmmart.retailos.models.HomeConfig>>() {
-            @Override
-            public void onResponse(@NonNull Call<List<com.nmmart.retailos.models.HomeConfig>> call, @NonNull Response<List<com.nmmart.retailos.models.HomeConfig>> response) {
-                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
-                    // Assuming HomeConfig has AppConfig fields or we need to fetch AppConfig separately
-                    Log.d(TAG, "HomeConfig fetched");
-                }
-            }
-            @Override public void onFailure(@NonNull Call<List<com.nmmart.retailos.models.HomeConfig>> call, @NonNull Throwable t) {
-                Log.e(TAG, "Error fetching HomeConfig", t);
-            }
-        });
-
-        // Also fetch AppConfig directly
+        // Fetch AppConfig to apply theme immediately
         repository.getAppConfig(new Callback<List<AppConfig>>() {
             @Override
             public void onResponse(@NonNull Call<List<AppConfig>> call, @NonNull Response<List<AppConfig>> response) {
