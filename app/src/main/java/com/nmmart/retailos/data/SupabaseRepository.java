@@ -86,7 +86,9 @@ public class SupabaseRepository {
                 .enqueue(wrapCallback(FUNCTION_NAME, callback));
         } catch (Exception e) {
             NMMartLogger.logError(FILE_NAME, FUNCTION_NAME, e.getMessage());
-            callback.onFailure(null, e);
+            if (callback != null) {
+                callback.onFailure(null, e);
+            }
         }
     }
     
@@ -98,7 +100,9 @@ public class SupabaseRepository {
                 .enqueue(wrapCallback(FUNCTION_NAME, callback));
         } catch (Exception e) {
             NMMartLogger.logError(FILE_NAME, FUNCTION_NAME, e.getMessage());
-            callback.onFailure(null, e);
+            if (callback != null) {
+                callback.onFailure(null, e);
+            }
         }
     }
 
@@ -122,13 +126,17 @@ public class SupabaseRepository {
                 } else {
                     Log.e(TAG, methodName + " - Error response: " + response.message());
                 }
-                originalCallback.onResponse(call, response);
+                if (originalCallback != null) {
+                    originalCallback.onResponse(call, response);
+                }
             }
             
             @Override
             public void onFailure(Call<T> call, Throwable t) {
                 Log.e(TAG, methodName + " - API call failed", t);
-                originalCallback.onFailure(call, t);
+                if (originalCallback != null) {
+                    originalCallback.onFailure(call, t);
+                }
             }
         };
     }
