@@ -18,6 +18,7 @@ import com.nmmart.retailos.R;
 import com.nmmart.retailos.data.SessionManager;
 import com.nmmart.retailos.models.Product;
 import com.nmmart.retailos.ui.activities.ProductDetailActivity;
+import com.nmmart.retailos.utils.PriceUtils;
 
 import java.util.List;
 
@@ -62,8 +63,8 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Product product = productList.get(position);
-        holder.tvName.setText(product.name);
-        holder.tvPrice.setText("₹" + product.nm_price);
+        holder.tvName.setText(product.getName());
+        holder.tvPrice.setText(PriceUtils.formatPrice(product.getNmPrice()));
         
         // Apply corner radius
         if (holder.itemView instanceof MaterialCardView) {
@@ -71,13 +72,19 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
         }
 
         if (holder.tvMrp != null) {
-            holder.tvMrp.setText("₹" + product.mrp);
-            holder.tvMrp.setPaintFlags(holder.tvMrp.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+            if (product.getMrp() > product.getNmPrice()) {
+                holder.tvMrp.setText(PriceUtils.formatPrice(product.getMrp()));
+                holder.tvMrp.setPaintFlags(holder.tvMrp.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+                holder.tvMrp.setVisibility(View.VISIBLE);
+            } else {
+                holder.tvMrp.setVisibility(View.GONE);
+            }
         }
 
-        if (product.image_url != null && !product.image_url.isEmpty()) {
+        String imageUrl = product.getImageUrl();
+        if (imageUrl != null && !imageUrl.isEmpty()) {
             Glide.with(context)
-                    .load(product.image_url)
+                    .load(imageUrl)
                     .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
                     .placeholder(R.drawable.ic_grocery_bag)
                     .error(R.drawable.ic_grocery_bag)

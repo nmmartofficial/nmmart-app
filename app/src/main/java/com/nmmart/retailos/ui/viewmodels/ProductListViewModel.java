@@ -37,7 +37,7 @@ public class ProductListViewModel extends AndroidViewModel {
     private String currentBrandId;
     private String currentSearchQuery;
     private int currentOffset = 0;
-    private static final int PAGE_SIZE = 30;
+    private static final int PAGE_SIZE = 50;
     private boolean isLastPage = false;
     private boolean filterInStockOnly = false;
 
@@ -96,9 +96,8 @@ public class ProductListViewModel extends AndroidViewModel {
         isLastPage = false;
         isLoading.setValue(true);
 
-        // Use subcategoryId if available, else categoryId
-        String catIdToUse = subcategoryId != null ? subcategoryId : categoryId;
-        Call<List<Product>> call = repository.getProductsSortedCall(catIdToUse, brandId, null, limit, currentOffset);
+        // Use category_id / sub_category_id filters from Supabase schema
+        Call<List<Product>> call = repository.getProductsSortedCall(categoryId, subcategoryId, brandId, "online_rate.asc", limit, currentOffset);
         activeCalls.add(call);
         call.enqueue(new Callback<List<Product>>() {
             @Override
@@ -258,15 +257,14 @@ public class ProductListViewModel extends AndroidViewModel {
         };
 
         Call<List<Product>> call = null;
-        String catIdToUse = currentSubcategoryId != null ? currentSubcategoryId : currentCategoryId;
-        if (catIdToUse != null) {
-            call = repository.getProductsSortedCall(catIdToUse, null, null, (Integer) PAGE_SIZE, (Integer) currentOffset);
+        if (currentSubcategoryId != null || currentCategoryId != null) {
+            call = repository.getProductsSortedCall(currentCategoryId, currentSubcategoryId, null, "online_rate.asc", PAGE_SIZE, currentOffset);
         } else if (currentBrandId != null) {
-            call = repository.getProductsSortedCall(null, currentBrandId, null, (Integer) PAGE_SIZE, (Integer) currentOffset);
+            call = repository.getProductsSortedCall(null, null, currentBrandId, "online_rate.asc", PAGE_SIZE, currentOffset);
         } else if (currentSearchQuery != null) {
-            call = repository.searchProductsCall(currentSearchQuery, (Integer) PAGE_SIZE, (Integer) currentOffset);
+            call = repository.searchProductsCall(currentSearchQuery, PAGE_SIZE, currentOffset);
         } else {
-            call = repository.getProductsSortedCall(null, null, null, (Integer) PAGE_SIZE, (Integer) currentOffset);
+            call = repository.getProductsSortedCall(null, null, null, "online_rate.asc", PAGE_SIZE, currentOffset);
         }
         
         if (call != null) {

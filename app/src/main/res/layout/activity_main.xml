@@ -9,17 +9,18 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#F5F5F5"
+        android:background="@color/grey_background"
         android:fitsSystemWindows="true">
 
-        <!-- Simple Header with proper padding for status bar -->
+        <!-- Premium Header with Gradient -->
         <LinearLayout
             android:id="@+id/headerLayout"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@color/primary"
+            android:background="@drawable/bg_gradient_premium_header"
             android:paddingTop="16dp"
+            android:paddingBottom="24dp"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -30,15 +31,15 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:paddingHorizontal="16dp"
-                android:paddingBottom="8dp"
+                android:paddingBottom="12dp"
                 android:gravity="center_vertical">
 
                 <ImageButton
                     android:id="@+id/btnMenu"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_person"
+                    android:src="@drawable/ic_menu"
                     android:contentDescription="@string/menu_desc"
                     app:tint="@color/white" />
 
@@ -54,8 +55,8 @@
 
                     <ImageButton
                         android:id="@+id/btnCart"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:src="@drawable/ic_cart"
                         android:contentDescription="@string/cart_desc"
@@ -63,8 +64,8 @@
 
                     <TextView
                         android:id="@+id/tvCartBadge"
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
                         android:layout_gravity="top|end"
                         android:background="@drawable/badge_background"
                         android:text="0"
@@ -76,17 +77,69 @@
                 </FrameLayout>
             </LinearLayout>
 
+            <!-- Location/Address Bar -->
+            <LinearLayout
+                android:id="@+id/locationBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingHorizontal="20dp"
+                android:gravity="center_vertical"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@android:drawable/ic_menu_mylocation"
+                    app:tint="@color/white" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_weight="1"
+                    android:layout_marginStart="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Deliver to"
+                        android:textColor="@color/white"
+                        android:textSize="12sp"
+                        android:alpha="0.9" />
+
+                    <TextView
+                        android:id="@+id/tvLocation"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Select Location"
+                        android:textColor="@color/white"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@android:drawable/arrow_down_float"
+                    app:tint="@color/white" />
+            </LinearLayout>
+
         </LinearLayout>
 
-        <!-- Simple Search Bar with Scan Icon - now below header -->
+        <!-- Premium Search Bar with Shadow & Rounded Corners -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/tilSearch"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="20dp"
-            android:layout_marginTop="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="4dp"
+            android:layout_marginTop="-16dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="8dp"
             app:layout_constraintTop_toBottomOf="@id/headerLayout"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -95,7 +148,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:paddingVertical="8dp">
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/textInputLayout"
@@ -108,16 +162,17 @@
                     app:boxBackgroundColor="@color/white"
                     app:boxStrokeWidth="0dp"
                     app:boxStrokeWidthFocused="0dp"
-                    app:boxCornerRadiusTopStart="12dp"
-                    app:boxCornerRadiusTopEnd="12dp"
-                    app:boxCornerRadiusBottomStart="12dp"
-                    app:boxCornerRadiusBottomEnd="12dp">
+                    app:boxCornerRadiusTopStart="20dp"
+                    app:boxCornerRadiusTopEnd="20dp"
+                    app:boxCornerRadiusBottomStart="20dp"
+                    app:boxCornerRadiusBottomEnd="20dp">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etSearch"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif-medium"
+                        android:textSize="15sp"
                         android:inputType="text" />
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -127,7 +182,7 @@
                     android:layout_height="48dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@android:drawable/ic_btn_speak_now"
-                    app:tint="@color/primary"
+                    app:tint="@color/accent"
                     android:contentDescription="Voice Search" />
                 
                 <ImageButton
@@ -137,17 +192,29 @@
                     android:layout_marginEnd="8dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@drawable/ic_scan"
-                    app:tint="@color/primary"
+                    app:tint="@color/accent"
                     android:contentDescription="@string/scan_barcode_desc" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvSearchSuggestions"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:overScrollMode="never"
+            app:layout_constraintTop_toBottomOf="@id/tilSearch"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
         <!-- Main Content -->
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
             android:id="@+id/swipeRefreshLayout"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            app:layout_constraintTop_toBottomOf="@id/tilSearch"
+            app:layout_constraintTop_toBottomOf="@id/rvSearchSuggestions"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -178,21 +245,41 @@
                         android:orientation="vertical"
                         android:padding="16dp">
 
+                        <!-- Banners -->
+                        <LinearLayout
+                            android:id="@+id/sectionBanners"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:layout_marginBottom="20dp"
+                            android:layout_marginStart="-16dp"
+                            android:layout_marginEnd="-16dp">
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/rvBanners"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                                android:paddingStart="16dp"
+                                android:paddingEnd="16dp"
+                                android:clipToPadding="false" />
+                        </LinearLayout>
+
                         <!-- Categories -->
                         <LinearLayout
                             android:id="@+id/sectionCategories"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:layout_marginBottom="16dp">
+                            android:layout_marginBottom="20dp">
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/categories_label"
                                 android:textSize="20sp"
                                 android:textStyle="bold"
-                                android:textColor="@color/black"
-                                android:fontFamily="sans-serif" />
+                                android:textColor="@color/black_soft"
+                                android:fontFamily="sans-serif-medium" />
                             <androidx.recyclerview.widget.RecyclerView
                                 android:id="@+id/rvCategories"
                                 android:layout_width="match_parent"
@@ -202,17 +289,79 @@
                                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
                         </LinearLayout>
 
-                        <!-- Banners -->
+                        <!-- Brands -->
                         <LinearLayout
-                            android:id="@+id/sectionBanners"
+                            android:id="@+id/sectionBrands"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:layout_marginBottom="16dp">
+                            android:layout_marginBottom="20dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Top Brands"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/black_soft"
+                                android:fontFamily="sans-serif-medium" />
                             <androidx.recyclerview.widget.RecyclerView
-                                android:id="@+id/rvBanners"
+                                android:id="@+id/rvBrands"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:orientation="horizontal"
+                                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                        </LinearLayout>
+
+                        <!-- Flash Sale Section -->
+                        <LinearLayout
+                            android:id="@+id/sectionFlashSale"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:layout_marginBottom="20dp"
+                            android:background="@drawable/bg_gradient_premium_header"
+                            android:padding="16dp"
+                            android:elevation="4dp">
+                            
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+                                
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="⚡ Flash Sale"
+                                    android:textSize="20sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/white" />
+                                    
+                                <View
+                                    android:layout_width="0dp"
+                                    android:layout_height="0dp"
+                                    android:layout_weight="1" />
+                                    
+                                <TextView
+                                    android:id="@+id/tvFlashSaleCountdown"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="00:00:00"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/white"
+                                    android:background="@color/accent"
+                                    android:paddingHorizontal="10dp"
+                                    android:paddingVertical="5dp"
+                                    android:elevation="4dp" />
+                            </LinearLayout>
+                            
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/rvFlashSale"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
                                 android:orientation="horizontal"
                                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
                         </LinearLayout>
@@ -223,15 +372,15 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:layout_marginBottom="16dp">
+                            android:layout_marginBottom="20dp">
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/best_selling_label"
                                 android:textSize="20sp"
                                 android:textStyle="bold"
-                                android:textColor="@color/black"
-                                android:fontFamily="sans-serif" />
+                                android:textColor="@color/black_soft"
+                                android:fontFamily="sans-serif-medium" />
                             <androidx.recyclerview.widget.RecyclerView
                                 android:id="@+id/rvBestSelling"
                                 android:layout_width="match_parent"
@@ -247,15 +396,15 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:layout_marginBottom="16dp">
+                            android:layout_marginBottom="20dp">
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Everyday Essentials"
                                 android:textSize="20sp"
                                 android:textStyle="bold"
-                                android:textColor="@color/black"
-                                android:fontFamily="sans-serif" />
+                                android:textColor="@color/black_soft"
+                                android:fontFamily="sans-serif-medium" />
                             <androidx.recyclerview.widget.RecyclerView
                                 android:id="@+id/rvEverydayEssentials"
                                 android:layout_width="match_parent"
@@ -271,17 +420,65 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:layout_marginBottom="16dp">
+                            android:layout_marginBottom="20dp">
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Discounted Products"
                                 android:textSize="20sp"
                                 android:textStyle="bold"
-                                android:textColor="@color/black"
-                                android:fontFamily="sans-serif" />
+                                android:textColor="@color/black_soft"
+                                android:fontFamily="sans-serif-medium" />
                             <androidx.recyclerview.widget.RecyclerView
                                 android:id="@+id/rvDiscountedProducts"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:orientation="horizontal"
+                                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                        </LinearLayout>
+
+                        <!-- Combo Offers -->
+                        <LinearLayout
+                            android:id="@+id/sectionComboOffers"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:layout_marginBottom="20dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="🎁 Combo Offers"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/black_soft"
+                                android:fontFamily="sans-serif-medium" />
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/rvComboOffers"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:orientation="horizontal"
+                                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                        </LinearLayout>
+
+                        <!-- AI Recommendations -->
+                        <LinearLayout
+                            android:id="@+id/sectionAIRecommendations"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:layout_marginBottom="20dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="🤖 Recommended for You"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/black_soft"
+                                android:fontFamily="sans-serif-medium" />
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/rvAIRecommendations"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="12dp"
@@ -295,15 +492,15 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:layout_marginBottom="16dp">
+                            android:layout_marginBottom="20dp">
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="New Arrivals"
                                 android:textSize="20sp"
                                 android:textStyle="bold"
-                                android:textColor="@color/black"
-                                android:fontFamily="sans-serif" />
+                                android:textColor="@color/black_soft"
+                                android:fontFamily="sans-serif-medium" />
                             <androidx.recyclerview.widget.RecyclerView
                                 android:id="@+id/rvNewArrivals"
                                 android:layout_width="match_parent"
@@ -319,15 +516,15 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:layout_marginBottom="16dp">
+                            android:layout_marginBottom="20dp">
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Featured Products"
                                 android:textSize="20sp"
                                 android:textStyle="bold"
-                                android:textColor="@color/black"
-                                android:fontFamily="sans-serif" />
+                                android:textColor="@color/black_soft"
+                                android:fontFamily="sans-serif-medium" />
                             <androidx.recyclerview.widget.RecyclerView
                                 android:id="@+id/rvFeaturedProducts"
                                 android:layout_width="match_parent"
@@ -343,15 +540,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="20dp">
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/recently_viewed"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="@color/black"
-                android:fontFamily="sans-serif" />
+                android:textColor="@color/black_soft"
+                android:fontFamily="sans-serif-medium" />
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvRecentlyViewed"
                 android:layout_width="match_parent"
@@ -373,8 +570,8 @@
                                 android:text="@string/all_products_label"
                                 android:textSize="20sp"
                                 android:textStyle="bold"
-                                android:textColor="@color/black"
-                                android:fontFamily="sans-serif" />
+                                android:textColor="@color/black_soft"
+                                android:fontFamily="sans-serif-medium" />
                             <androidx.recyclerview.widget.RecyclerView
                                 android:id="@+id/rvProducts"
                                 android:layout_width="match_parent"
@@ -388,23 +585,11 @@
             </FrameLayout>
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fabScan"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="80dp"
-            android:layout_marginEnd="16dp"
-            android:src="@drawable/ic_scan"
-            app:tint="@color/white"
-            app:backgroundTint="@color/primary"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:elevation="8dp" />
-
+        <!-- Premium Bottom Navigation -->
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottom_navigation"
             android:layout_width="match_parent"
-            android:layout_height="70dp"
+            android:layout_height="72dp"
             android:background="@color/white"
             app:elevation="16dp"
             app:menu="@menu/bottom_nav_menu"
@@ -415,17 +600,18 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <!-- Premium Navigation Drawer -->
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:fitsSystemWindows="true"
-        android:background="#F0F0F0"
+        android:background="@color/white"
         app:headerLayout="@layout/nav_header"
         app:menu="@menu/drawer_menu"
-        app:itemIconTint="#333333"
-        app:itemTextColor="#333333"
+        app:itemIconTint="@color/grey_700"
+        app:itemTextColor="@color/black_soft"
         app:itemBackground="@drawable/nav_item_background"
         android:paddingHorizontal="8dp" />
 

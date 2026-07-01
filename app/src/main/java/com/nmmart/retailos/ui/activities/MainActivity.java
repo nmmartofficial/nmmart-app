@@ -8,6 +8,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -30,6 +31,7 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import com.journeyapps.barcodescanner.ScanContract;
 import com.journeyapps.barcodescanner.ScanOptions;
 import com.nmmart.retailos.R;
+import com.nmmart.retailos.data.SearchHistoryManager;
 import com.nmmart.retailos.data.SelfCheckoutCartManager;
 import com.nmmart.retailos.data.SupabaseRepository;
 import com.bumptech.glide.Glide;
@@ -39,6 +41,7 @@ import com.nmmart.retailos.models.Category;
 import com.nmmart.retailos.models.Product;
 import com.nmmart.retailos.ui.adapters.CategoryAdapter;
 import com.nmmart.retailos.ui.adapters.ProductListAdapter;
+import com.nmmart.retailos.ui.adapters.SearchHistoryAdapter;
 import com.nmmart.retailos.ui.viewmodels.MainViewModel;
 import com.nmmart.retailos.utils.ThemeManager;
 
@@ -56,6 +59,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private ActivityResultLauncher<String> notificationPermissionLauncher;
     private ActivityResultLauncher<ScanOptions> barcodeLauncher;
     private ActivityResultLauncher<Intent> speechRecognizerLauncher;
+    private ActivityResultLauncher<Intent> locationSelectionLauncher;
     
     private ActivityMainBinding binding;
     private SessionManager sessionManager;
@@ -63,6 +67,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private ThemeManager themeManager;
     
     private CategoryAdapter categoryAdapter;
+    private com.nmmart.retailos.ui.adapters.BrandAdapter brandAdapter;
     private ProductListAdapter trendingAdapter;
     private ProductListAdapter productGridAdapter;
     private ProductListAdapter recentlyViewedAdapter;
@@ -70,9 +75,24 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private ProductListAdapter discountedProductsAdapter;
     private ProductListAdapter newArrivalsAdapter;
     private ProductListAdapter featuredProductsAdapter;
+    private ProductListAdapter flashSaleAdapter;
+    private ProductListAdapter aiRecommendationsAdapter;
+    private com.nmmart.retailos.ui.adapters.ComboOfferAdapter comboOfferAdapter;
+    private SearchHistoryManager searchHistoryManager;
+    private SearchHistoryAdapter searchHistoryAdapter;
+    private final List<String> searchHistory = new ArrayList<>();
     private com.nmmart.retailos.data.RecentlyViewedManager recentlyViewedManager;
 
     private com.nmmart.retailos.ui.adapters.BannerAdapter bannerAdapter;
+    
+    private android.os.Handler countdownHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private Runnable countdownRunnable;
+    private long flashSaleEndTime = System.currentTimeMillis() + (24 * 60 * 60 * 1000); // 24 hours from now
+
+    private android.os.Handler bannerAutoScrollHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private Runnable bannerAutoScrollRunnable;
+    private int currentBannerIndex = 0;
+    private static final int BANNER_AUTO_SCROLL_DELAY_MS = 4000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,6 +123,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             logDebug("onCreate: setupHeader start");
             setupHeader();
             logDebug("onCreate: setupHeader end (" + (System.currentTimeMillis() - startTime) + "ms)");
+            setupSearchSuggestions();
 
             logDebug("onCreate: setupAdapters start");
             setupAdapters();
@@ -126,6 +147,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
 
             logDebug("onCreate: fetchHomeData start");
             viewModel.fetchHomeData();
+            viewModel.loadInitialAllProducts();
             if (sessionManager.isLoggedIn()) {
                 viewModel.fetchWallet();
             }
@@ -200,6 +222,13 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 }
             }
         );
+
+        locationSelectionLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                updateLocationDisplay();
+            }
+        );
     }
 
     private void setupNavigation() {
@@ -208,6 +237,21 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
 
     private void setupHeader() {
         updateNavHeader();
+        
+        // Location bar click listener
+        binding.locationBar.setOnClickListener(v -> {
+            Intent intent = new Intent(this, LocationSelectionActivity.class);
+            locationSelectionLauncher.launch(intent);
+        });
+        
+        updateLocationDisplay();
+    }
+    
+    private void updateLocationDisplay() {
+        String location = sessionManager.getDeliveryLocation();
+        if (binding.tvLocation != null) {
+            binding.tvLocation.setText(location);
+        }
     }
 
     private void updateNavHeader() {
@@ -267,7 +311,12 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
 
     private void setupAdapters() {
         categoryAdapter = new CategoryAdapter(new ArrayList<>(), this::openProductList);
+        brandAdapter = new com.nmmart.retailos.ui.adapters.BrandAdapter(this::openBrandProducts);
         bannerAdapter = new com.nmmart.retailos.ui.adapters.BannerAdapter(this, new ArrayList<>());
+        comboOfferAdapter = new com.nmmart.retailos.ui.adapters.ComboOfferAdapter(comboOffer -> {
+            // Handle combo offer click
+            android.widget.Toast.makeText(this, "Combo offer selected: " + comboOffer.getTitle(), android.widget.Toast.LENGTH_SHORT).show();
+        });
 
         trendingAdapter = createProductAdapter();
         productGridAdapter = createProductAdapter();
@@ -276,6 +325,8 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         discountedProductsAdapter = createProductAdapter();
         newArrivalsAdapter = createProductAdapter();
         featuredProductsAdapter = createProductAdapter();
+        flashSaleAdapter = createProductAdapter();
+        aiRecommendationsAdapter = createProductAdapter();
     }
 
     private ProductListAdapter createProductAdapter() {
@@ -293,8 +344,20 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         binding.rvCategories.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         binding.rvCategories.setAdapter(categoryAdapter);
 
+        binding.rvBrands.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        binding.rvBrands.setAdapter(brandAdapter);
+
         binding.rvBanners.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         binding.rvBanners.setAdapter(bannerAdapter);
+
+        binding.rvFlashSale.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        binding.rvFlashSale.setAdapter(flashSaleAdapter);
+
+        binding.rvComboOffers.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        binding.rvComboOffers.setAdapter(comboOfferAdapter);
+
+        binding.rvAIRecommendations.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        binding.rvAIRecommendations.setAdapter(aiRecommendationsAdapter);
 
         setupHorizontalRV(binding.rvBestSelling, trendingAdapter);
         setupHorizontalRV(binding.rvEverydayEssentials, everydayEssentialsAdapter);
@@ -315,6 +378,22 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         });
         binding.rvProducts.setLayoutManager(glm);
         binding.rvProducts.setAdapter(productGridAdapter);
+
+        binding.rvProducts.addOnScrollListener(new androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull androidx.recyclerview.widget.RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                if (dy > 0) { // Only scroll down
+                    int visibleItemCount = glm.getChildCount();
+                    int totalItemCount = glm.getItemCount();
+                    int firstVisibleItemPosition = glm.findFirstVisibleItemPosition();
+
+                    if (!viewModel.isAllProductsLastPage() && (visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 5) {
+                        viewModel.loadMoreAllProducts();
+                    }
+                }
+            }
+        });
     }
 
     private void loadRecentlyViewed() {
@@ -355,7 +434,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private void applyTheme() {
         // Apply colors to various UI elements
         binding.bottomNavigation.setBackgroundColor(themeManager.getPrimaryColor());
-        binding.fabScan.setBackgroundColor(themeManager.getAccentColor());
         binding.swipeRefreshLayout.setColorSchemeColors(themeManager.getPrimaryColor(), themeManager.getAccentColor());
     }
 
@@ -376,6 +454,12 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         viewModel.getBanners().observe(this, banners -> {
             if (banners != null && bannerAdapter != null) {
                 bannerAdapter.setBanners(banners);
+                currentBannerIndex = 0;
+                if (banners.size() > 1) {
+                    startBannerAutoScroll();
+                } else {
+                    stopBannerAutoScroll();
+                }
             }
         });
 
@@ -386,7 +470,14 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             }
         });
 
-        // 4. Trending Products Observer
+        // 4. Brands Observer
+        viewModel.getBrands().observe(this, brands -> {
+            if (brands != null) {
+                brandAdapter.setBrands(brands);
+            }
+        });
+
+        // 5. Trending Products Observer
         viewModel.getTrendingProducts().observe(this, products -> {
             if (products != null) {
                 trendingAdapter.setProducts(products);
@@ -394,35 +485,68 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             }
         });
 
-        // 5. Everyday Essentials Observer
+        // 6. Everyday Essentials Observer
         viewModel.getEverydayEssentials().observe(this, products -> {
             if (products != null) {
                 everydayEssentialsAdapter.setProducts(products);
             }
         });
 
-        // 6. Discounted Products Observer
+        // 7. Discounted Products Observer
         viewModel.getDiscountedProducts().observe(this, products -> {
             if (products != null) {
                 discountedProductsAdapter.setProducts(products);
             }
         });
 
-        // 7. New Arrivals Observer
+        // 8. New Arrivals Observer
         viewModel.getNewArrivals().observe(this, products -> {
             if (products != null) {
                 newArrivalsAdapter.setProducts(products);
             }
         });
 
-        // 8. Featured Products Observer
+        // 9. Featured Products Observer
         viewModel.getFeaturedProducts().observe(this, products -> {
             if (products != null) {
                 featuredProductsAdapter.setProducts(products);
             }
         });
+        
+        // 10. Flash Sale Products Observer
+        viewModel.getFlashSaleProducts().observe(this, products -> {
+            if (products != null) {
+                flashSaleAdapter.setProducts(products);
+            }
+        });
+        
+        // 11. Combo Offers Observer
+        viewModel.getComboOffers().observe(this, offers -> {
+            if (offers != null) {
+                comboOfferAdapter.setComboOffers(offers);
+            }
+        });
+        
+        // 12. AI Recommendations Observer
+        viewModel.getAIRecommendations().observe(this, products -> {
+            if (products != null) {
+                aiRecommendationsAdapter.setProducts(products);
+            }
+        });
 
-        // 9. Loading State Observer
+        // 13. All Products Observer
+        viewModel.getAllProducts().observe(this, products -> {
+            if (products != null) {
+                productGridAdapter.setProducts(products);
+            }
+        });
+
+        // 14. All Products Loading More Observer
+        viewModel.getIsAllProductsLoadingMore().observe(this, isLoading -> {
+            productGridAdapter.setLoading(isLoading != null && isLoading);
+        });
+
+        // 13. Loading State Observer
         viewModel.getIsLoading().observe(this, isLoading -> {
             if (isLoading != null && isLoading) {
                 binding.shimmerView.setVisibility(View.VISIBLE);
@@ -436,12 +560,68 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             }
         });
 
-        // 10. Error Message Observer
+        // 14. Error Message Observer
         viewModel.getErrorMessage().observe(this, msg -> {
             if (msg != null) {
                 Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+    
+    private void startCountdownTimer() {
+        countdownRunnable = new Runnable() {
+            @Override
+            public void run() {
+                long now = System.currentTimeMillis();
+                long diff = flashSaleEndTime - now;
+                
+                if (diff > 0) {
+                    long hours = diff / (60 * 60 * 1000);
+                    long minutes = (diff % (60 * 60 * 1000)) / (60 * 1000);
+                    long seconds = (diff % (60 * 1000)) / 1000;
+                    
+                    String timeString = String.format("%02d:%02d:%02d", hours, minutes, seconds);
+                    binding.tvFlashSaleCountdown.setText(timeString);
+                    
+                    countdownHandler.postDelayed(this, 1000);
+                } else {
+                    binding.tvFlashSaleCountdown.setText("00:00:00");
+                }
+            }
+        };
+        countdownHandler.post(countdownRunnable);
+    }
+    
+    private void stopCountdownTimer() {
+        if (countdownRunnable != null) {
+            countdownHandler.removeCallbacks(countdownRunnable);
+        }
+    }
+
+    private void startBannerAutoScroll() {
+        stopBannerAutoScroll();
+        if (bannerAdapter == null || bannerAdapter.getItemCount() <= 1) {
+            return;
+        }
+        bannerAutoScrollRunnable = new Runnable() {
+            @Override
+            public void run() {
+                int itemCount = bannerAdapter.getItemCount();
+                if (itemCount <= 1) {
+                    return;
+                }
+                currentBannerIndex = (currentBannerIndex + 1) % itemCount;
+                binding.rvBanners.smoothScrollToPosition(currentBannerIndex);
+                bannerAutoScrollHandler.postDelayed(this, BANNER_AUTO_SCROLL_DELAY_MS);
+            }
+        };
+        bannerAutoScrollHandler.postDelayed(bannerAutoScrollRunnable, BANNER_AUTO_SCROLL_DELAY_MS);
+    }
+
+    private void stopBannerAutoScroll() {
+        if (bannerAutoScrollRunnable != null) {
+            bannerAutoScrollHandler.removeCallbacks(bannerAutoScrollRunnable);
+        }
     }
 
     private void setupClickListeners() {
@@ -450,28 +630,87 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         binding.btnScanSearch.setOnClickListener(v -> startBarcodeScanner());
         binding.btnVoiceSearch.setOnClickListener(v -> startVoiceSearch());
         
+        binding.etSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                showSearchSuggestions(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
         binding.etSearch.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
                 Editable text = binding.etSearch.getText();
                 if (text != null && !text.toString().trim().isEmpty()) {
-                    String query = text.toString().trim();
-                    Intent intent = new Intent(this, ProductListActivity.class);
-                    intent.putExtra("SEARCH_QUERY", query);
-                    startActivity(intent);
+                    startSearch(text.toString().trim());
                 }
                 return true;
             }
             return false;
         });
         
-        binding.swipeRefreshLayout.setOnRefreshListener(() -> viewModel.fetchHomeData());
-        binding.fabScan.setOnClickListener(v -> {
-            if (SelfCheckoutCartManager.getInstance(this).getCartCount() > 0) {
-                startActivity(new Intent(this, SelfCheckoutCartActivity.class));
-            } else {
-                startBarcodeScanner();
-            }
+        binding.swipeRefreshLayout.setOnRefreshListener(() -> {
+            viewModel.fetchHomeData();
+            viewModel.loadInitialAllProducts();
         });
+    }
+
+    private void setupSearchSuggestions() {
+        searchHistoryManager = SearchHistoryManager.getInstance(this);
+        searchHistory.clear();
+        searchHistory.addAll(searchHistoryManager.getHistory());
+
+        binding.rvSearchSuggestions.setLayoutManager(new LinearLayoutManager(this));
+        searchHistoryAdapter = new SearchHistoryAdapter(searchHistory, query -> {
+            binding.etSearch.setText(query);
+            binding.etSearch.setSelection(query.length());
+            startSearch(query);
+        });
+        binding.rvSearchSuggestions.setAdapter(searchHistoryAdapter);
+    }
+
+    private void showSearchSuggestions(String query) {
+        if (query == null) query = "";
+        String normalized = query.trim().toLowerCase();
+        List<String> suggestions = new ArrayList<>();
+
+        if (normalized.isEmpty()) {
+            suggestions.addAll(searchHistory);
+        } else {
+            for (String history : searchHistory) {
+                if (history.toLowerCase().contains(normalized)) {
+                    suggestions.add(history);
+                }
+                if (suggestions.size() >= 10) break;
+            }
+            if (suggestions.isEmpty()) {
+                suggestions.add(query);
+            }
+        }
+
+        searchHistoryAdapter.updateHistory(suggestions);
+        binding.rvSearchSuggestions.setVisibility(suggestions.isEmpty() ? View.GONE : View.VISIBLE);
+    }
+
+    private void startSearch(String query) {
+        if (query == null || query.trim().isEmpty()) return;
+        query = query.trim();
+        searchHistoryManager.addToHistory(query);
+        searchHistory.clear();
+        searchHistory.addAll(searchHistoryManager.getHistory());
+        showSearchSuggestions(query);
+
+        binding.rvSearchSuggestions.setVisibility(View.GONE);
+        binding.etSearch.clearFocus();
+
+        Intent intent = new Intent(this, ProductListActivity.class);
+        intent.putExtra("SEARCH_QUERY", query);
+        startActivity(intent);
     }
 
     private void startBarcodeScanner() {
@@ -480,7 +719,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         options.setBeepEnabled(true);
         options.setBarcodeImageEnabled(false);
         options.setCameraId(0);
-        options.setOrientationLocked(false);
+        options.setOrientationLocked(true);
         barcodeLauncher.launch(options);
     }
 
@@ -529,10 +768,35 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
 
     private void openProductList(Category category) { 
         if (category == null || category.getId() == null) return;
-        Intent intent = new Intent(this, ProductListActivity.class); 
-        intent.putExtra("CATEGORY_ID", category.getId()); 
-        intent.putExtra("CATEGORY_NAME", category.getName()); 
+        Intent intent = new Intent(this, CategoriesActivity.class); 
+        intent.putExtra("selected_category_id", category.getId()); 
         startActivity(intent); 
+    }
+
+    private void openBrandProducts(com.nmmart.retailos.models.Brand brand) { 
+        if (brand == null || brand.getId() == null) return;
+        Intent intent = new Intent(this, ProductListActivity.class); 
+        intent.putExtra("BRAND_ID", brand.getId()); 
+        intent.putExtra("BRAND_NAME", brand.getName()); 
+        startActivity(intent); 
+    }
+    
+    private void shareApp(String message) {
+        try {
+            // First try to share directly via WhatsApp
+            Intent whatsappIntent = new Intent(Intent.ACTION_SEND);
+            whatsappIntent.setType("text/plain");
+            whatsappIntent.setPackage("com.whatsapp");
+            whatsappIntent.putExtra(Intent.EXTRA_TEXT, message);
+            
+            startActivity(whatsappIntent);
+        } catch (android.content.ActivityNotFoundException e) {
+            // If WhatsApp not installed, show all options
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/plain");
+            shareIntent.putExtra(Intent.EXTRA_TEXT, message);
+            startActivity(Intent.createChooser(shareIntent, "Share via"));
+        }
     } 
 
     public void updateCartBadge() { 
@@ -548,30 +812,138 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     @Override 
     public boolean onNavigationItemSelected(@NonNull MenuItem item) { 
         int id = item.getItemId(); 
-        if (id == R.id.nav_logout) { 
+        if (id == R.id.nav_profile) { 
+            startActivity(new Intent(this, ProfileActivity.class)); 
+        } else if (id == R.id.nav_notifications) { 
+            startActivity(new Intent(this, NotificationsActivity.class)); 
+        } else if (id == R.id.nav_orders) { 
+            startActivity(new Intent(this, OrderHistoryActivity.class)); 
+        } else if (id == R.id.nav_addresses) { 
+            startActivity(new Intent(this, AddressListActivity.class)); 
+        } else if (id == R.id.nav_wallet) { 
+            startActivity(new Intent(this, WalletActivity.class)); 
+        } else if (id == R.id.nav_coupons) { 
+            startActivity(new Intent(this, CouponsActivity.class)); 
+        } else if (id == R.id.nav_refer) { 
+            startActivity(new Intent(this, ReferEarnActivity.class)); 
+        } else if (id == R.id.nav_help) { 
+            startActivity(new Intent(this, CustomerSupportActivity.class)); 
+        } else if (id == R.id.nav_about) { 
+            startActivity(new Intent(this, AboutUsActivity.class)); 
+        } else if (id == R.id.nav_settings) { 
+            startActivity(new Intent(this, SettingsActivity.class)); 
+        } else if (id == R.id.nav_share) { 
+            String shareBody = "Download NM Mart app for best deals on groceries and daily essentials!"; 
+            shareApp(shareBody); 
+        } else if (id == R.id.nav_logout) { 
             sessionManager.logout(); 
             Intent intent = new Intent(this, LoginActivity.class); 
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); 
             startActivity(intent); 
             finish(); 
-        } else if (id == R.id.nav_orders) { 
-            startActivity(new Intent(this, OrderHistoryActivity.class)); 
-        } else if (id == R.id.nav_share) { 
-            String shareBody = "Download NM Mart app for best deals!"; 
-            Intent shareIntent = new Intent(Intent.ACTION_SEND); 
-            shareIntent.setType("text/plain"); 
-            shareIntent.putExtra(Intent.EXTRA_TEXT, shareBody); 
-            startActivity(Intent.createChooser(shareIntent, "Share via")); 
         } 
         binding.drawerLayout.closeDrawer(GravityCompat.START); 
         return true; 
     } 
 
-    @Override 
-    protected void onResume() { 
-        super.onResume(); 
-        updateNavHeader(); 
-        updateCartBadge(); 
-        loadRecentlyViewed(); 
-    } 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleDeepLink(intent);
+    }
+
+    private void handleDeepLink(Intent intent) {
+        Uri data = intent.getData();
+        if (data == null) return;
+
+        String path = data.getPath();
+        if (path == null) return;
+
+        try {
+            if (path.startsWith("/product")) {
+                String productId = data.getQueryParameter("id");
+                if (productId != null && !productId.isEmpty()) {
+                    fetchProductByIdAndOpen(productId);
+                }
+            } else if (path.startsWith("/category")) {
+                String categoryId = data.getQueryParameter("id");
+                String categoryName = data.getQueryParameter("name");
+                if (categoryId != null && !categoryId.isEmpty()) {
+                    Intent catIntent = new Intent(this, ProductListActivity.class);
+                    catIntent.putExtra("CATEGORY_ID", categoryId);
+                    if (categoryName != null) {
+                        catIntent.putExtra("CATEGORY_NAME", categoryName);
+                    }
+                    startActivity(catIntent);
+                }
+            } else if (path.startsWith("/brand")) {
+                String brandId = data.getQueryParameter("id");
+                String brandName = data.getQueryParameter("name");
+                if (brandId != null && !brandId.isEmpty()) {
+                    Intent brandIntent = new Intent(this, ProductListActivity.class);
+                    brandIntent.putExtra("BRAND_ID", brandId);
+                    if (brandName != null) {
+                        brandIntent.putExtra("BRAND_NAME", brandName);
+                    }
+                    startActivity(brandIntent);
+                }
+            } else if (path.startsWith("/cart")) {
+                startActivity(new Intent(this, CartActivity.class));
+            } else if (path.startsWith("/orders")) {
+                startActivity(new Intent(this, OrderHistoryActivity.class));
+            } else if (path.startsWith("/profile")) {
+                startActivity(new Intent(this, ProfileActivity.class));
+            }
+        } catch (Exception e) {
+            logError("Deep link error", e);
+        }
+    }
+
+    private void fetchProductByIdAndOpen(String productId) {
+        SupabaseRepository repository = new SupabaseRepository();
+        repository.getProductById(productId, new Callback<List<Product>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<Product>> call, @NonNull Response<List<Product>> response) {
+                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                    Product product = response.body().get(0);
+                    Intent intent = new Intent(MainActivity.this, ProductDetailActivity.class);
+                    intent.putExtra("PRODUCT", product);
+                    startActivity(intent);
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<List<Product>> call, @NonNull Throwable t) {
+                Toast.makeText(MainActivity.this, "Product not found!", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateNavHeader();
+        updateCartBadge();
+        loadRecentlyViewed();
+        updateLocationDisplay();
+        startCountdownTimer();
+        startBannerAutoScroll();
+        
+        // Handle deep link if activity was launched with one
+        handleDeepLink(getIntent());
+    }
+    
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopCountdownTimer();
+        stopBannerAutoScroll();
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopCountdownTimer();
+    }
 }

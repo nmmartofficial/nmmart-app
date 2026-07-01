@@ -226,6 +226,13 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             }
 
             binding.tvNmPrice.setText(PriceUtils.formatPrice(product.getNmPrice()));
+            double discountPercent = product.getDiscountPercent();
+            if (discountPercent > 0) {
+                binding.cardDiscount.setVisibility(View.VISIBLE);
+                binding.tvDiscountBadge.setText(String.format("%.0f%% OFF", discountPercent));
+            } else {
+                binding.cardDiscount.setVisibility(View.GONE);
+            }
 
             if (product.getStock() > 0 && product.getStock() <= 5) {
                 binding.tvInventoryAlert.setVisibility(View.VISIBLE);

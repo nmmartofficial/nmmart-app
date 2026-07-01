@@ -7,6 +7,8 @@ import com.nmmart.retailos.models.AppError;
 import com.nmmart.retailos.models.Banner;
 import com.nmmart.retailos.models.Brand;
 import com.nmmart.retailos.models.Category;
+import com.nmmart.retailos.models.ComboOffer;
+import com.nmmart.retailos.models.FlashSale;
 import com.nmmart.retailos.models.HomeConfig;
 import com.nmmart.retailos.models.Order;
 import com.nmmart.retailos.models.Product;
@@ -142,14 +144,28 @@ public class SupabaseRepository {
     }
 
     // --- Methods that return Call objects (for ViewModel tracking) ---
-    public Call<List<Product>> getProductsSortedCall(String categoryId, String brandId, String order, Integer limit, Integer offset) {
+    public Call<List<Product>> getProductsSortedCall(String categoryId, String subCategoryId, String brandId, String order, Integer limit, Integer offset) {
         String catParam = categoryId != null ? "eq." + categoryId : null;
+        String subCatParam = subCategoryId != null ? "eq." + subCategoryId : null;
         String brandParam = brandId != null ? "eq." + brandId : null;
-        return apiService.getProductsSorted(apiKey, anonOrUserAuth(), catParam, brandParam, order, limit, offset);
+        String orderParam = order != null ? order : "online_rate.asc";
+        return apiService.getProductsSorted(apiKey, anonOrUserAuth(), catParam, subCatParam, brandParam, "eq.true", orderParam, limit, offset);
+    }
+
+    public Call<List<Product>> getProductsSortedCall(String categoryId, String brandId, String order, Integer limit, Integer offset) {
+        return getProductsSortedCall(categoryId, null, brandId, order, limit, offset);
     }
 
     public Call<List<Product>> searchProductsCall(String query, Integer limit, Integer offset) {
-        return apiService.searchProducts(apiKey, anonOrUserAuth(), "ilike.%" + query + "%", limit, offset);
+        String normalizedQuery = query != null ? query.trim() : "";
+        if (normalizedQuery.isEmpty()) {
+            normalizedQuery = "";
+        }
+        String escapedQuery = normalizedQuery.replace("%", "\\%").replace("_", "\\_");
+        String wildcard = "%" + escapedQuery + "%";
+
+        String orQuery = "name.ilike." + wildcard + ",itname.ilike." + wildcard + ",itnameprint.ilike." + wildcard + ",print_name.ilike." + wildcard + ",itemdescription.ilike." + wildcard + ",barcode.ilike." + wildcard;
+        return apiService.searchProducts(apiKey, anonOrUserAuth(), orQuery, limit, offset);
     }
 
     public Call<List<HomeConfig>> getHomeConfigCall() {
@@ -162,6 +178,14 @@ public class SupabaseRepository {
     
     public Call<List<Brand>> getBrandsCall() {
         return apiService.getBrands(apiKey, anonOrUserAuth());
+    }
+    
+    public Call<List<FlashSale>> getFlashSalesCall() {
+        return apiService.getFlashSales(apiKey, anonOrUserAuth());
+    }
+    
+    public Call<List<ComboOffer>> getComboOffersCall() {
+        return apiService.getComboOffers(apiKey, anonOrUserAuth());
     }
 
     public Call<List<Category>> getSubCategoriesCall(String parentId) {
@@ -219,9 +243,13 @@ public class SupabaseRepository {
         apiService.getLatestProducts(apiKey, anonOrUserAuth(), "id.desc", limit).enqueue(wrapCallback("getLatestProducts", callback));
     }
 
+    public void getProductsSorted(String categoryId, String subCategoryId, String brandId, String order, int limit, int offset, Callback<List<Product>> callback) {
+        Log.d(TAG, "getProductsSorted called - categoryId: " + categoryId + ", subCategoryId: " + subCategoryId + ", brandId: " + brandId + ", order: " + order + ", limit: " + limit + ", offset: " + offset);
+        getProductsSortedCall(categoryId, subCategoryId, brandId, order, limit, offset).enqueue(wrapCallback("getProductsSorted", callback));
+    }
+
     public void getProductsSorted(String categoryId, String brandId, String order, int limit, int offset, Callback<List<Product>> callback) {
-        Log.d(TAG, "getProductsSorted called - categoryId: " + categoryId + ", brandId: " + brandId + ", order: " + order + ", limit: " + limit + ", offset: " + offset);
-        getProductsSortedCall(categoryId, brandId, order, limit, offset).enqueue(wrapCallback("getProductsSorted", callback));
+        getProductsSorted(categoryId, null, brandId, order, limit, offset, callback);
     }
 
     public void getAllProducts(int limit, int offset, Callback<List<Product>> callback) {
@@ -231,7 +259,7 @@ public class SupabaseRepository {
 
     public void placeOrder(Map<String, Object> orderData, Callback<Void> callback) {
         Log.d(TAG, "placeOrder called");
-        apiService.placeOrder(apiKey, requireUserAuth(), orderData).enqueue(wrapCallback("placeOrder", callback));
+        apiService.placeOrder(apiKey, anonOrUserAuth(), orderData).enqueue(wrapCallback("placeOrder", callback));
     }
 
     public void getLiveOrders(String mobile, String status, Callback<List<Order>> callback) {
@@ -246,7 +274,7 @@ public class SupabaseRepository {
     
     public void fetchLiveProducts(String categoryId, int limit, int offset, Callback<List<Product>> callback) {
         Log.d(TAG, "fetchLiveProducts called with categoryId: " + categoryId + ", limit: " + limit + ", offset: " + offset);
-        getProductsSorted(categoryId, null, "sale_rate.asc", limit, offset, callback);
+        getProductsSorted(categoryId, null, null, "online_rate.asc", limit, offset, callback);
     }
     
     public void getAppConfig(Callback<List<AppConfig>> callback) {
@@ -327,8 +355,13 @@ public class SupabaseRepository {
         apiService.getProductByBarcode(apiKey, anonOrUserAuth(), "eq." + barcode).enqueue(wrapCallback("getProductByBarcode", callback));
     }
 
+    public void getProductById(String productId, Callback<List<Product>> callback) {
+        Log.d(TAG, "getProductById called with productId: " + productId);
+        apiService.getProductById(apiKey, anonOrUserAuth(), "eq." + productId).enqueue(wrapCallback("getProductById", callback));
+    }
+
     public Call<List<Product>> getDiscountProductsCall(int limit) {
-        return apiService.getDiscountProducts(apiKey, anonOrUserAuth(), limit);
+        return apiService.getDiscountProducts(apiKey, anonOrUserAuth(), "discount_pct.desc", limit);
     }
 
     public Call<List<Product>> getNewArrivalProductsCall(int limit) {
@@ -336,12 +369,16 @@ public class SupabaseRepository {
     }
 
     public Call<List<Product>> getFeaturedProductsCall(int limit) {
-        return apiService.getFeaturedProducts(apiKey, anonOrUserAuth(), limit);
+        return apiService.getFeaturedProducts(apiKey, anonOrUserAuth(), "stock.desc", limit);
+    }
+
+    public Call<List<Product>> getProductsByIdsCall(String idFilter) {
+        return apiService.getProductsByIds(apiKey, anonOrUserAuth(), idFilter);
     }
 
     public void getDiscountProducts(int limit, Callback<List<Product>> callback) {
         Log.d(TAG, "getDiscountProducts called with limit: " + limit);
-        apiService.getDiscountProducts(apiKey, anonOrUserAuth(), limit).enqueue(wrapCallback("getDiscountProducts", callback));
+        apiService.getDiscountProducts(apiKey, anonOrUserAuth(), "discount_pct.desc", limit).enqueue(wrapCallback("getDiscountProducts", callback));
     }
 
     public void getNewArrivalProducts(int limit, Callback<List<Product>> callback) {
@@ -351,7 +388,7 @@ public class SupabaseRepository {
 
     public void getFeaturedProducts(int limit, Callback<List<Product>> callback) {
         Log.d(TAG, "getFeaturedProducts called with limit: " + limit);
-        apiService.getFeaturedProducts(apiKey, anonOrUserAuth(), limit).enqueue(wrapCallback("getFeaturedProducts", callback));
+        apiService.getFeaturedProducts(apiKey, anonOrUserAuth(), "stock.desc", limit).enqueue(wrapCallback("getFeaturedProducts", callback));
     }
 
     public void decrementStock(String productId, int quantity, Callback<Void> callback) {
