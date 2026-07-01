@@ -70,6 +70,14 @@
                 android:padding="16dp"
                 android:visibility="gone" />
 
+            <!-- Products -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvProducts"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="16dp"
+                android:visibility="gone" />
+
             <!-- Loading -->
             <LinearLayout
                 android:id="@+id/shimmerLayout"

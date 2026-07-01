@@ -19,6 +19,8 @@ import com.google.android.material.appbar.MaterialToolbar;
 import com.nmmart.retailos.R;
 import com.nmmart.retailos.data.SupabaseRepository;
 import com.nmmart.retailos.models.Category;
+import com.nmmart.retailos.models.Product;
+import com.nmmart.retailos.ui.adapters.ProductListAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,14 +29,17 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class CategoriesActivity extends AppCompatActivity {
+public class CategoriesActivity extends BaseActivity {
 
     private RecyclerView rvMainCategories;
     private RecyclerView rvSubCategories;
+    private RecyclerView rvProducts;
     private MainCategoryAdapter mainCategoryAdapter;
     private SubCategoryAdapter subCategoryAdapter;
+    private ProductListAdapter productAdapter;
     private List<Category> mainCategoryList = new ArrayList<>();
     private List<Category> subCategoryList = new ArrayList<>();
+    private List<Product> productList = new ArrayList<>();
     private View emptyState;
     private View loadingView;
     private View errorView;
@@ -53,11 +58,7 @@ public class CategoriesActivity extends AppCompatActivity {
 
             MaterialToolbar toolbar = findViewById(R.id.toolbar);
             if (toolbar != null) {
-                toolbar.setTitle("Categories");
-                setSupportActionBar(toolbar);
-                if (getSupportActionBar() != null) {
-                    getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-                }
+                setupToolbar(toolbar, "Categories");
             }
 
             // Initialize views with null checks
@@ -79,8 +80,21 @@ public class CategoriesActivity extends AppCompatActivity {
             // Setup subcategories (right panel)
             if (rvSubCategories != null) {
                 rvSubCategories.setLayoutManager(new GridLayoutManager(this, 2));
-                subCategoryAdapter = new SubCategoryAdapter(subCategoryList);
+                subCategoryAdapter = new SubCategoryAdapter(subCategoryList, category -> loadProducts(category));
                 rvSubCategories.setAdapter(subCategoryAdapter);
+            }
+
+            // Setup products list on right panel
+            rvProducts = findViewById(R.id.rvProducts);
+            if (rvProducts != null) {
+                rvProducts.setLayoutManager(new GridLayoutManager(this, 2));
+                productAdapter = new ProductListAdapter(this);
+                productAdapter.setOnProductClickListener(product -> {
+                    Intent intent = new Intent(CategoriesActivity.this, ProductDetailActivity.class);
+                    intent.putExtra("PRODUCT", product);
+                    startActivity(intent);
+                });
+                rvProducts.setAdapter(productAdapter);
             }
 
             if (btnRetry != null) {
@@ -158,63 +172,64 @@ public class CategoriesActivity extends AppCompatActivity {
             repository.getSubCategories(mainCategory.getId(), new Callback<List<Category>>() {
                 @Override
                 public void onResponse(Call<List<Category>> call, Response<List<Category>> response) {
-                    try {
-                        if (response.isSuccessful() && response.body() != null) {
-                            subCategoryList.clear();
-                            List<Category> subCats = response.body();
-                            if (subCats.isEmpty()) {
-                                // No subcategories, show products directly
-                                Intent intent = new Intent(CategoriesActivity.this, ProductListActivity.class);
-                                intent.putExtra("CATEGORY_NAME", mainCategory.getName());
-                                intent.putExtra("CATEGORY_ID", mainCategory.getId());
-                                startActivity(intent);
-                            } else {
-                                subCategoryList.addAll(subCats);
-                                subCategoryAdapter.notifyDataSetChanged();
-                                showRightSubCategories();
-                            }
-                        } else {
-                            // If error, treat as no subcategories and show products directly
-                            Intent intent = new Intent(CategoriesActivity.this, ProductListActivity.class);
-                            intent.putExtra("CATEGORY_NAME", mainCategory.getName());
-                            intent.putExtra("CATEGORY_ID", mainCategory.getId());
-                            startActivity(intent);
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        // Fallback to product list
-                        Intent intent = new Intent(CategoriesActivity.this, ProductListActivity.class);
-                        intent.putExtra("CATEGORY_NAME", mainCategory.getName());
-                        intent.putExtra("CATEGORY_ID", mainCategory.getId());
-                        startActivity(intent);
+                    if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                        subCategoryList.clear();
+                        subCategoryList.addAll(response.body());
+                        subCategoryAdapter.notifyDataSetChanged();
+                        showRightSubCategories();
+                    } else {
+                        loadProducts(mainCategory);
                     }
                 }
 
                 @Override
                 public void onFailure(Call<List<Category>> call, Throwable t) {
-                    try {
-                        // On failure, show products directly
-                        Intent intent = new Intent(CategoriesActivity.this, ProductListActivity.class);
-                        intent.putExtra("CATEGORY_NAME", mainCategory.getName());
-                        intent.putExtra("CATEGORY_ID", mainCategory.getId());
-                        startActivity(intent);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    loadProducts(mainCategory);
                 }
             });
         } catch (Exception e) {
             e.printStackTrace();
-            // Fallback to product list
-            try {
-                Intent intent = new Intent(CategoriesActivity.this, ProductListActivity.class);
-                intent.putExtra("CATEGORY_NAME", mainCategory.getName());
-                intent.putExtra("CATEGORY_ID", mainCategory.getId());
-                startActivity(intent);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
+            loadProducts(mainCategory);
         }
+    }
+
+    private void loadProducts(Category category) {
+        if (category == null || category.getId() == null) {
+            showRightError("Invalid category selected.");
+            return;
+        }
+        if (rvProducts != null) {
+            rvProducts.setVisibility(View.VISIBLE);
+        }
+        if (rvSubCategories != null) {
+            rvSubCategories.setVisibility(View.GONE);
+        }
+        if (emptyState != null) {
+            emptyState.setVisibility(View.GONE);
+        }
+        if (errorView != null) {
+            errorView.setVisibility(View.GONE);
+        }
+        repository.getProducts(category.getId(), new Callback<List<Product>>() {
+            @Override
+            public void onResponse(Call<List<Product>> call, Response<List<Product>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    productList.clear();
+                    productList.addAll(response.body());
+                    productAdapter.setProducts(productList);
+                    if (productList.isEmpty()) {
+                        showRightError("No products found for " + category.getName());
+                    }
+                } else {
+                    showRightError("Failed to load products.");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Product>> call, Throwable t) {
+                showRightError("Unable to load products: " + t.getMessage());
+            }
+        });
     }
 
     // Main panel state methods
@@ -362,11 +377,17 @@ public class CategoriesActivity extends AppCompatActivity {
         }
     }
 
-    private class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.SubCategoryViewHolder> {
+    private static class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.SubCategoryViewHolder> {
         private List<Category> items;
+        private OnSubCategoryClickListener listener;
 
-        SubCategoryAdapter(List<Category> items) {
+        interface OnSubCategoryClickListener {
+            void onSubCategoryClick(Category category);
+        }
+
+        SubCategoryAdapter(List<Category> items, OnSubCategoryClickListener listener) {
             this.items = items;
+            this.listener = listener;
         }
 
         @NonNull
@@ -394,10 +415,9 @@ public class CategoriesActivity extends AppCompatActivity {
             }
 
             holder.itemView.setOnClickListener(v -> {
-                Intent intent = new Intent(CategoriesActivity.this, ProductListActivity.class);
-                intent.putExtra("CATEGORY_NAME", category.getName());
-                intent.putExtra("CATEGORY_ID", category.getId());
-                startActivity(intent);
+                if (listener != null) {
+                    listener.onSubCategoryClick(category);
+                }
             });
         }
 
