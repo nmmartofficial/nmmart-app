@@ -38,7 +38,21 @@
 
         <activity
             android:name=".ui.activities.MainActivity"
-            android:exported="false" />
+            android:exported="true">
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="http"
+                    android:host="nmmart.com" />
+                <data
+                    android:scheme="https"
+                    android:host="nmmart.com" />
+                <data
+                    android:scheme="nmmart" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name=".ui.activities.SubCategoryActivity"
@@ -158,6 +172,11 @@
         
         <activity
             android:name=".ui.activities.CategoriesActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity" />
+
+        <activity
+            android:name=".ui.activities.BrandsActivity"
             android:exported="false"
             android:parentActivityName=".ui.activities.MainActivity" />
 

@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -37,6 +38,7 @@ import com.nmmart.retailos.data.SupabaseRepository;
 import com.bumptech.glide.Glide;
 import com.nmmart.retailos.data.SessionManager;
 import com.nmmart.retailos.databinding.ActivityMainBinding;
+import com.nmmart.retailos.models.Brand;
 import com.nmmart.retailos.models.Category;
 import com.nmmart.retailos.models.Product;
 import com.nmmart.retailos.ui.adapters.CategoryAdapter;
@@ -81,7 +83,13 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private SearchHistoryManager searchHistoryManager;
     private SearchHistoryAdapter searchHistoryAdapter;
     private final List<String> searchHistory = new ArrayList<>();
+    private final List<Category> allCategories = new ArrayList<>();
+    private final List<Brand> allBrands = new ArrayList<>();
+    private static final int MAX_SECTION_ITEMS = 6;
     private com.nmmart.retailos.data.RecentlyViewedManager recentlyViewedManager;
+    
+    // Master list of all products from ALL sections for local search
+    private final List<Product> allProductsMaster = new ArrayList<>();
 
     private com.nmmart.retailos.ui.adapters.BannerAdapter bannerAdapter;
     
@@ -444,9 +452,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 themeManager.setAppConfig(config);
                 applyTheme();
                 // Sirf refresh ke liye adapter notify karein
-                if (categoryAdapter != null) {
-                    categoryAdapter.notifyDataSetChanged();
-                }
             }
         });
 
@@ -464,16 +469,20 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         });
 
         // 3. Categories Observer
-        viewModel.getCategories().observe(this, cats -> {
-            if (cats != null) {
-                categoryAdapter.setCategories(cats);
+        viewModel.getCategories().observe(this, categories -> {
+            if (categories != null && categoryAdapter != null) {
+                allCategories.clear();
+                allCategories.addAll(categories);
+                updateCategorySection();
             }
         });
 
         // 4. Brands Observer
         viewModel.getBrands().observe(this, brands -> {
             if (brands != null) {
-                brandAdapter.setBrands(brands);
+                allBrands.clear();
+                allBrands.addAll(brands);
+                updateBrandSection();
             }
         });
 
@@ -481,7 +490,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         viewModel.getTrendingProducts().observe(this, products -> {
             if (products != null) {
                 trendingAdapter.setProducts(products);
-                productGridAdapter.setProducts(products);
+                addProductsToMasterList(products);
             }
         });
 
@@ -489,6 +498,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         viewModel.getEverydayEssentials().observe(this, products -> {
             if (products != null) {
                 everydayEssentialsAdapter.setProducts(products);
+                addProductsToMasterList(products);
             }
         });
 
@@ -496,6 +506,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         viewModel.getDiscountedProducts().observe(this, products -> {
             if (products != null) {
                 discountedProductsAdapter.setProducts(products);
+                addProductsToMasterList(products);
             }
         });
 
@@ -503,6 +514,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         viewModel.getNewArrivals().observe(this, products -> {
             if (products != null) {
                 newArrivalsAdapter.setProducts(products);
+                addProductsToMasterList(products);
             }
         });
 
@@ -510,6 +522,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         viewModel.getFeaturedProducts().observe(this, products -> {
             if (products != null) {
                 featuredProductsAdapter.setProducts(products);
+                addProductsToMasterList(products);
             }
         });
         
@@ -517,6 +530,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         viewModel.getFlashSaleProducts().observe(this, products -> {
             if (products != null) {
                 flashSaleAdapter.setProducts(products);
+                addProductsToMasterList(products);
             }
         });
         
@@ -531,6 +545,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         viewModel.getAIRecommendations().observe(this, products -> {
             if (products != null) {
                 aiRecommendationsAdapter.setProducts(products);
+                addProductsToMasterList(products);
             }
         });
 
@@ -538,12 +553,31 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         viewModel.getAllProducts().observe(this, products -> {
             if (products != null) {
                 productGridAdapter.setProducts(products);
+                addProductsToMasterList(products);
             }
         });
 
-        // 14. All Products Loading More Observer
+        // 13. All Products Loading More Observer
         viewModel.getIsAllProductsLoadingMore().observe(this, isLoading -> {
             productGridAdapter.setLoading(isLoading != null && isLoading);
+        });
+
+        // Load ALL products for local search
+        viewModel.loadAllProductsForSearch(new Callback<List<Product>>() {
+            @Override
+            public void onResponse(Call<List<Product>> call, Response<List<Product>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Log.d("MainActivity", "Loaded " + response.body().size() + " products for search");
+                    addProductsToMasterList(response.body());
+                } else {
+                    Log.e("MainActivity", "Failed to load all products for search: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Product>> call, Throwable t) {
+                Log.e("MainActivity", "Error loading all products for search", t);
+            }
         });
 
         // 13. Loading State Observer
@@ -624,6 +658,32 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         }
     }
 
+    private void updateCategorySection() {
+        List<Category> displayCategories;
+        if (allCategories.size() > MAX_SECTION_ITEMS) {
+            binding.tvCategoriesSeeMore.setVisibility(View.VISIBLE);
+            binding.tvCategoriesSeeMore.setText(R.string.see_more);
+            displayCategories = new ArrayList<>(allCategories.subList(0, MAX_SECTION_ITEMS));
+        } else {
+            binding.tvCategoriesSeeMore.setVisibility(View.GONE);
+            displayCategories = new ArrayList<>(allCategories);
+        }
+        categoryAdapter.setCategories(displayCategories);
+    }
+
+    private void updateBrandSection() {
+        List<com.nmmart.retailos.models.Brand> displayBrands;
+        if (allBrands.size() > MAX_SECTION_ITEMS) {
+            binding.tvBrandsSeeMore.setVisibility(View.VISIBLE);
+            binding.tvBrandsSeeMore.setText(R.string.see_more);
+            displayBrands = new ArrayList<>(allBrands.subList(0, MAX_SECTION_ITEMS));
+        } else {
+            binding.tvBrandsSeeMore.setVisibility(View.GONE);
+            displayBrands = new ArrayList<>(allBrands);
+        }
+        brandAdapter.setBrands(displayBrands);
+    }
+
     private void setupClickListeners() {
         binding.btnMenu.setOnClickListener(v -> binding.drawerLayout.openDrawer(GravityCompat.START));
         binding.btnCart.setOnClickListener(v -> startActivity(new Intent(this, CartActivity.class)));
@@ -653,11 +713,32 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             }
             return false;
         });
+
+        binding.etSearch.setOnFocusChangeListener((v, hasFocus) -> {
+            String currentText = binding.etSearch.getText() != null ? binding.etSearch.getText().toString() : "";
+            if (hasFocus) {
+                showSearchSuggestions(currentText);
+            } else {
+                binding.rvSearchSuggestions.postDelayed(() -> binding.rvSearchSuggestions.setVisibility(View.GONE), 200);
+            }
+        });
+        
+        binding.tvCategoriesSeeMore.setOnClickListener(v -> openCategoriesFullScreen());
+
+        binding.tvBrandsSeeMore.setOnClickListener(v -> openBrandsFullScreen());
         
         binding.swipeRefreshLayout.setOnRefreshListener(() -> {
             viewModel.fetchHomeData();
             viewModel.loadInitialAllProducts();
         });
+    }
+
+    private void openCategoriesFullScreen() {
+        startActivity(new Intent(this, CategoriesActivity.class));
+    }
+
+    private void openBrandsFullScreen() {
+        startActivity(new Intent(this, BrandsActivity.class));
     }
 
     private void setupSearchSuggestions() {
@@ -679,6 +760,9 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         String normalized = query.trim().toLowerCase();
         List<String> suggestions = new ArrayList<>();
 
+        // Filter products locally first
+        filterProductsLocally(normalized);
+
         if (normalized.isEmpty()) {
             suggestions.addAll(searchHistory);
         } else {
@@ -697,6 +781,66 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         binding.rvSearchSuggestions.setVisibility(suggestions.isEmpty() ? View.GONE : View.VISIBLE);
     }
 
+    private void addProductsToMasterList(List<Product> products) {
+        if (products == null || products.isEmpty()) return;
+        
+        for (Product product : products) {
+            boolean exists = false;
+            for (Product existing : allProductsMaster) {
+                if (existing.getId() != null && existing.getId().equals(product.getId())) {
+                    exists = true;
+                    break;
+                }
+                if (existing.getBarcode() != null && !existing.getBarcode().isEmpty() 
+                    && existing.getBarcode().equals(product.getBarcode())) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) {
+                allProductsMaster.add(product);
+            }
+        }
+        
+        // Re-apply the current search filter
+        Editable currentText = binding.etSearch.getText();
+        if (currentText != null) {
+            showSearchSuggestions(currentText.toString());
+        }
+    }
+
+    private void filterProductsLocally(String query) {
+        if (query == null) query = "";
+        String normalized = query.trim().toLowerCase();
+        
+        if (normalized.isEmpty()) {
+            // Show original all products if query is empty
+            List<Product> originalAllProducts = viewModel.getAllProducts().getValue();
+            if (originalAllProducts != null) {
+                productGridAdapter.setProducts(originalAllProducts);
+            }
+        } else {
+            // Filter the MASTER list of all products
+            List<Product> filtered = new ArrayList<>();
+            for (Product p : allProductsMaster) {
+                String productName = p.getName().toLowerCase();
+                String productBrand = (p.getBrand() != null) ? p.getBrand().toLowerCase() : "";
+                String productCategory = (p.getCategory() != null) ? p.getCategory().toLowerCase() : "";
+                String productDescription = p.getDescription().toLowerCase();
+                String productBarcode = (p.getBarcode() != null) ? p.getBarcode().toLowerCase() : "";
+                
+                if (productName.contains(normalized) || 
+                    productBrand.contains(normalized) || 
+                    productCategory.contains(normalized) || 
+                    productDescription.contains(normalized) ||
+                    productBarcode.contains(normalized)) {
+                    filtered.add(p);
+                }
+            }
+            productGridAdapter.setProducts(filtered);
+        }
+    }
+
     private void startSearch(String query) {
         if (query == null || query.trim().isEmpty()) return;
         query = query.trim();
@@ -713,13 +857,40 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         startActivity(intent);
     }
 
+    private void openQuickAction(String action) {
+        if ("wishlist".equals(action) || "orders".equals(action) || "cart".equals(action)) {
+            if (!sessionManager.isLoggedIn()) {
+                Toast.makeText(this, R.string.login_required, Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(this, LoginActivity.class));
+                return;
+            }
+        }
+
+        switch (action) {
+            case "wishlist":
+                startActivity(new Intent(this, WishlistActivity.class));
+                break;
+            case "orders":
+                startActivity(new Intent(this, OrderHistoryActivity.class));
+                break;
+            case "cart":
+                startActivity(new Intent(this, CartActivity.class));
+                break;
+            case "support":
+                startActivity(new Intent(this, CustomerSupportActivity.class));
+                break;
+            default:
+                break;
+        }
+    }
+
     private void startBarcodeScanner() {
         ScanOptions options = new ScanOptions();
         options.setPrompt(getString(R.string.scan_barcode_prompt));
         options.setBeepEnabled(true);
         options.setBarcodeImageEnabled(false);
         options.setCameraId(0);
-        options.setOrientationLocked(true);
+        options.setOrientationLocked(false);
         barcodeLauncher.launch(options);
     }
 
@@ -766,19 +937,20 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         }); 
     } 
 
-    private void openProductList(Category category) { 
+    private void openProductList(Category category) {
         if (category == null || category.getId() == null) return;
-        Intent intent = new Intent(this, CategoriesActivity.class); 
-        intent.putExtra("selected_category_id", category.getId()); 
-        startActivity(intent); 
+        Intent intent = new Intent(this, SubCategoryActivity.class);
+        intent.putExtra("CATEGORY_ID", category.getId());
+        intent.putExtra("CATEGORY_NAME", category.getName());
+        startActivity(intent);
     }
 
-    private void openBrandProducts(com.nmmart.retailos.models.Brand brand) { 
+    private void openBrandProducts(com.nmmart.retailos.models.Brand brand) {
         if (brand == null || brand.getId() == null) return;
-        Intent intent = new Intent(this, ProductListActivity.class); 
-        intent.putExtra("BRAND_ID", brand.getId()); 
-        intent.putExtra("BRAND_NAME", brand.getName()); 
-        startActivity(intent); 
+        Intent intent = new Intent(this, ProductListActivity.class);
+        intent.putExtra("BRAND_ID", brand.getId());
+        intent.putExtra("BRAND_NAME", brand.getName());
+        startActivity(intent);
     }
     
     private void shareApp(String message) {
@@ -832,10 +1004,10 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             startActivity(new Intent(this, AboutUsActivity.class)); 
         } else if (id == R.id.nav_settings) { 
             startActivity(new Intent(this, SettingsActivity.class)); 
-        } else if (id == R.id.nav_share) { 
-            String shareBody = "Download NM Mart app for best deals on groceries and daily essentials!"; 
-            shareApp(shareBody); 
-        } else if (id == R.id.nav_logout) { 
+        } else if (id == R.id.nav_share) {
+            String shareBody = getString(R.string.sharing_msg);
+            shareApp(shareBody);
+        } else if (id == R.id.nav_logout) {
             sessionManager.logout(); 
             Intent intent = new Intent(this, LoginActivity.class); 
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); 
@@ -870,7 +1042,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 String categoryId = data.getQueryParameter("id");
                 String categoryName = data.getQueryParameter("name");
                 if (categoryId != null && !categoryId.isEmpty()) {
-                    Intent catIntent = new Intent(this, ProductListActivity.class);
+                    Intent catIntent = new Intent(this, SubCategoryActivity.class);
                     catIntent.putExtra("CATEGORY_ID", categoryId);
                     if (categoryName != null) {
                         catIntent.putExtra("CATEGORY_NAME", categoryName);

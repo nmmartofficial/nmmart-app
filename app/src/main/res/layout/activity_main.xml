@@ -272,14 +272,30 @@
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
                             android:layout_marginBottom="20dp">
-                            <TextView
-                                android:layout_width="wrap_content"
+                            <LinearLayout
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="@string/categories_label"
-                                android:textSize="20sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/black_soft"
-                                android:fontFamily="sans-serif-medium" />
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="@string/categories_label"
+                                    android:textSize="20sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/black_soft"
+                                    android:fontFamily="sans-serif-medium" />
+                                <TextView
+                                    android:id="@+id/tvCategoriesSeeMore"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/see_more"
+                                    android:textSize="14sp"
+                                    android:textColor="@color/accent"
+                                    android:visibility="gone"
+                                    android:padding="4dp" />
+                            </LinearLayout>
                             <androidx.recyclerview.widget.RecyclerView
                                 android:id="@+id/rvCategories"
                                 android:layout_width="match_parent"
@@ -296,14 +312,30 @@
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
                             android:layout_marginBottom="20dp">
-                            <TextView
-                                android:layout_width="wrap_content"
+                            <LinearLayout
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="Top Brands"
-                                android:textSize="20sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/black_soft"
-                                android:fontFamily="sans-serif-medium" />
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="Top Brands"
+                                    android:textSize="20sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/black_soft"
+                                    android:fontFamily="sans-serif-medium" />
+                                <TextView
+                                    android:id="@+id/tvBrandsSeeMore"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/see_more"
+                                    android:textSize="14sp"
+                                    android:textColor="@color/accent"
+                                    android:visibility="gone"
+                                    android:padding="4dp" />
+                            </LinearLayout>
                             <androidx.recyclerview.widget.RecyclerView
                                 android:id="@+id/rvBrands"
                                 android:layout_width="match_parent"
